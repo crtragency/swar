@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const POSTS = [
   {
     title: "أفضل أوقات السنة للرحلات البحرية في ثول",
     excerpt:
       "تعرف على المواسم المثالية للاستمتاع بأجواء البحر الأحمر وأفضل تجارب الإبحار.",
-    image: "/images/hero-1.webp",
+    image: HERO_1,
     category: "نصائح السفر",
     date: "10 يونيو 2026",
   },
@@ -18,7 +19,7 @@ const POSTS = [
     title: "دليلك الكامل لتجربة الغوص في البحر الأحمر",
     excerpt:
       "كل ما تحتاج معرفته قبل خوض مغامرة الغوص واستكشاف الشعاب المرجانية الساحرة.",
-    image: "/images/hero-2.webp",
+    image: HERO_2,
     category: "مغامرات",
     date: "2 يونيو 2026",
   },
@@ -26,7 +27,7 @@ const POSTS = [
     title: "كيف تختار الباقة البحرية المناسبة لعائلتك",
     excerpt:
       "نصائح عملية لاختيار الرحلة البحرية الأمثل التي تناسب جميع أفراد العائلة.",
-    image: "/images/hero-3.webp",
+    image: HERO_3,
     category: "إرشادات",
     date: "25 مايو 2026",
   },

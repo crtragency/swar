@@ -4,24 +4,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const PACKAGES = [
   {
     title: "باقة العائلة",
     desc: "تجربة بحرية آمنة وممتعة مصممة للعائلات لقضاء أجمل الأوقات معاً.",
-    image: "/images/hero-1.webp",
+    image: HERO_1,
     items: ["يخت عائلي واسع", "أنشطة للأطفال", "وجبات خفيفة"],
   },
   {
     title: "باقة المغامرة",
     desc: "للباحثين عن الإثارة، رحلة غوص واستكشاف بين أعماق البحر الأحمر.",
-    image: "/images/hero-2.webp",
+    image: HERO_2,
     items: ["غوص بصحبة مدرب", "معدات احترافية", "استكشاف الشعاب"],
   },
   {
     title: "باقة المناسبات",
     desc: "احتفل بمناسباتك الخاصة على متن يخت فاخر بأجواء استثنائية.",
-    image: "/images/hero-3.webp",
+    image: HERO_3,
     items: ["تجهيز خاص للمناسبة", "ضيافة فاخرة", "تصوير احترافي"],
   },
 ];

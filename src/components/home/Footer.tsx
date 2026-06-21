@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./ui";
+import { LOGO } from "./images";
 
 const QUICK_LINKS = [
   { label: "رحلات بحرية في ثول", href: "#adventures" },
@@ -56,7 +57,7 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <span className="relative block h-14 w-14 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/20">
                 <Image
-                  src="/images/logo.webp"
+                  src={LOGO}
                   alt="شعار سوار"
                   fill
                   sizes="56px"

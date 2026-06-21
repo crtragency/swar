@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const IMAGES = [
-  { src: "/images/hero-1.webp", alt: "لحظة بحرية على متن يخت سوار", span: "row-span-2" },
-  { src: "/images/hero-2.webp", alt: "إبحار في مياه ثول الصافية", span: "" },
-  { src: "/images/hero-3.webp", alt: "غروب ساحر فوق البحر الأحمر", span: "" },
-  { src: "/images/hero-2.webp", alt: "متعة السباحة في عرض البحر", span: "" },
-  { src: "/images/hero-3.webp", alt: "أجواء عائلية على متن الرحلة", span: "row-span-2" },
-  { src: "/images/hero-1.webp", alt: "مغامرة بحرية لا تُنسى", span: "" },
+  { src: HERO_1, alt: "لحظة بحرية على متن يخت سوار", span: "row-span-2" },
+  { src: HERO_2, alt: "إبحار في مياه ثول الصافية", span: "" },
+  { src: HERO_3, alt: "غروب ساحر فوق البحر الأحمر", span: "" },
+  { src: HERO_2, alt: "متعة السباحة في عرض البحر", span: "" },
+  { src: HERO_3, alt: "أجواء عائلية على متن الرحلة", span: "row-span-2" },
+  { src: HERO_1, alt: "مغامرة بحرية لا تُنسى", span: "" },
 ];
 
 export default function GallerySection() {

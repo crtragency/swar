@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const PLANS = [
   {
@@ -12,7 +13,7 @@ const PLANS = [
     price: "490",
     oldPrice: "650",
     discount: "25%",
-    image: "/images/hero-2.webp",
+    image: HERO_2,
     features: [
       "جولة بحرية على متن يخت فاخر",
       "مشروبات ترحيبية",
@@ -27,7 +28,7 @@ const PLANS = [
     price: "990",
     oldPrice: "1300",
     discount: "30%",
-    image: "/images/hero-1.webp",
+    image: HERO_1,
     features: [
       "جولة بحرية ممتدة في ثول",
       "وجبة غداء بحرية فاخرة",
@@ -43,7 +44,7 @@ const PLANS = [
     price: "1790",
     oldPrice: "2200",
     discount: "20%",
-    image: "/images/hero-3.webp",
+    image: HERO_3,
     features: [
       "تجربة بحرية متكاملة طوال اليوم",
       "وجبات ومشروبات فاخرة",

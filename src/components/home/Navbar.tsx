@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { LOGO } from "./images";
 
 const MENU = [
   { label: "رحلات بحرية في ثول", href: "#adventures" },
@@ -41,7 +42,7 @@ export default function Navbar() {
         <Link href="#hero" className="flex items-center gap-3" aria-label="سوار">
           <span className="relative block h-12 w-12 overflow-hidden rounded-full ring-1 ring-white/20 sm:h-14 sm:w-14">
             <Image
-              src="/images/logo.webp"
+              src={LOGO}
               alt="شعار سوار"
               fill
               sizes="56px"

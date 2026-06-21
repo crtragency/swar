@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const SLIDES = [
-  { src: "/images/hero-1.webp", alt: "رحلة بحرية فاخرة في ثول" },
-  { src: "/images/hero-2.webp", alt: "يخت يبحر في مياه البحر الأحمر" },
-  { src: "/images/hero-3.webp", alt: "غروب الشمس على متن رحلة سوار البحرية" },
+  { src: HERO_1, alt: "رحلة بحرية فاخرة في ثول" },
+  { src: HERO_2, alt: "يخت يبحر في مياه البحر الأحمر" },
+  { src: HERO_3, alt: "غروب الشمس على متن رحلة سوار البحرية" },
 ];
 
 const AUTOPLAY_MS = 3000;
@@ -36,7 +37,7 @@ export default function Hero() {
           (slide, i) =>
             i === index && (
               <motion.div
-                key={slide.src}
+                key={slide.alt}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -116,7 +117,7 @@ export default function Hero() {
       <div className="absolute inset-x-0 bottom-10 z-10 flex items-center justify-center gap-3">
         {SLIDES.map((slide, i) => (
           <button
-            key={slide.src}
+            key={slide.alt}
             type="button"
             aria-label={`الشريحة ${i + 1}`}
             aria-current={i === index}

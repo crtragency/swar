@@ -3,24 +3,25 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const ADVENTURES = [
   {
     title: "رحلات اليخوت الفاخرة",
     desc: "أبحر على متن أفخم اليخوت واستمتع بخدمة متكاملة على مياه البحر الأحمر.",
-    image: "/images/hero-1.webp",
+    image: HERO_1,
     tag: "الأكثر طلباً",
   },
   {
     title: "الغوص واستكشاف الشعاب",
     desc: "اكتشف عالماً مدهشاً تحت الماء بين الشعاب المرجانية والكائنات البحرية.",
-    image: "/images/hero-2.webp",
+    image: HERO_2,
     tag: "مغامرة",
   },
   {
     title: "رحلات الغروب الرومانسية",
     desc: "لحظات ساحرة مع غروب الشمس على متن رحلة بحرية لا تُنسى.",
-    image: "/images/hero-3.webp",
+    image: HERO_3,
     tag: "تجربة مميزة",
   },
 ];

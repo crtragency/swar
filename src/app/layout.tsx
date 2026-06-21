@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
+import heroOg from "../../الهيرو الاولي.webp";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     description: "عِش معنا متعة بحرية لا تُنسى وخُض تجربة بحرية لا مثيل لها.",
     type: "website",
     locale: "ar_SA",
-    images: ["/images/hero-1.webp"],
+    images: [heroOg.src],
   },
   robots: { index: true, follow: true },
 };

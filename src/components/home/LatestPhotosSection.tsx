@@ -1,15 +1,16 @@
 "use client";
 
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
+import { HERO_1, HERO_2, HERO_3 } from "./images";
 
 const PHOTOS = [
-  { src: "/images/hero-3.webp", alt: "أحدث صور رحلاتنا البحرية في ثول" },
-  { src: "/images/hero-1.webp", alt: "لقطة من رحلة يخت سوار" },
-  { src: "/images/hero-2.webp", alt: "مشهد بحري ساحر من البحر الأحمر" },
-  { src: "/images/hero-1.webp", alt: "أجواء الإبحار مع سوار" },
-  { src: "/images/hero-3.webp", alt: "غروب على متن الرحلة البحرية" },
+  { src: HERO_3, alt: "أحدث صور رحلاتنا البحرية في ثول" },
+  { src: HERO_1, alt: "لقطة من رحلة يخت سوار" },
+  { src: HERO_2, alt: "مشهد بحري ساحر من البحر الأحمر" },
+  { src: HERO_1, alt: "أجواء الإبحار مع سوار" },
+  { src: HERO_3, alt: "غروب على متن الرحلة البحرية" },
 ];
 
 export default function LatestPhotosSection() {
@@ -50,7 +51,7 @@ function PhotoCard({
   photo,
   tall = false,
 }: {
-  photo: { src: string; alt: string };
+  photo: { src: StaticImageData; alt: string };
   tall?: boolean;
 }) {
   return (
