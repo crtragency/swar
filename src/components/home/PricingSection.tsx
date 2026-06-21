@@ -1,59 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
-import { HERO_1, HERO_2, HERO_3 } from "./images";
+import { PACKAGES, DISCOUNT } from "@/lib/packages";
 
-const PLANS = [
-  {
-    name: "رحلة بحرية قصيرة",
-    duration: "ساعتان",
-    price: "490",
-    oldPrice: "650",
-    discount: "25%",
-    image: HERO_2,
-    features: [
-      "جولة بحرية على متن يخت فاخر",
-      "مشروبات ترحيبية",
-      "طاقم خدمة متكامل",
-      "سترات نجاة لجميع الركاب",
-    ],
-    featured: false,
-  },
-  {
-    name: "رحلة بحرية مميزة",
-    duration: "نصف يوم",
-    price: "990",
-    oldPrice: "1300",
-    discount: "30%",
-    image: HERO_1,
-    features: [
-      "جولة بحرية ممتدة في ثول",
-      "وجبة غداء بحرية فاخرة",
-      "معدات سباحة وغوص",
-      "جلسة تصوير احترافية",
-      "طاقم خدمة خاص",
-    ],
-    featured: true,
-  },
-  {
-    name: "رحلة اليوم الكامل",
-    duration: "يوم كامل",
-    price: "1790",
-    oldPrice: "2200",
-    discount: "20%",
-    image: HERO_3,
-    features: [
-      "تجربة بحرية متكاملة طوال اليوم",
-      "وجبات ومشروبات فاخرة",
-      "رحلة غوص بصحبة مدرب",
-      "نقاط توقف للسباحة والاستجمام",
-    ],
-    featured: false,
-  },
-];
+const ACCENT: Record<string, string> = {
+  turquoise: "from-turquoise-500 to-ocean-500",
+  green: "from-emerald-500 to-teal-500",
+  gold: "from-gold-500 to-gold-600",
+  pink: "from-pink-500 to-rose-500",
+  blue: "from-ocean-500 to-ocean-600",
+  purple: "from-violet-600 to-purple-700",
+};
 
 export default function PricingSection() {
   return (
@@ -69,110 +28,59 @@ export default function PricingSection() {
           light
         />
 
-        <div className="mt-16 grid items-stretch gap-7 lg:grid-cols-3">
-          {PLANS.map((plan, i) => (
-            <Reveal key={plan.name} delay={i * 0.1} className="h-full">
+        <Reveal>
+          <div className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/10 px-6 py-3 text-center text-sm font-bold text-gold-400 sm:text-base">
+            🌞 {DISCOUNT.ar}
+          </div>
+        </Reveal>
+
+        <div className="mt-14 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {PACKAGES.map((pkg, i) => (
+            <Reveal key={pkg.id} delay={(i % 3) * 0.08} className="h-full">
               <motion.div
                 whileHover={{ y: -8 }}
                 transition={{ type: "spring", stiffness: 220, damping: 20 }}
-                className={`relative flex h-full flex-col overflow-hidden rounded-[28px] ${
-                  plan.featured
-                    ? "bg-white shadow-gold ring-2 ring-gold-400 lg:-translate-y-4"
-                    : "glass"
+                className={`relative flex h-full flex-col overflow-hidden rounded-[26px] p-7 ${
+                  pkg.featured
+                    ? "bg-white shadow-gold ring-2 ring-gold-400"
+                    : "glass text-white"
                 }`}
               >
-                {plan.featured && (
-                  <span className="absolute right-0 top-6 z-10 rounded-l-full bg-gradient-to-l from-gold-600 to-gold-400 px-5 py-1.5 text-sm font-bold text-navy-950">
-                    الأكثر تميزاً
-                  </span>
-                )}
+                <span className="absolute left-5 top-5 rounded-full bg-red-500 px-3 py-1 text-xs font-extrabold text-white shadow-lg">
+                  خصم {DISCOUNT.pct}%
+                </span>
 
-                <div className="relative h-44 overflow-hidden">
-                  <Image
-                    src={plan.image}
-                    alt={plan.name}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 33vw"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 to-transparent" />
-                  <span className="absolute right-4 top-4 rounded-full bg-red-500 px-3 py-1 text-xs font-extrabold text-white shadow-lg">
-                    خصم {plan.discount}
+                <span className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br text-3xl ${ACCENT[pkg.accent]} ${pkg.featured ? "" : "shadow-lg"}`}>
+                  {pkg.emoji}
+                </span>
+
+                <h3 className={`mt-5 text-xl font-extrabold ${pkg.featured ? "text-navy-900" : "text-white"}`}>
+                  {pkg.title}
+                </h3>
+                <p className={`mt-1 text-sm leading-relaxed ${pkg.featured ? "text-navy-900/60" : "text-white/70"}`}>
+                  {pkg.subtitle}
+                </p>
+
+                <div className="mt-5 flex items-end gap-2">
+                  <span className={`text-xs ${pkg.featured ? "text-navy-900/50" : "text-white/55"}`}>يبدأ من</span>
+                  <span className={`text-sm line-through ${pkg.featured ? "text-navy-900/40" : "text-white/45"}`}>
+                    {pkg.oldPrice.toLocaleString()}
                   </span>
-                  <div className="absolute bottom-4 right-5">
-                    <h3
-                      className={`text-2xl font-extrabold ${
-                        plan.featured ? "text-white" : "text-white"
-                      }`}
-                    >
-                      {plan.name}
-                    </h3>
-                    <p className="text-sm text-white/80">{plan.duration}</p>
-                  </div>
+                  <span className={`text-3xl font-extrabold ${pkg.featured ? "text-navy-900" : "text-turquoise-400"}`}>
+                    {pkg.price.toLocaleString()}
+                  </span>
+                  <span className={`text-sm font-semibold ${pkg.featured ? "text-navy-900/70" : "text-white/70"}`}>
+                    {pkg.unit}
+                  </span>
                 </div>
 
-                <div className="flex flex-1 flex-col p-7">
-                  <div className="flex items-end gap-2">
-                    <span
-                      className={`text-4xl font-extrabold ${
-                        plan.featured ? "text-navy-900" : "text-white"
-                      }`}
-                    >
-                      {plan.price}
-                    </span>
-                    <span
-                      className={`text-base font-semibold ${
-                        plan.featured ? "text-navy-900/70" : "text-white/70"
-                      }`}
-                    >
-                      ر.س
-                    </span>
-                    <span
-                      className={`mr-1 text-base line-through ${
-                        plan.featured ? "text-navy-900/40" : "text-white/45"
-                      }`}
-                    >
-                      {plan.oldPrice}
-                    </span>
-                  </div>
+                <p className={`mt-3 inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${pkg.featured ? "bg-navy-50 text-ocean-600" : "bg-white/10 text-turquoise-400"}`}>
+                  👥 {pkg.capacity}
+                </p>
 
-                  <ul className="mt-6 flex flex-1 flex-col gap-3">
-                    {plan.features.map((f) => (
-                      <li
-                        key={f}
-                        className={`flex items-start gap-3 text-[15px] ${
-                          plan.featured ? "text-navy-900/80" : "text-white/85"
-                        }`}
-                      >
-                        <span
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                            plan.featured
-                              ? "bg-turquoise-500 text-white"
-                              : "bg-turquoise-500/20 text-turquoise-400"
-                          }`}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path
-                              d="M20 6L9 17l-5-5"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link
-                    href="#contact"
-                    className={`mt-8 ${plan.featured ? "btn-gold" : "btn-ocean"} w-full`}
-                  >
-                    احجز الآن
-                  </Link>
-                </div>
+                <Link href="/booking" className={`mt-6 ${pkg.featured ? "btn-gold" : "btn-ocean"} w-full text-sm`}>
+                  احجز الآن
+                </Link>
               </motion.div>
             </Reveal>
           ))}

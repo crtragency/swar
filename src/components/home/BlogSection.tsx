@@ -4,34 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
-import { HERO_1, HERO_2, HERO_3 } from "./images";
+import { HOME_IMAGES } from "./homeImages";
+import { BLOG_POSTS } from "@/lib/blog";
 
-const POSTS = [
-  {
-    title: "أفضل أوقات السنة للرحلات البحرية في ثول",
-    excerpt:
-      "تعرف على المواسم المثالية للاستمتاع بأجواء البحر الأحمر وأفضل تجارب الإبحار.",
-    image: HERO_1,
-    category: "نصائح السفر",
-    date: "10 يونيو 2026",
-  },
-  {
-    title: "دليلك الكامل لتجربة الغوص في البحر الأحمر",
-    excerpt:
-      "كل ما تحتاج معرفته قبل خوض مغامرة الغوص واستكشاف الشعاب المرجانية الساحرة.",
-    image: HERO_2,
-    category: "مغامرات",
-    date: "2 يونيو 2026",
-  },
-  {
-    title: "كيف تختار الباقة البحرية المناسبة لعائلتك",
-    excerpt:
-      "نصائح عملية لاختيار الرحلة البحرية الأمثل التي تناسب جميع أفراد العائلة.",
-    image: HERO_3,
-    category: "إرشادات",
-    date: "25 مايو 2026",
-  },
-];
+const POSTS = BLOG_POSTS.slice(0, 3).map((p, i) => ({
+  ...p,
+  image: HOME_IMAGES.blog[i],
+}));
 
 export default function BlogSection() {
   return (
@@ -46,7 +25,7 @@ export default function BlogSection() {
           />
           <Reveal>
             <Link
-              href="#blog"
+              href="/blog"
               className="hidden items-center gap-2 font-bold text-ocean-600 transition-colors hover:text-turquoise-500 sm:inline-flex"
             >
               جميع المقالات
@@ -94,7 +73,7 @@ export default function BlogSection() {
                     {post.excerpt}
                   </p>
                   <Link
-                    href="#blog"
+                    href={`/blog/${post.slug}`}
                     className="mt-5 inline-flex items-center gap-2 font-bold text-turquoise-600 transition-all group-hover:gap-3"
                   >
                     اقرأ المقال

@@ -4,20 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./ui";
 import { LOGO } from "./images";
-
-const QUICK_LINKS = [
-  { label: "رحلات بحرية في ثول", href: "#adventures" },
-  { label: "من نحن", href: "#about" },
-  { label: "الحجوزات", href: "#pricing" },
-  { label: "المدونة", href: "#blog" },
-  { label: "التواصل", href: "#contact" },
-  { label: "الوسائط", href: "#gallery" },
-];
+import { NAV, CONTACT, BOOK_CTA, waLink } from "@/lib/site";
 
 const SOCIALS = [
   { label: "انستغرام", href: "#", icon: InstagramIcon },
   { label: "تويتر", href: "#", icon: TwitterIcon },
-  { label: "واتساب", href: "#", icon: WhatsappIcon },
+  { label: "واتساب", href: waLink(), icon: WhatsappIcon },
   { label: "سناب شات", href: "#", icon: SnapIcon },
 ];
 
@@ -30,7 +22,6 @@ export default function Footer() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gold-line" />
       <div className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-ocean-500/10 blur-3xl" />
 
-      {/* CTA banner */}
       <div className="container-px relative">
         <Reveal>
           <div className="mb-16 flex flex-col items-center gap-6 rounded-[32px] bg-gradient-to-l from-ocean-600 to-turquoise-500 px-8 py-12 text-center shadow-luxe sm:flex-row sm:justify-between sm:text-start">
@@ -39,14 +30,11 @@ export default function Footer() {
                 جاهز لتجربة بحرية لا تُنسى؟
               </h3>
               <p className="mt-2 text-white/85">
-                تواصل معنا الآن واحصل على عرض سعر خاص لرحلتك القادمة.
+                احجز رحلتك الآن واستمتع بخصم 25% على جميع الرحلات بمناسبة بداية موسم الصيف.
               </p>
             </div>
-            <Link
-              href="#contact"
-              className="btn-gold shrink-0 text-base"
-            >
-              اطلب عرض سعر
+            <Link href="/booking" className="btn-gold shrink-0 text-base">
+              {BOOK_CTA}
             </Link>
           </div>
         </Reveal>
@@ -54,31 +42,24 @@ export default function Footer() {
         <div className="grid gap-12 pb-14 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3">
-              <span className="relative block h-14 w-14 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/20">
-                <Image
-                  src={LOGO}
-                  alt="شعار سوار"
-                  fill
-                  sizes="56px"
-                  className="object-cover brightness-0 invert"
-                />
-              </span>
-              <span className="text-2xl font-extrabold">سوار</span>
-            </div>
+            <span className="inline-flex h-16 items-center rounded-2xl bg-white px-4 shadow-md">
+              <Image src={LOGO} alt="شعار سوار البحرية" className="h-10 w-auto" />
+            </span>
             <p className="mt-5 leading-relaxed text-white/65">
               رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر. عِش معنا متعة بحرية لا
               تُنسى وخُض تجربة بحرية لا مثيل لها.
             </p>
             <div className="mt-6 flex gap-3">
-              {SOCIALS.map((s) => (
+              {SOCIALS.map((soc) => (
                 <Link
-                  key={s.label}
-                  href={s.href}
-                  aria-label={s.label}
+                  key={soc.label}
+                  href={soc.href}
+                  aria-label={soc.label}
+                  target={soc.href.startsWith("http") ? "_blank" : undefined}
+                  rel={soc.href.startsWith("http") ? "noopener" : undefined}
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition-all hover:-translate-y-1 hover:border-gold-400 hover:text-gold-400"
                 >
-                  <s.icon />
+                  <soc.icon />
                 </Link>
               ))}
             </div>
@@ -88,12 +69,9 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-bold">روابط سريعة</h4>
             <ul className="mt-5 flex flex-col gap-3">
-              {QUICK_LINKS.map((l) => (
+              {NAV.map((l) => (
                 <li key={l.label}>
-                  <Link
-                    href={l.href}
-                    className="text-white/65 transition-colors hover:text-gold-400"
-                  >
+                  <Link href={l.href} className="text-white/65 transition-colors hover:text-gold-400">
                     {l.label}
                   </Link>
                 </li>
@@ -107,18 +85,18 @@ export default function Footer() {
             <ul className="mt-5 flex flex-col gap-4 text-white/65">
               <li className="flex items-start gap-3">
                 <PinIcon />
-                <span>ثول، المنطقة الغربية، المملكة العربية السعودية</span>
+                <span>{CONTACT.location}</span>
               </li>
               <li className="flex items-center gap-3">
                 <PhoneIcon />
-                <a dir="ltr" href="tel:+966500000000" className="hover:text-gold-400">
-                  +966 50 000 0000
+                <a dir="ltr" href={CONTACT.phoneHref} className="hover:text-gold-400">
+                  {CONTACT.phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <MailIcon />
-                <a href="mailto:info@sewar-marine.com" className="hover:text-gold-400">
-                  info@sewar-marine.com
+                <a href={`mailto:${CONTACT.email}`} className="hover:text-gold-400">
+                  {CONTACT.email}
                 </a>
               </li>
             </ul>
@@ -147,14 +125,10 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/10">
         <div className="container-px flex flex-col items-center justify-between gap-3 py-6 text-sm text-white/55 sm:flex-row">
-          <p>© {new Date().getFullYear()} سوار البحرية. جميع الحقوق محفوظة.</p>
+          <p>© {new Date().getFullYear()} {CONTACT.brand} · {CONTACT.brandEn}. جميع الحقوق محفوظة.</p>
           <div className="flex gap-6">
-            <Link href="#" className="hover:text-white">
-              سياسة الخصوصية
-            </Link>
-            <Link href="#" className="hover:text-white">
-              الشروط والأحكام
-            </Link>
+            <Link href="#" className="hover:text-white">سياسة الخصوصية</Link>
+            <Link href="#" className="hover:text-white">الشروط والأحكام</Link>
           </div>
         </div>
       </div>

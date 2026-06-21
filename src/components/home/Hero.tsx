@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { HERO_1, HERO_2, HERO_3 } from "./images";
+import { HOME_IMAGES } from "./homeImages";
 
 const SLIDES = [
-  { src: HERO_1, alt: "رحلة بحرية فاخرة في ثول" },
-  { src: HERO_2, alt: "يخت يبحر في مياه البحر الأحمر" },
-  { src: HERO_3, alt: "غروب الشمس على متن رحلة سوار البحرية" },
+  { src: HOME_IMAGES.hero[0], alt: "يخت سوار البحرية وقت الغروب في البحر الأحمر" },
+  { src: HOME_IMAGES.hero[1], alt: "تجربة صيد بحرية مع سوار في ثول" },
+  { src: HOME_IMAGES.hero[2], alt: "يخت سوار في مرسى ثول" },
 ];
 
 const AUTOPLAY_MS = 3000;
@@ -107,7 +107,7 @@ export default function Hero() {
           <Link href="#adventures" className="btn-gold text-base">
             المزيد
           </Link>
-          <Link href="#pricing" className="btn-outline text-base">
+          <Link href="/booking" className="btn-outline text-base">
             الحجوزات
           </Link>
         </motion.div>
