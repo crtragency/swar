@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f7fafc;
+  --foreground: #0a1a2f;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-cairo), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #d7b36b;
+  color: #06101f;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #06101f;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#0b5c8c, #21c0c0);
+  border-radius: 8px;
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-sm font-semibold tracking-wide text-turquoise-600;
+  }
+
+  .heading-xl {
+    @apply font-cairo text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl lg:text-6xl;
+  }
+
+  .heading-lg {
+    @apply font-cairo text-3xl font-extrabold leading-tight text-navy-900 sm:text-4xl lg:text-5xl;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-l from-gold-600 to-gold-400 px-7 py-3.5 font-bold text-navy-950 shadow-gold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-luxe active:translate-y-0;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-white/5 px-7 py-3.5 font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/15;
+  }
+
+  .btn-ocean {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-l from-ocean-600 to-turquoise-500 px-7 py-3.5 font-bold text-white shadow-luxe transition-all duration-300 hover:-translate-y-0.5;
+  }
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
