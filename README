@@ -1,0 +1,107 @@
+# Sewar Marine Website
+
+Modern corporate website for Sewar Marine, built with a modern web stack and deployed on Vercel.
+
+## Overview
+
+Sewar Marine is a marine services company providing specialized maritime solutions, offshore support, vessel operations, marine maintenance, and industry-focused services. This project represents the next-generation digital presence of the company, replacing the previous WordPress-based website with a faster, more scalable, and developer-friendly platform.
+
+## Features
+
+* Modern responsive design
+* Multi-language support (Arabic & English)
+* SEO optimized structure
+* High-performance architecture
+* Mobile-first user experience
+* Fast page loading
+* Scalable content management
+* Secure deployment pipeline
+* Contact and inquiry forms
+* Service showcase pages
+* Portfolio & project sections
+
+## Technology Stack
+
+* Frontend: Next.js
+* Styling: Tailwind CSS
+* Hosting: Vercel
+* Version Control: GitHub
+* AI-Assisted Development: Cloud Code
+* Analytics & SEO Optimization
+
+## Project Structure
+
+```bash
+/
+├── public/
+├── src/
+│   ├── app/
+│   ├── components/
+│   ├── sections/
+│   ├── lib/
+│   └── assets/
+├── docs/
+└── README.md
+```
+
+## Getting Started
+
+### Clone Repository
+
+```bash
+git clone https://github.com/your-username/sewar-marine.git
+```
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+### Build Production Version
+
+```bash
+npm run build
+```
+
+## Deployment
+
+The project is automatically deployed through Vercel.
+
+```bash
+npm run build
+```
+
+## Performance Goals
+
+* Optimized Core Web Vitals
+* Fast First Contentful Paint (FCP)
+* Excellent Lighthouse Scores
+* Mobile & Desktop Optimization
+
+## SEO Strategy
+
+* Structured metadata
+* Open Graph support
+* Dynamic sitemap
+* Semantic HTML
+* Search engine optimization best practices
+
+## Future Enhancements
+
+* Advanced CMS integration
+* Marine project management dashboard
+* Client portal
+* AI-powered inquiry assistant
+* Service quotation system
+
+## License
+
+Copyright © Sewar Marine.
+All rights reserved.
