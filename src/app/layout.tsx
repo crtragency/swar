@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import heroOg from "../../الهيرو الاولي.webp";
+import Navbar from "@/components/home/Navbar";
+import Footer from "@/components/home/Footer";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -49,7 +51,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body className="font-cairo antialiased">{children}</body>
+      <body className="font-cairo antialiased">
+        <Navbar />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

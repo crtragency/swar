@@ -3,15 +3,20 @@
 import Image, { type StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
-import { HERO_1, HERO_2, HERO_3 } from "./images";
+import { HOME_IMAGES } from "./homeImages";
 
-const PHOTOS = [
-  { src: HERO_3, alt: "أحدث صور رحلاتنا البحرية في ثول" },
-  { src: HERO_1, alt: "لقطة من رحلة يخت سوار" },
-  { src: HERO_2, alt: "مشهد بحري ساحر من البحر الأحمر" },
-  { src: HERO_1, alt: "أجواء الإبحار مع سوار" },
-  { src: HERO_3, alt: "غروب على متن الرحلة البحرية" },
+const ALTS = [
+  "أحدث صور رحلاتنا البحرية في ثول",
+  "لقطة من رحلة يخت سوار",
+  "مشهد بحري ساحر من البحر الأحمر",
+  "أجواء الإبحار مع سوار",
+  "غروب على متن الرحلة البحرية",
+  "تفاصيل من يخت سوار البحرية",
 ];
+const PHOTOS = HOME_IMAGES.latest.map((src, i) => ({
+  src,
+  alt: ALTS[i] || "صورة من رحلات سوار البحرية",
+}));
 
 export default function LatestPhotosSection() {
   return (

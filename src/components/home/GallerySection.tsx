@@ -4,16 +4,23 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
-import { HERO_1, HERO_2, HERO_3 } from "./images";
+import { HOME_IMAGES } from "./homeImages";
 
-const IMAGES = [
-  { src: HERO_1, alt: "لحظة بحرية على متن يخت سوار", span: "row-span-2" },
-  { src: HERO_2, alt: "إبحار في مياه ثول الصافية", span: "" },
-  { src: HERO_3, alt: "غروب ساحر فوق البحر الأحمر", span: "" },
-  { src: HERO_2, alt: "متعة السباحة في عرض البحر", span: "" },
-  { src: HERO_3, alt: "أجواء عائلية على متن الرحلة", span: "row-span-2" },
-  { src: HERO_1, alt: "مغامرة بحرية لا تُنسى", span: "" },
+const ALTS = [
+  "لحظة بحرية على متن يخت سوار",
+  "إبحار في مياه ثول الصافية",
+  "غروب ساحر فوق البحر الأحمر",
+  "متعة السباحة في عرض البحر",
+  "أجواء على متن الرحلة البحرية",
+  "مغامرة بحرية لا تُنسى",
+  "تفاصيل يخت سوار البحرية",
 ];
+const SPANS = ["row-span-2", "", "", "", "row-span-2", "", ""];
+const IMAGES = HOME_IMAGES.gallery.map((src, i) => ({
+  src,
+  alt: ALTS[i] || "صورة من رحلات سوار البحرية",
+  span: SPANS[i] || "",
+}));
 
 export default function GallerySection() {
   const [active, setActive] = useState<number | null>(null);
