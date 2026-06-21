@@ -1,5 +1,4 @@
 import Hero from "@/components/home/Hero";
-import AdventureSection from "@/components/home/AdventureSection";
 import PricingSection from "@/components/home/PricingSection";
 import GallerySection from "@/components/home/GallerySection";
 import PackagesSection from "@/components/home/PackagesSection";
@@ -12,7 +11,6 @@ export default function HomePage() {
   return (
     <main>
       <Hero />
-      <AdventureSection />
       <PricingSection />
       <GallerySection />
       <PackagesSection />

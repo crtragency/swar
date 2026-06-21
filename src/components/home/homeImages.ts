@@ -12,7 +12,7 @@ const take = (n: number) => pool.slice(cursor, (cursor += n));
 
 export const HOME_IMAGES = {
   hero,
-  adventure: take(6),
+  pricing: take(6),
   packages: take(3),
   gallery: take(7),
   latest: take(5),

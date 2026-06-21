@@ -134,21 +134,6 @@ export default function Hero() {
           </button>
         ))}
       </div>
-
-      {/* Scroll hint */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="absolute bottom-9 left-8 z-10 hidden flex-col items-center gap-2 text-white/70 lg:flex"
-      >
-        <span className="text-xs tracking-widest">اسحب للأسفل</span>
-        <motion.span
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.6 }}
-          className="h-8 w-px bg-gradient-to-b from-white/70 to-transparent"
-        />
-      </motion.div>
     </section>
   );
 }
