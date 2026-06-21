@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
-import { addBooking, getBookings, type Booking } from "@/lib/store";
+import { addBooking, getBookings, updateStatus, type Booking } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "sewar2026";
+
+function isAdmin(req: Request) {
+  const params = new URL(req.url).searchParams;
+  const user = req.headers.get("x-admin-user") || params.get("user");
+  const pass = req.headers.get("x-admin-password") || params.get("password");
+  return user === ADMIN_USERNAME && pass === ADMIN_PASSWORD;
+}
 
 function newId() {
   return "BK-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -57,15 +64,35 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const params = new URL(req.url).searchParams;
-  const user = req.headers.get("x-admin-user") || params.get("user");
-  const pass = req.headers.get("x-admin-password") || params.get("password");
-  if (user !== ADMIN_USERNAME || pass !== ADMIN_PASSWORD) {
+  if (!isAdmin(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
     const bookings = await getBookings();
     return NextResponse.json({ bookings });
+  } catch {
+    return NextResponse.json({ error: "error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "bad request" }, { status: 400 });
+  }
+  const id = String(body.id || "");
+  const status = body.status as Booking["status"];
+  if (!id || !["pending", "confirmed", "cancelled"].includes(status)) {
+    return NextResponse.json({ error: "bad request" }, { status: 422 });
+  }
+  try {
+    await updateStatus(id, status);
+    return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "error" }, { status: 500 });
   }

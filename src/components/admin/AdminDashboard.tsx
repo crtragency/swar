@@ -41,6 +41,19 @@ export default function AdminDashboard() {
     }
   }
 
+  async function setStatus(id: string, status: Booking["status"]) {
+    setBookings((bs) => bs.map((b) => (b.id === id ? { ...b, status } : b)));
+    try {
+      await fetch("/api/bookings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-admin-user": username, "x-admin-password": password },
+        body: JSON.stringify({ id, status }),
+      });
+    } catch {
+      /* optimistic; refresh to resync if needed */
+    }
+  }
+
   const shown = useMemo(
     () => (filter === "all" ? bookings : bookings.filter((b) => b.status === filter)),
     [bookings, filter]
@@ -137,7 +150,20 @@ export default function AdminDashboard() {
                   <p className="mt-3 text-sm"><span className="text-navy-900/50">الإضافات: </span><span className="text-navy-900/80">{b.addons.join("، ")}</span></p>
                 )}
                 {b.notes && <p className="mt-3 rounded-xl bg-navy-50/60 px-3 py-2 text-sm text-navy-900/70">📝 {b.notes}</p>}
-                <p className="mt-3 text-xs text-navy-900/40">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-navy-100 pt-3">
+                  <span className="text-xs text-navy-900/40">{new Date(b.createdAt).toLocaleString("ar-SA")}</span>
+                  <div className="flex gap-2">
+                    {b.status !== "confirmed" && (
+                      <button onClick={() => setStatus(b.id, "confirmed")} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">تأكيد</button>
+                    )}
+                    {b.status !== "cancelled" && (
+                      <button onClick={() => setStatus(b.id, "cancelled")} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">إلغاء</button>
+                    )}
+                    {b.status !== "pending" && (
+                      <button onClick={() => setStatus(b.id, "pending")} className="rounded-lg bg-navy-100 px-3 py-1.5 text-xs font-bold text-navy-700 transition-colors hover:bg-navy-200">إرجاع</button>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
