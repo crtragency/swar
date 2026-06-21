@@ -5,8 +5,8 @@ import Image, { type StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/home/ui";
 import { PACKAGES, DISCOUNT, BANK, type Pkg } from "@/lib/packages";
-import { waLink } from "@/lib/site";
 import { ALL_PHOTOS, FISHING, HERO_SUNSET, MARINA_BOAT, CABIN } from "@/components/home/images";
+import BookingModal from "./BookingModal";
 
 const PKG_IMAGE: Record<string, StaticImageData> = {
   swim: ALL_PHOTOS[1],
@@ -17,11 +17,9 @@ const PKG_IMAGE: Record<string, StaticImageData> = {
   vip: HERO_SUNSET,
 };
 
-function bookMessage(pkg: Pkg) {
-  return `مرحباً سوار البحرية 🌊\nأرغب بحجز: ${pkg.title}\nالسعر يبدأ من ${pkg.price.toLocaleString()} ${pkg.unit} (بعد خصم ${DISCOUNT.pct}%)\nالسعة: ${pkg.capacity}\nبرجاء التواصل لتأكيد الموعد.`;
-}
-
 export default function BookingPackages() {
+  const [active, setActive] = useState<{ pkg: Pkg; image: StaticImageData } | null>(null);
+
   return (
     <section className="relative bg-navy-50/40 py-20 sm:py-28">
       <div className="container-px">
@@ -33,12 +31,17 @@ export default function BookingPackages() {
         </Reveal>
 
         <div className="grid gap-8 lg:grid-cols-2">
-          {PACKAGES.map((pkg, i) => (
-            <Reveal key={pkg.id} delay={(i % 2) * 0.08} className="h-full">
-              <PackageCard pkg={pkg} image={PKG_IMAGE[pkg.id] ?? CABIN} />
-            </Reveal>
-          ))}
+          {PACKAGES.map((pkg, i) => {
+            const image = PKG_IMAGE[pkg.id] ?? CABIN;
+            return (
+              <Reveal key={pkg.id} delay={(i % 2) * 0.08} className="h-full">
+                <PackageCard pkg={pkg} image={image} onBook={() => setActive({ pkg, image })} />
+              </Reveal>
+            );
+          })}
         </div>
+
+        <BookingModal pkg={active?.pkg ?? null} image={active?.image} onClose={() => setActive(null)} />
 
         {/* Bank details */}
         <Reveal>
@@ -78,7 +81,7 @@ function BankRow({ label, value, mono }: { label: string; value: string; mono?: 
   );
 }
 
-function PackageCard({ pkg, image }: { pkg: Pkg; image: StaticImageData }) {
+function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData; onBook: () => void }) {
   return (
     <motion.article
       whileHover={{ y: -6 }}
@@ -184,11 +187,11 @@ function PackageCard({ pkg, image }: { pkg: Pkg; image: StaticImageData }) {
           <p className="mt-5 rounded-2xl bg-navy-50/70 px-4 py-3 text-xs leading-relaxed text-navy-900/65">{pkg.note}</p>
         )}
 
-        <a href={waLink(bookMessage(pkg))} target="_blank" rel="noopener" className="mt-auto pt-6">
-          <span className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-l from-ocean-600 to-turquoise-500 py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02]">
-            احجز الآن عبر واتساب
+        <button type="button" onClick={onBook} className="mt-auto pt-6">
+          <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-ocean-600 to-turquoise-500 py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02]">
+            خصّص رحلتك واحجز
           </span>
-        </a>
+        </button>
       </div>
     </motion.article>
   );

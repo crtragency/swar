@@ -33,9 +33,13 @@ export type Pkg = {
   featured?: boolean;
   accent: "turquoise" | "green" | "gold" | "pink" | "blue" | "purple";
   yacht: string;
-  rows?: Row[];
-  tiers?: Tier[];
-  addons?: Row[];
+  // calculator fields
+  maxBase: number; // persons covered by the base price
+  extraPerPerson: number; // cost per extra person above maxBase
+  maxPersons: number; // capacity cap
+  rows?: Row[]; // selectable durations (price = base)
+  tiers?: Tier[]; // selectable party tiers (price = base)
+  addons?: Row[]; // optional add-ons
   includes?: string[];
   note?: string;
 };
@@ -51,6 +55,9 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال / رحلة",
     capacity: "5 أشخاص · 4 ساعات",
     accent: "turquoise",
+    maxBase: 5,
+    extraPerPerson: 100,
+    maxPersons: 11,
     yacht: YACHT_FEATURES,
     rows: [
       { label: "السعر الأساسي — 4 ساعات + مشروبات · لـ 5 أشخاص + أدوات سلامة", oldPrice: 1200, price: 900 },
@@ -74,6 +81,9 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال / رحلة",
     capacity: "لـ 5 أشخاص",
     accent: "green",
+    maxBase: 5,
+    extraPerPerson: 100,
+    maxPersons: 11,
     yacht: YACHT_FEATURES,
     rows: [
       { label: "🕕 6 ساعات — حتى 5 أشخاص", oldPrice: 1400, price: 1050 },
@@ -97,6 +107,9 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال",
     capacity: "لـ 5 أشخاص",
     accent: "gold",
+    maxBase: 5,
+    extraPerPerson: 100,
+    maxPersons: 11,
     yacht: YACHT_FEATURES,
     rows: [
       { label: "⏱️ نصف ساعة — حتى 5 أشخاص", oldPrice: 250, price: 188 },
@@ -115,6 +128,9 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال",
     capacity: "لـ 5 أشخاص",
     accent: "pink",
+    maxBase: 5,
+    extraPerPerson: 100,
+    maxPersons: 10,
     yacht: YACHT_FEATURES,
     tiers: [
       {
@@ -151,12 +167,14 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال / رحلة",
     capacity: "لـ 5 أشخاص",
     accent: "blue",
+    maxBase: 5,
+    extraPerPerson: 50,
+    maxPersons: 10,
     yacht: "يتسع لـ10 أشخاص · غرفة نوم خاصة · مطبخ تحضيري متكامل · دورة مياه · ماء حلو للغسيل والاستحمام",
     rows: [
       { label: "🌅 الرحلة الصباحية — 6:00 ص حتى 10:00 ص", oldPrice: 900, price: 675, note: "حتى 5 أشخاص" },
       { label: "🌇 رحلة وقت الغروب — 2:00 م حتى 6:00 م", oldPrice: 900, price: 675, note: "حتى 5 أشخاص" },
     ],
-    addons: [{ label: "👤 كل شخص إضافي (فوق 5)", price: 50 }],
     includes: [
       "🐬 مشاهدة الدلافين",
       "🕐 4 ساعات كاملة",
@@ -177,6 +195,9 @@ export const PACKAGES: Pkg[] = [
     capacity: "لـ 5 أشخاص · 8 ساعات",
     featured: true,
     accent: "purple",
+    maxBase: 5,
+    extraPerPerson: 100,
+    maxPersons: 11,
     yacht: YACHT_FEATURES,
     includes: [
       "🕗 8 ساعات كاملة",
