@@ -59,15 +59,15 @@ body {
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-l from-gold-600 to-gold-400 px-7 py-3.5 font-bold text-navy-950 shadow-gold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-luxe active:translate-y-0;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-gold-600 to-gold-400 px-7 py-3.5 font-bold text-navy-950 shadow-gold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-luxe active:translate-y-0;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/40 bg-white/5 px-7 py-3.5 font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/15;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/5 px-7 py-3.5 font-bold text-white backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/15;
   }
 
   .btn-ocean {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-l from-ocean-600 to-turquoise-500 px-7 py-3.5 font-bold text-white shadow-luxe transition-all duration-300 hover:-translate-y-0.5;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-ocean-600 to-turquoise-500 px-7 py-3.5 font-bold text-white shadow-luxe transition-all duration-300 hover:-translate-y-0.5;
   }
 }
 
