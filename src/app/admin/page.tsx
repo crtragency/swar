@@ -2,14 +2,11 @@ import type { Metadata } from "next";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 
 export const metadata: Metadata = {
-  title: "لوحة التحكم",
+  title: "لوحة تحكم سوار البحرية",
+  description: "لوحة تحكم إدارة حجوزات سوار البحرية",
   robots: { index: false, follow: false },
 };
 
 export default function AdminPage() {
-  return (
-    <main className="min-h-screen bg-navy-50/40 pt-24">
-      <AdminDashboard />
-    </main>
-  );
+  return <AdminDashboard />;
 }

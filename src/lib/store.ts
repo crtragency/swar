@@ -16,6 +16,10 @@ export type Booking = {
   phone: string;
   notes: string;
   payMethod: "bank" | "arrival";
+  payType: "full" | "deposit";
+  deposit: number;
+  amountDue: number;
+  promo: string;
   total: number;
   status: "pending" | "confirmed" | "cancelled";
 };

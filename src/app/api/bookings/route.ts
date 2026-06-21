@@ -3,6 +3,7 @@ import { addBooking, getBookings, type Booking } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "sewar2026";
 
 function newId() {
@@ -38,6 +39,10 @@ export async function POST(req: Request) {
     phone,
     notes: String(body.notes || ""),
     payMethod: body.payMethod === "arrival" ? "arrival" : "bank",
+    payType: body.payType === "deposit" ? "deposit" : "full",
+    deposit: Number(body.deposit) || 0,
+    amountDue: Number(body.amountDue) || Number(body.total) || 0,
+    promo: String(body.promo || ""),
     total: Number(body.total) || 0,
     status: "pending",
   };
@@ -52,8 +57,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("x-admin-password") || new URL(req.url).searchParams.get("password");
-  if (auth !== ADMIN_PASSWORD) {
+  const params = new URL(req.url).searchParams;
+  const user = req.headers.get("x-admin-user") || params.get("user");
+  const pass = req.headers.get("x-admin-password") || params.get("password");
+  if (user !== ADMIN_USERNAME || pass !== ADMIN_PASSWORD) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {

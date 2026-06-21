@@ -20,6 +20,8 @@ export const YACHT_FEATURES =
 
 export type Tier = { name: string; oldPrice: number; price: number; note: string; items: string[] };
 export type Row = { label: string; oldPrice?: number; price: number; note?: string };
+// Optional add-on. `stepper` => quantity selectable up to `max`; otherwise a toggle.
+export type Addon = { id: string; label: string; price: number; stepper?: boolean; max?: number };
 
 export type Pkg = {
   id: string;
@@ -33,13 +35,16 @@ export type Pkg = {
   featured?: boolean;
   accent: "turquoise" | "green" | "gold" | "pink" | "blue" | "purple";
   yacht: string;
-  // calculator fields
+  // calculator fields (prices below are the ORIGINAL pre-discount values; the
+  // modal applies the 25% season discount to the whole subtotal)
+  baseDuration: string; // e.g. "4 ساعات"
   maxBase: number; // persons covered by the base price
   extraPerPerson: number; // cost per extra person above maxBase
   maxPersons: number; // capacity cap
-  rows?: Row[]; // selectable durations (price = base)
-  tiers?: Tier[]; // selectable party tiers (price = base)
-  addons?: Row[]; // optional add-ons
+  dayType?: number; // weekend surcharge (e.g. fishing +200)
+  rows?: Row[]; // selectable durations
+  tiers?: Tier[]; // selectable party tiers
+  addons?: Addon[]; // optional add-ons
   includes?: string[];
   note?: string;
 };
@@ -55,6 +60,7 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال / رحلة",
     capacity: "5 أشخاص · 4 ساعات",
     accent: "turquoise",
+    baseDuration: "4 ساعات",
     maxBase: 5,
     extraPerPerson: 100,
     maxPersons: 11,
@@ -63,12 +69,12 @@ export const PACKAGES: Pkg[] = [
       { label: "السعر الأساسي — 4 ساعات + مشروبات · لـ 5 أشخاص + أدوات سلامة", oldPrice: 1200, price: 900 },
     ],
     addons: [
-      { label: "⏱️ ساعة إضافية", price: 100 },
-      { label: "🍉 سناك وفواكه", price: 250 },
-      { label: "🎣 صيد + عدة صيد + طُعم", price: 250 },
-      { label: "🛶 كاياك", price: 150 },
-      { label: "📸 تصوير احترافي", price: 500 },
-      { label: "🌙 نهاية الأسبوع", price: 200 },
+      { id: "extra_hour", label: "⏱️ ساعة إضافية", price: 100, stepper: true, max: 4 },
+      { id: "snacks", label: "🍉 سناك وفواكه", price: 250 },
+      { id: "fishing", label: "🎣 صيد + عدة صيد + طُعم", price: 250 },
+      { id: "kayak", label: "🛶 كاياك", price: 150 },
+      { id: "photo", label: "📸 تصوير احترافي", price: 500 },
+      { id: "weekend", label: "🌙 نهاية الأسبوع", price: 200 },
     ],
   },
   {
@@ -81,9 +87,11 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال / رحلة",
     capacity: "لـ 5 أشخاص",
     accent: "green",
+    baseDuration: "6 ساعات",
     maxBase: 5,
     extraPerPerson: 100,
     maxPersons: 11,
+    dayType: 200,
     yacht: YACHT_FEATURES,
     rows: [
       { label: "🕕 6 ساعات — حتى 5 أشخاص", oldPrice: 1400, price: 1050 },
@@ -91,8 +99,9 @@ export const PACKAGES: Pkg[] = [
       { label: "🕙 10 ساعات — حتى 5 أشخاص", oldPrice: 1900, price: 1425 },
     ],
     addons: [
-      { label: "🌙 نهاية الأسبوع", price: 200 },
-      { label: "🎣 عدة صيد + طُعم (من عندنا)", price: 250 },
+      { id: "gear_rent", label: "🎣 عدة صيد + طُعم (استئجار من عندنا)", price: 250 },
+      { id: "cooler", label: "📦 حافظة للسمك", price: 50 },
+      { id: "hospitality", label: "☕ ضيافة شاهي وقهوة", price: 50 },
     ],
     includes: ["❄️ مياه شرب وثلج"],
     note: "نوفر مياه الشرب والثلج فقط ضمن جميع الباقات. عدة الصيد والطُعم وحافظة السمك والضيافة إضافات اختيارية — أحضر عدتك الخاصة مجاناً، أو استأجرها منا بمقابل +250 ريال.",
@@ -107,6 +116,7 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال",
     capacity: "لـ 5 أشخاص",
     accent: "gold",
+    baseDuration: "حسب الاختيار",
     maxBase: 5,
     extraPerPerson: 100,
     maxPersons: 11,
@@ -128,6 +138,7 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال",
     capacity: "لـ 5 أشخاص",
     accent: "pink",
+    baseDuration: "حسب الباقة",
     maxBase: 5,
     extraPerPerson: 100,
     maxPersons: 10,
@@ -167,6 +178,7 @@ export const PACKAGES: Pkg[] = [
     unit: "ريال / رحلة",
     capacity: "لـ 5 أشخاص",
     accent: "blue",
+    baseDuration: "4 ساعات",
     maxBase: 5,
     extraPerPerson: 50,
     maxPersons: 10,
@@ -195,6 +207,7 @@ export const PACKAGES: Pkg[] = [
     capacity: "لـ 5 أشخاص · 8 ساعات",
     featured: true,
     accent: "purple",
+    baseDuration: "8 ساعات",
     maxBase: 5,
     extraPerPerson: 100,
     maxPersons: 11,
