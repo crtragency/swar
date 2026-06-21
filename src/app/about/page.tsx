@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 };
 
 const VALUES = [
-  { icon: "⚓", title: "خبرة بحرية", desc: "سنوات من الخبرة في تنظيم أرقى الرحلات البحرية على ساحل البحر الأحمر." },
-  { icon: "🛟", title: "سلامة تامة", desc: "أدوات سلامة كاملة ومعتمدة في جميع رحلاتنا لراحة بالك التامة." },
-  { icon: "✨", title: "خدمة فاخرة", desc: "طاقم محترف وضيافة راقية تجعل كل لحظة في رحلتك استثنائية." },
-  { icon: "🌊", title: "وجهات ساحرة", desc: "أجمل مواقع ثول والبحر الأحمر من جزر رملية ومواقع صيد ومشاهدة دلافين." },
+  { title: "خبرة بحرية", desc: "سنوات من الخبرة في تنظيم أرقى الرحلات البحرية على ساحل البحر الأحمر." },
+  { title: "سلامة تامة", desc: "أدوات سلامة كاملة ومعتمدة في جميع رحلاتنا لراحة بالك التامة." },
+  { title: "خدمة فاخرة", desc: "طاقم محترف وضيافة راقية تجعل كل لحظة في رحلتك استثنائية." },
+  { title: "وجهات ساحرة", desc: "أجمل مواقع ثول والبحر الأحمر من جزر رملية ومواقع صيد ومشاهدة دلافين." },
 ];
 
 const FEATURES = [
@@ -65,7 +65,10 @@ export default function AboutPage() {
             {VALUES.map((v, i) => (
               <Reveal key={v.title} delay={i * 0.08}>
                 <div className="group h-full rounded-[26px] border border-navy-50 bg-white p-7 shadow-luxe transition-transform hover:-translate-y-2">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-ocean-500 to-turquoise-500 text-3xl">{v.icon}</span>
+                  <span className="block font-cairo text-3xl font-extrabold text-gold-500">
+                    0{i + 1}
+                  </span>
+                  <span className="mt-3 block h-px w-10 bg-gold-400" />
                   <h3 className="mt-5 text-xl font-extrabold text-navy-900">{v.title}</h3>
                   <p className="mt-2 leading-relaxed text-navy-900/65">{v.desc}</p>
                 </div>

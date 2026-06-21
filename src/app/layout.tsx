@@ -36,6 +36,10 @@ export const metadata: Metadata = {
     images: [heroOg.src],
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: [{ url: "/icon.webp", type: "image/webp" }],
+    apple: [{ url: "/icon.webp" }],
+  },
 };
 
 export const viewport: Viewport = {

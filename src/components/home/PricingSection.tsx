@@ -1,88 +1,97 @@
 "use client";
 
+import { useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
 import { PACKAGES, DISCOUNT } from "@/lib/packages";
-
-const ACCENT: Record<string, string> = {
-  turquoise: "from-turquoise-500 to-ocean-500",
-  green: "from-emerald-500 to-teal-500",
-  gold: "from-gold-500 to-gold-600",
-  pink: "from-pink-500 to-rose-500",
-  blue: "from-ocean-500 to-ocean-600",
-  purple: "from-violet-600 to-purple-700",
-};
+import { HOME_IMAGES } from "./homeImages";
 
 export default function PricingSection() {
-  return (
-    <section id="pricing" className="relative overflow-hidden bg-ocean-gradient py-24 sm:py-32">
-      <div className="pointer-events-none absolute -right-32 top-10 h-96 w-96 rounded-full bg-turquoise-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute -left-32 bottom-0 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl" />
+  const trackRef = useRef<HTMLDivElement>(null);
 
+  const scroll = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>("[data-card]");
+    const amount = card ? card.offsetWidth + 24 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  };
+
+  return (
+    <section id="pricing" className="relative overflow-hidden bg-navy-950 py-24 sm:py-32">
       <div className="container-px relative">
-        <SectionHeading
-          eyebrow="باقات الحجز"
-          title="أسعار رحلات بحرية ثول"
-          description="اختر الباقة التي تناسبك واحجز تجربتك البحرية الفاخرة بأفضل الأسعار وأرقى الخدمات."
-          light
-        />
+        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+          <SectionHeading
+            eyebrow="باقات الحجز"
+            title="أسعار رحلات بحرية ثول"
+            description="اختر الباقة التي تناسبك واحجز تجربتك البحرية الفاخرة بأفضل الأسعار."
+            light
+            align="start"
+          />
+          <div className="hidden gap-3 sm:flex">
+            <button type="button" aria-label="السابق" onClick={() => scroll(1)} className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:border-gold-400 hover:text-gold-400">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <button type="button" aria-label="التالي" onClick={() => scroll(-1)} className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:border-gold-400 hover:text-gold-400">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          </div>
+        </div>
 
         <Reveal>
-          <div className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/10 px-6 py-3 text-center text-sm font-bold text-gold-400 sm:text-base">
-            🌞 {DISCOUNT.ar}
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/5 px-5 py-2.5 text-sm font-bold text-gold-400">
+            {DISCOUNT.ar}
           </div>
         </Reveal>
 
-        <div className="mt-14 grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div
+          ref={trackRef}
+          dir="rtl"
+          className="mt-10 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {PACKAGES.map((pkg, i) => (
-            <Reveal key={pkg.id} delay={(i % 3) * 0.08} className="h-full">
-              <motion.div
-                whileHover={{ y: -8 }}
-                transition={{ type: "spring", stiffness: 220, damping: 20 }}
-                className={`relative flex h-full flex-col overflow-hidden rounded-[26px] p-7 ${
-                  pkg.featured
-                    ? "bg-white shadow-gold ring-2 ring-gold-400"
-                    : "glass text-white"
-                }`}
-              >
-                <span className="absolute left-5 top-5 rounded-full bg-red-500 px-3 py-1 text-xs font-extrabold text-white shadow-lg">
+            <motion.div
+              key={pkg.id}
+              data-card
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6, delay: (i % 3) * 0.08 }}
+              className={`group relative flex w-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-[26px] bg-white sm:w-[340px] ${
+                pkg.featured ? "ring-2 ring-gold-400" : ""
+              }`}
+            >
+              <div className="relative h-48 overflow-hidden">
+                <Image
+                  src={HOME_IMAGES.pricing[i]}
+                  alt={pkg.title}
+                  fill
+                  sizes="340px"
+                  className="object-cover transition-transform duration-[1200ms] group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-950/85 via-navy-950/20 to-transparent" />
+                <span className="absolute right-4 top-4 rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">
                   خصم {DISCOUNT.pct}%
                 </span>
-
-                <span className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br text-3xl ${ACCENT[pkg.accent]} ${pkg.featured ? "" : "shadow-lg"}`}>
-                  {pkg.emoji}
-                </span>
-
-                <h3 className={`mt-5 text-xl font-extrabold ${pkg.featured ? "text-navy-900" : "text-white"}`}>
-                  {pkg.title}
-                </h3>
-                <p className={`mt-1 text-sm leading-relaxed ${pkg.featured ? "text-navy-900/60" : "text-white/70"}`}>
-                  {pkg.subtitle}
-                </p>
-
-                <div className="mt-5 flex items-end gap-2">
-                  <span className={`text-xs ${pkg.featured ? "text-navy-900/50" : "text-white/55"}`}>يبدأ من</span>
-                  <span className={`text-sm line-through ${pkg.featured ? "text-navy-900/40" : "text-white/45"}`}>
-                    {pkg.oldPrice.toLocaleString()}
-                  </span>
-                  <span className={`text-3xl font-extrabold ${pkg.featured ? "text-navy-900" : "text-turquoise-400"}`}>
-                    {pkg.price.toLocaleString()}
-                  </span>
-                  <span className={`text-sm font-semibold ${pkg.featured ? "text-navy-900/70" : "text-white/70"}`}>
-                    {pkg.unit}
-                  </span>
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <h3 className="text-xl font-extrabold text-white drop-shadow">{pkg.title}</h3>
                 </div>
+              </div>
 
-                <p className={`mt-3 inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${pkg.featured ? "bg-navy-50 text-ocean-600" : "bg-white/10 text-turquoise-400"}`}>
-                  👥 {pkg.capacity}
-                </p>
-
-                <Link href="/booking" className={`mt-6 ${pkg.featured ? "btn-gold" : "btn-ocean"} w-full text-sm`}>
-                  احجز الآن
-                </Link>
-              </motion.div>
-            </Reveal>
+              <div className="flex flex-1 flex-col p-6">
+                <p className="text-sm leading-relaxed text-navy-900/60">{pkg.subtitle}</p>
+                <div className="mt-4 flex items-end gap-2">
+                  <span className="text-xs text-navy-900/45">يبدأ من</span>
+                  <span className="text-sm text-navy-900/40 line-through">{pkg.oldPrice.toLocaleString()}</span>
+                  <span className="text-3xl font-extrabold text-navy-900">{pkg.price.toLocaleString()}</span>
+                  <span className="text-sm font-semibold text-navy-900/60">{pkg.unit}</span>
+                </div>
+                <p className="mt-3 w-fit rounded-full bg-navy-50 px-3 py-1 text-xs font-semibold text-ocean-600">{pkg.capacity}</p>
+                <Link href="/booking" className="btn-ocean mt-6 w-full text-sm">احجز الآن</Link>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
