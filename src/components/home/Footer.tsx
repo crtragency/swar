@@ -4,14 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./ui";
 import { LOGO } from "./images";
-import { NAV, CONTACT, BOOK_CTA, waLink } from "@/lib/site";
-
-const SOCIALS = [
-  { label: "انستغرام", href: "#", icon: InstagramIcon },
-  { label: "تويتر", href: "#", icon: TwitterIcon },
-  { label: "واتساب", href: waLink(), icon: WhatsappIcon },
-  { label: "سناب شات", href: "#", icon: SnapIcon },
-];
+import { NAV, CONTACT, BOOK_CTA, SOCIALS } from "@/lib/site";
+import SocialIcon from "@/components/SocialIcon";
 
 export default function Footer() {
   return (
@@ -49,18 +43,19 @@ export default function Footer() {
               رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر. عِش معنا متعة بحرية لا
               تُنسى وخُض تجربة بحرية لا مثيل لها.
             </p>
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               {SOCIALS.map((soc) => (
-                <Link
-                  key={soc.label}
+                <a
+                  key={soc.key}
                   href={soc.href}
                   aria-label={soc.label}
-                  target={soc.href.startsWith("http") ? "_blank" : undefined}
-                  rel={soc.href.startsWith("http") ? "noopener" : undefined}
+                  title={soc.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition-all hover:-translate-y-1 hover:border-gold-400 hover:text-gold-400"
                 >
-                  <soc.icon />
-                </Link>
+                  <SocialIcon name={soc.key} />
+                </a>
               ))}
             </div>
           </div>
@@ -118,37 +113,7 @@ export default function Footer() {
   );
 }
 
-/* ---------- icons ---------- */
-function InstagramIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="2" width="20" height="20" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-function TwitterIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
-function WhatsappIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1112 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7 1-.3.2-.5.1a6.5 6.5 0 01-1.9-1.2 7.2 7.2 0 01-1.3-1.7c-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4c0-.1-.5-1.3-.7-1.7s-.4-.4-.5-.4h-.5a1 1 0 00-.7.3A3 3 0 006 8.7c0 1.7 1.3 3.4 1.5 3.6s2.5 3.8 6 5.1c2.9 1.1 2.9.7 3.5.7s1.7-.7 2-1.4.3-1.3.2-1.4-.3-.2-.5-.3z" />
-    </svg>
-  );
-}
-function SnapIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2c2.6 0 4.6 2 4.7 4.6v1.6c.4.2.9.1 1.3-.1.6-.2 1.2.6.7 1.1-.4.4-1 .6-1.5.8-.3.1-.5.3-.4.6.3 1.2 1.2 2.2 2.4 2.6.4.1.6.6.3.9-.6.6-1.5.8-2.3 1 .1.4.2.8.5.9.3.2.7.2 1 .2.5 0 .6.7.1.9-1 .4-2.1.2-3 .8-.6.4-1 1.1-1.8 1.3-1 .3-2-.3-3-.3s-2 .6-3 .3c-.8-.2-1.2-.9-1.8-1.3-.9-.6-2-.4-3-.8-.5-.2-.4-.9.1-.9.3 0 .7 0 1-.2.3-.1.4-.5.5-.9-.8-.2-1.7-.4-2.3-1-.3-.3-.1-.8.3-.9 1.2-.4 2.1-1.4 2.4-2.6.1-.3-.1-.5-.4-.6-.5-.2-1.1-.4-1.5-.8-.5-.5.1-1.3.7-1.1.4.2.9.3 1.3.1V6.6C7.4 4 9.4 2 12 2z" />
-    </svg>
-  );
-}
+/* ---------- contact icons ---------- */
 function PinIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D7B36B" strokeWidth="2" className="mt-0.5 shrink-0">
