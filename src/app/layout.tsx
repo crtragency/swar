@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import heroOg from "../../الهيرو الاولي.webp";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -11,7 +12,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sewar-marine.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "سوار | رحلات بحرية فاخرة في ثول والبحر الأحمر",
     template: "%s | سوار البحرية",

@@ -1,3 +1,5 @@
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://swar-wine.vercel.app";
+
 export const NAV = [
   { label: "الرئيسية", href: "/" },
   { label: "من نحن", href: "/about" },
