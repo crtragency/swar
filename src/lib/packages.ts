@@ -13,6 +13,10 @@ export const BANK = {
   bank: "مصرف الراجحي",
   name: "مؤسسة سوار البحر للتجارة",
   iban: "SA4180000993608016031469",
+  // Direct payment link the customer is sent to for bank/online payment.
+  // Set NEXT_PUBLIC_BANK_PAY_URL in the environment (e.g. an STC Pay / Sadad /
+  // bank payment-request URL). When empty, the IBAN transfer details are shown.
+  payUrl: process.env.NEXT_PUBLIC_BANK_PAY_URL || "",
 };
 
 export const YACHT_FEATURES =

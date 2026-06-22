@@ -39,7 +39,7 @@ export default function Footer() {
           </div>
         </Reveal>
 
-        <div className="grid gap-12 pb-14 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-12 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {/* Brand */}
           <div className="lg:col-span-1">
             <span className="inline-flex h-16 items-center rounded-2xl bg-white px-4 shadow-md">
@@ -100,24 +100,6 @@ export default function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
-
-          {/* Language + hours */}
-          <div>
-            <h4 className="text-lg font-bold">اللغة</h4>
-            <div className="mt-5 inline-flex rounded-full border border-white/15 bg-white/5 p-1">
-              <span className="rounded-full bg-gold-400 px-5 py-2 text-sm font-bold text-navy-950">
-                العربية
-              </span>
-              <button
-                type="button"
-                className="rounded-full px-5 py-2 text-sm font-bold text-white/70 transition-colors hover:text-white"
-              >
-                EN
-              </button>
-            </div>
-            <h4 className="mt-8 text-lg font-bold">أوقات العمل</h4>
-            <p className="mt-4 text-white/65">يومياً من 8 صباحاً حتى 10 مساءً</p>
           </div>
         </div>
       </div>
