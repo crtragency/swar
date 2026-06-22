@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"all" | Booking["status"]>("all");
+  const [editing, setEditing] = useState<Booking | null>(null);
 
   async function load(u = username, p = password) {
     setLoading(true);
@@ -51,6 +52,25 @@ export default function AdminDashboard() {
       });
     } catch {
       /* optimistic; refresh to resync if needed */
+    }
+  }
+
+  async function saveEdit(updated: Booking) {
+    setBookings((bs) => bs.map((b) => (b.id === updated.id ? updated : b)));
+    setEditing(null);
+    try {
+      await fetch("/api/bookings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-admin-user": username, "x-admin-password": password },
+        body: JSON.stringify({
+          id: updated.id, name: updated.name, phone: updated.phone, date: updated.date,
+          departTime: updated.departTime, persons: updated.persons, option: updated.option,
+          payMethod: updated.payMethod, payType: updated.payType, total: updated.total,
+          notes: updated.notes, status: updated.status,
+        }),
+      });
+    } catch {
+      /* optimistic */
     }
   }
 
@@ -152,7 +172,8 @@ export default function AdminDashboard() {
                 {b.notes && <p className="mt-3 rounded-xl bg-navy-50/60 px-3 py-2 text-sm text-navy-900/70">📝 {b.notes}</p>}
                 <div className="mt-4 flex items-center justify-between gap-2 border-t border-navy-100 pt-3">
                   <span className="text-xs text-navy-900/40">{new Date(b.createdAt).toLocaleString("ar-SA")}</span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setEditing(b)} className="rounded-lg bg-ocean-600 px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">تعديل</button>
                     {b.status !== "confirmed" && (
                       <button onClick={() => setStatus(b.id, "confirmed")} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90">تأكيد</button>
                     )}
@@ -169,7 +190,71 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {editing && <EditModal booking={editing} onClose={() => setEditing(null)} onSave={saveEdit} />}
     </div>
+  );
+}
+
+function EditModal({ booking, onClose, onSave }: { booking: Booking; onClose: () => void; onSave: (b: Booking) => void }) {
+  const [form, setForm] = useState<Booking>(booking);
+  const set = <K extends keyof Booking>(k: K, v: Booking[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-navy-950/80 p-4 backdrop-blur-md">
+      <div onClick={(e) => e.stopPropagation()} className="my-6 w-full max-w-lg rounded-[24px] bg-white p-7 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-extrabold text-navy-900">تعديل الحجز</h3>
+          <button onClick={onClose} aria-label="إغلاق" className="flex h-8 w-8 items-center justify-center rounded-full bg-navy-50 text-navy-700">✕</button>
+        </div>
+        <p className="mt-1 font-mono text-xs text-navy-900/45">{booking.id}</p>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <EditField label="اسم العميل"><input value={form.name} onChange={(e) => set("name", e.target.value)} className="ed-in" /></EditField>
+          <EditField label="رقم الجوال"><input value={form.phone} onChange={(e) => set("phone", e.target.value)} className="ed-in" dir="ltr" /></EditField>
+          <EditField label="التاريخ"><input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className="ed-in" /></EditField>
+          <EditField label="وقت الانطلاق"><input value={form.departTime} onChange={(e) => set("departTime", e.target.value)} className="ed-in" dir="ltr" /></EditField>
+          <EditField label="عدد الأشخاص"><input type="number" min={1} value={form.persons} onChange={(e) => set("persons", Number(e.target.value) || 1)} className="ed-in" /></EditField>
+          <EditField label="الإجمالي (ريال)"><input type="number" min={0} value={form.total} onChange={(e) => set("total", Number(e.target.value) || 0)} className="ed-in" /></EditField>
+          <EditField label="الخيار / الباقة" full><input value={form.option} onChange={(e) => set("option", e.target.value)} className="ed-in" /></EditField>
+          <EditField label="طريقة الدفع">
+            <select value={form.payMethod} onChange={(e) => set("payMethod", e.target.value as Booking["payMethod"])} className="ed-in">
+              <option value="bank">تحويل بنكي</option>
+              <option value="arrival">عند الوصول</option>
+            </select>
+          </EditField>
+          <EditField label="نوع الدفع">
+            <select value={form.payType} onChange={(e) => set("payType", e.target.value as Booking["payType"])} className="ed-in">
+              <option value="full">كامل</option>
+              <option value="deposit">مقدّم 50%</option>
+            </select>
+          </EditField>
+          <EditField label="الحالة" full>
+            <select value={form.status} onChange={(e) => set("status", e.target.value as Booking["status"])} className="ed-in">
+              <option value="pending">قيد الانتظار</option>
+              <option value="confirmed">مؤكد</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+          </EditField>
+          <EditField label="ملاحظات" full><textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} className="ed-in resize-none" /></EditField>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <button onClick={() => onSave(form)} className="btn-ocean flex-1">حفظ التعديلات</button>
+          <button onClick={onClose} className="flex-1 rounded-xl bg-navy-50 py-3 font-bold text-navy-700">إلغاء</button>
+        </div>
+        <style>{`.ed-in{width:100%;padding:11px 13px;background:#f0f8fb;border:1px solid rgba(11,92,140,.18);border-radius:12px;outline:none;font-family:inherit}.ed-in:focus{border-color:#21c0c0;background:#e8f6f8}`}</style>
+      </div>
+    </div>
+  );
+}
+
+function EditField({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${full ? "sm:col-span-2" : ""}`}>
+      <span className="text-sm font-semibold text-navy-900/70">{label}</span>
+      {children}
+    </label>
   );
 }
 

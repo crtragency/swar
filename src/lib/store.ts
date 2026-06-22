@@ -140,12 +140,12 @@ export async function getBookings(): Promise<Booking[]> {
   return g.__sewarBookings!;
 }
 
-export async function updateStatus(id: string, status: Booking["status"]): Promise<void> {
+export async function updateBooking(id: string, patch: Partial<Booking>): Promise<void> {
   if (SB_URL && SB_KEY) {
     const res = await fetch(`${SB_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: { ...sbHeaders(), Prefer: "return=minimal" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(toRowPatch(patch)),
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`Supabase update ${res.status}`);
@@ -155,11 +155,36 @@ export async function updateStatus(id: string, status: Booking["status"]): Promi
     const list = await getBookings();
     const idx = list.findIndex((b) => b.id === id);
     if (idx >= 0) {
-      list[idx].status = status;
+      list[idx] = { ...list[idx], ...patch };
       await kv(["LSET", KEY, idx, JSON.stringify(list[idx])]);
     }
     return;
   }
   const b = g.__sewarBookings!.find((x) => x.id === id);
-  if (b) b.status = status;
+  if (b) Object.assign(b, patch);
+}
+
+export async function updateStatus(id: string, status: Booking["status"]): Promise<void> {
+  return updateBooking(id, { status });
+}
+
+function toRowPatch(p: Partial<Booking>): Record<string, unknown> {
+  const m: Record<string, unknown> = {};
+  if (p.packageTitle !== undefined) m.package_title = p.packageTitle;
+  if (p.option !== undefined) m.option = p.option;
+  if (p.persons !== undefined) m.persons = p.persons;
+  if (p.addons !== undefined) m.addons = p.addons;
+  if (p.date !== undefined) m.date = p.date;
+  if (p.departTime !== undefined) m.depart_time = p.departTime;
+  if (p.name !== undefined) m.name = p.name;
+  if (p.phone !== undefined) m.phone = p.phone;
+  if (p.notes !== undefined) m.notes = p.notes;
+  if (p.payMethod !== undefined) m.pay_method = p.payMethod;
+  if (p.payType !== undefined) m.pay_type = p.payType;
+  if (p.deposit !== undefined) m.deposit = p.deposit;
+  if (p.amountDue !== undefined) m.amount_due = p.amountDue;
+  if (p.promo !== undefined) m.promo = p.promo;
+  if (p.total !== undefined) m.total = p.total;
+  if (p.status !== undefined) m.status = p.status;
+  return m;
 }
