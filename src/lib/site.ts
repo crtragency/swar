@@ -1,5 +1,5 @@
 export const NAV = [
-  { label: "رحلات بحرية في ثول", href: "/" },
+  { label: "الرئيسية", href: "/" },
   { label: "من نحن", href: "/about" },
   { label: "الحجوزات", href: "/booking" },
   { label: "المدونة", href: "/blog" },
