@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addBooking, getBookings, updateStatus, type Booking } from "@/lib/store";
+import { addBooking, getBookings, updateBooking, type Booking } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -86,12 +86,31 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "bad request" }, { status: 400 });
   }
   const id = String(body.id || "");
-  const status = body.status as Booking["status"];
-  if (!id || !["pending", "confirmed", "cancelled"].includes(status)) {
-    return NextResponse.json({ error: "bad request" }, { status: 422 });
+  if (!id) return NextResponse.json({ error: "missing id" }, { status: 422 });
+
+  const patch: Partial<Booking> = {};
+  if (body.status !== undefined) {
+    if (!["pending", "confirmed", "cancelled"].includes(String(body.status))) {
+      return NextResponse.json({ error: "bad status" }, { status: 422 });
+    }
+    patch.status = body.status as Booking["status"];
+  }
+  if (body.name !== undefined) patch.name = String(body.name);
+  if (body.phone !== undefined) patch.phone = String(body.phone);
+  if (body.date !== undefined) patch.date = String(body.date);
+  if (body.departTime !== undefined) patch.departTime = String(body.departTime);
+  if (body.persons !== undefined) patch.persons = Number(body.persons) || 1;
+  if (body.option !== undefined) patch.option = String(body.option);
+  if (body.payMethod !== undefined) patch.payMethod = body.payMethod === "arrival" ? "arrival" : "bank";
+  if (body.payType !== undefined) patch.payType = body.payType === "deposit" ? "deposit" : "full";
+  if (body.total !== undefined) patch.total = Number(body.total) || 0;
+  if (body.notes !== undefined) patch.notes = String(body.notes);
+
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ error: "nothing to update" }, { status: 422 });
   }
   try {
-    await updateStatus(id, status);
+    await updateBooking(id, patch);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "error" }, { status: 500 });
