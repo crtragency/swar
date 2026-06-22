@@ -37,7 +37,7 @@ export default function Navbar() {
             src={LOGO}
             alt="شعار سوار البحرية"
             priority
-            className="h-9 w-auto sm:h-11"
+            className="h-12 w-auto sm:h-16"
           />
         </Link>
 
