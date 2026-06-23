@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "framer-motion";
 import { Reveal } from "./ui";
+import { useI18n } from "@/lib/i18n";
 
 const STATS = [
-  { value: 12, suffix: "", label: "سنة خبرة" },
-  { value: 97, suffix: "%", label: "رضا العملاء" },
-  { value: 8, suffix: "k", label: "رحلات مكتملة" },
-  { value: 19, suffix: "k", label: "مسافرون سعداء" },
+  { value: 12, suffix: "", key: "stats.years" },
+  { value: 97, suffix: "%", key: "stats.satisfaction" },
+  { value: 8, suffix: "k", key: "stats.trips" },
+  { value: 19, suffix: "k", key: "stats.travelers" },
 ];
 
 function Counter({
@@ -48,6 +49,7 @@ function Counter({
 export default function StatsSection() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
+  const { t } = useI18n();
 
   return (
     <section className="relative overflow-hidden bg-ocean-gradient py-20 sm:py-24">
@@ -57,7 +59,7 @@ export default function StatsSection() {
       <div ref={ref} className="container-px relative">
         <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
           {STATS.map((stat, i) => (
-            <Reveal key={stat.label} delay={i * 0.1}>
+            <Reveal key={stat.key} delay={i * 0.1}>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-2 bg-gradient-to-b from-white to-gold-400 bg-clip-text font-cairo text-5xl font-extrabold text-transparent sm:text-6xl lg:text-7xl">
                   <Counter
@@ -68,7 +70,7 @@ export default function StatsSection() {
                 </div>
                 <span className="h-1 w-12 rounded-full bg-gold-400" />
                 <p className="mt-3 text-base font-semibold text-white/85 sm:text-lg">
-                  {stat.label}
+                  {t(stat.key)}
                 </p>
               </div>
             </Reveal>

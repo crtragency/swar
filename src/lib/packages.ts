@@ -229,3 +229,28 @@ export const PACKAGES: Pkg[] = [
     note: "استمتع بتجربة بحرية فاخرة تجمع بين الصيد الاحترافي وتجربة الطهي المباشر في قلب بحر ثول. نأخذك إلى أفضل مواقع الصيد، ثم نحوّل صيدك إلى وجبة بحرية طازجة تُحضَّر أمامك. الشخص الإضافي (فوق 5): +100 ريال.",
   },
 ];
+
+// English display strings for packages (keeps the Arabic source intact).
+import type { Locale } from "./i18n-core";
+
+type PkgI18nFields = {
+  title: string;
+  subtitle: string;
+  unit: string;
+  capacity: string;
+  baseDuration: string;
+};
+
+export const PKG_I18N: Record<string, PkgI18nFields> = {
+  swim: { title: "Swimming & Relaxation Trip", subtitle: "Thoul Sandy Island · Sewar Al-Bahr mini-yacht 31ft", unit: "SAR / trip", capacity: "5 persons · 4 hours", baseDuration: "4 hours" },
+  fish: { title: "Fishing Trips", subtitle: "Professional fishing experience · up to 5 persons", unit: "SAR / trip", capacity: "for 5 persons", baseDuration: "6 hours" },
+  hour: { title: "Hourly Trips", subtitle: "Flexible cruise · straight from the marina", unit: "SAR", capacity: "for 5 persons", baseDuration: "as chosen" },
+  party: { title: "Private Sea Parties", subtitle: "Make your occasion unforgettable on the Red Sea waves", unit: "SAR", capacity: "for 5 persons", baseDuration: "by package" },
+  dolphin: { title: "Dolphin Watching Trip", subtitle: "An unforgettable experience · watch dolphins in the Red Sea · 4 hours", unit: "SAR / trip", capacity: "for 5 persons", baseDuration: "4 hours" },
+  vip: { title: "Royal Fishing Experience — VIP All-Inclusive", subtitle: "Pro fishing + live cooking + luxury hospitality · 8 hours · Thoul sea", unit: "SAR", capacity: "for 5 persons · 8 hours", baseDuration: "8 hours" },
+};
+
+export function pkgText(locale: Locale, pkg: Pkg, field: keyof PkgI18nFields): string {
+  if (locale === "en") return PKG_I18N[pkg.id]?.[field] ?? (pkg[field] as string);
+  return pkg[field] as string;
+}

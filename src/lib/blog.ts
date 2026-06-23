@@ -796,3 +796,30 @@ export const BLOG_POSTS: BlogPost[] = [
 export function getPost(slug: string) {
   return BLOG_POSTS.find((p) => p.slug === slug);
 }
+
+// English display strings for blog cards/lists (titles, excerpts, categories).
+import type { Locale } from "./i18n-core";
+
+type BlogI18nFields = { title: string; excerpt: string; category: string };
+
+export const BLOG_I18N: Record<string, BlogI18nFields> = {
+  "rehlat-bahriya-fi-thol": { title: "Sea Trips in Thoul: Your Complete Guide to the Red Sea", excerpt: "Sea trips in Thoul on the Red Sea: trip types, prices, best times and booking tips with Sewar Marine for a luxury sea experience.", category: "Marine Guides" },
+  "sayd-alasmak-fi-albahr-alahmar": { title: "Fishing in the Red Sea from Thoul: A Guide for Beginners & Pros", excerpt: "A guide to fishing in the Red Sea from Thoul: best spots, seasons, gear and the fish you can catch with Sewar Marine.", category: "Fishing Adventures" },
+  "rehlat-mushahadat-aldalafin": { title: "Dolphin Watching in Thoul: When & Where to See Dolphins", excerpt: "Everything about dolphin watching in Thoul on the Red Sea: best times, locations and tips for a close, safe experience with Sewar Marine.", category: "Sea Experiences" },
+  "tajeer-yacht-fi-thol-jeddah": { title: "Yacht Rental in Thoul near Jeddah: Prices, Packages & How to Choose", excerpt: "A guide to yacht rental in Thoul near Jeddah: prices, packages, capacity and tips to choose the right yacht with Sewar Marine.", category: "Marine Guides" },
+  "crystal-reef-thol": { title: "Crystal Reef in Thoul: The Jewel of Red Sea Coral Reefs", excerpt: "A guide to Crystal Reef in Thoul on the Red Sea: what it is, why visit, and the best activities and trips to reach it with Sewar Marine.", category: "Marine Destinations" },
+  "ghats-snorkeling-albahr-alahmar": { title: "Snorkeling in the Red Sea from Thoul: A Beginner's Guide", excerpt: "A guide to snorkeling in the Red Sea from Thoul: top spots like Crystal Reef, gear and safety tips with Sewar Marine.", category: "Marine Activities" },
+  "siyaha-fi-thol": { title: "Tourism in Thoul: Your Guide to a Perfect Sea Day near Jeddah", excerpt: "A guide to tourism in Thoul near Jeddah: top marine activities, spots like Crystal Reef, best times and tips with Sewar Marine.", category: "Travel Guides" },
+  "rehlat-sibaha-fi-thol": { title: "Swimming Trip in Thoul: Relaxation on a Charming Sandy Island", excerpt: "All about a swimming trip in Thoul with Sewar Marine: Thoul sandy island, Crystal Reef, duration, add-ons and prices.", category: "Our Packages" },
+  "haflat-bahriya-fi-thol": { title: "Sea Parties in Thoul: Host Your Private Event on a Luxury Yacht", excerpt: "Host sea parties in Thoul on the Red Sea with Sewar Marine: party packages, setup, privacy and prices for an unforgettable occasion.", category: "Our Packages" },
+  "rehlat-alsayd-almalakiya-vip": { title: "Royal VIP Fishing Experience: Fishing, Live Cooking & Luxury Hospitality", excerpt: "Discover the Royal VIP fishing experience in Thoul with Sewar Marine: 8 hours of pro fishing, live cooking and luxury hospitality.", category: "Our Packages" },
+  "rehla-bahriya-bilsaa": { title: "Hourly Sea Trip in Thoul: A Flexible Cruise Straight from the Marina", excerpt: "Book an hourly sea trip in Thoul with Sewar Marine: flexible cruises from 30 minutes on the Red Sea at great prices.", category: "Our Packages" },
+  "afdal-waqt-lizyarat-albahr-alahmar": { title: "Best Time to Visit the Red Sea in Thoul: Weather & Marine Seasons", excerpt: "Learn the best time to visit the Red Sea in Thoul: year-round weather and the best times for swimming, fishing and dolphins.", category: "Travel Tips" },
+  "rehla-bahriya-aailiya": { title: "Family Sea Trip in Thoul: A Safe, Fun Day for the Whole Family", excerpt: "Plan a family sea trip in Thoul with Sewar Marine: safe activities for kids, equipped yachts and tips for a memorable day.", category: "Travel Tips" },
+  "juzur-albahr-alahmar-qurb-thol": { title: "Red Sea Islands near Thoul: Charming Marine Destinations to Visit", excerpt: "Discover the most beautiful Red Sea islands near Thoul and spots like Crystal Reef: swimming, snorkeling and relaxing with Sewar Marine.", category: "Marine Destinations" },
+};
+
+export function postText(locale: Locale, post: BlogPost, field: keyof BlogI18nFields): string {
+  if (locale === "en") return BLOG_I18N[post.slug]?.[field] ?? post[field];
+  return post[field];
+}

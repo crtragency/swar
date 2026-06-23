@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SectionHeading } from "./ui";
 import type { Review } from "@/lib/reviews";
+import { useI18n } from "@/lib/i18n";
 
 export default function TestimonialsSlider({
   reviews,
@@ -19,6 +20,7 @@ export default function TestimonialsSlider({
   reviewsUrl: string;
 }) {
   const [index, setIndex] = useState(0);
+  const { t } = useI18n();
 
   useEffect(() => {
     const id = setInterval(() => setIndex((i) => (i + 1) % reviews.length), 5000);
@@ -33,9 +35,9 @@ export default function TestimonialsSlider({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(11,92,140,0.3),transparent_60%)]" />
       <div className="container-px relative">
         <SectionHeading
-          eyebrow="آراء العملاء"
-          title="آراء العملاء"
-          description="ثقة عملائنا هي بوصلتنا نحو التميز. تقييمات حقيقية من عملائنا على خرائط Google."
+          eyebrow={t("reviews.eyebrow")}
+          title={t("reviews.title")}
+          description={t("reviews.desc")}
           light
         />
 
@@ -48,13 +50,13 @@ export default function TestimonialsSlider({
             className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 backdrop-blur-md transition-colors hover:border-gold-400/50"
           >
             <GoogleG />
-            <span className="text-sm font-bold text-white">تقييمات Google</span>
+            <span className="text-sm font-bold text-white">{t("reviews.googleBadge")}</span>
             {rating != null && (
               <span className="flex items-center gap-1 text-sm font-bold text-gold-400">
                 {rating.toFixed(1)} <Star size={14} />
               </span>
             )}
-            {total != null && <span className="text-sm text-white/60">({total} تقييم)</span>}
+            {total != null && <span className="text-sm text-white/60">({total} {t("reviews.count")})</span>}
           </a>
         </div>
 
@@ -85,7 +87,7 @@ export default function TestimonialsSlider({
                   </span>
                   <div className="text-start">
                     <p className="text-lg font-bold text-white">{review.name}</p>
-                    <p className="text-sm text-turquoise-400">{review.when || "عميل سوار البحرية"}</p>
+                    <p className="text-sm text-turquoise-400">{review.when || t("reviews.customer")}</p>
                   </div>
                 </div>
               </motion.blockquote>
@@ -102,10 +104,10 @@ export default function TestimonialsSlider({
 
           <div className="mt-10 text-center">
             <a href={reviewsUrl} target="_blank" rel="noopener noreferrer" className="btn-outline text-sm">
-              اقرأ كل التقييمات على Google
+              {t("reviews.readAll")}
             </a>
             {source === "fallback" && (
-              <p className="mt-3 text-xs text-white/40">يتم عرض التقييمات الكاملة على Google.</p>
+              <p className="mt-3 text-xs text-white/40">{t("reviews.readAll")}</p>
             )}
           </div>
         </div>

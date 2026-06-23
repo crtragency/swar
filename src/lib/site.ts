@@ -1,12 +1,12 @@
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://swar-wine.vercel.app";
 
 export const NAV = [
-  { label: "الرئيسية", href: "/" },
-  { label: "من نحن", href: "/about" },
-  { label: "الحجوزات", href: "/booking" },
-  { label: "المدونة", href: "/blog" },
-  { label: "التواصل", href: "/contact" },
-  { label: "الوسائط", href: "/media" },
+  { key: "nav.home", href: "/" },
+  { key: "nav.about", href: "/about" },
+  { key: "nav.booking", href: "/booking" },
+  { key: "nav.blog", href: "/blog" },
+  { key: "nav.contact", href: "/contact" },
+  { key: "nav.media", href: "/media" },
 ];
 
 export const CONTACT = {
