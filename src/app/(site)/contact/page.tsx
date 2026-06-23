@@ -5,26 +5,28 @@ import ContactForm from "@/components/ContactForm";
 import { Reveal } from "@/components/home/ui";
 import { CONTACT, waLink } from "@/lib/site";
 import { MARINA_BOAT } from "@/components/home/images";
+import { tt } from "@/lib/i18n-core";
+import { getServerLocale } from "@/lib/locale-server";
 
 export const metadata: Metadata = {
   title: "التواصل",
   description: "تواصل مع سوار البحرية لحجز رحلتك البحرية الفاخرة في ثول — واتساب، هاتف، وبريد إلكتروني.",
 };
 
-const INFO = [
-  { icon: "📍", label: "الموقع", value: CONTACT.location },
-  { icon: "📞", label: "الهاتف", value: CONTACT.phone, href: CONTACT.phoneHref },
-  { icon: "✉️", label: "البريد الإلكتروني", value: CONTACT.email, href: `mailto:${CONTACT.email}` },
-  { icon: "🕐", label: "أوقات العمل", value: "يومياً من 8 صباحاً حتى 10 مساءً" },
-];
-
 export default function ContactPage() {
+  const locale = getServerLocale();
+  const INFO = [
+    { icon: "📍", label: tt(locale, "contact.location"), value: tt(locale, "contact.locationVal") },
+    { icon: "📞", label: tt(locale, "contact.phone"), value: CONTACT.phone, href: CONTACT.phoneHref, ltr: true },
+    { icon: "✉️", label: tt(locale, "contact.email"), value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+    { icon: "🕐", label: tt(locale, "contact.hours"), value: tt(locale, "contact.hoursVal") },
+  ];
   return (
     <main>
       <PageHero
-        eyebrow="التواصل"
-        title="تواصل معنا"
-        subtitle="نحن هنا للإجابة على استفساراتك ومساعدتك في حجز رحلتك البحرية القادمة."
+        eyebrow={tt(locale, "contact.eyebrow")}
+        title={tt(locale, "contact.title")}
+        subtitle={tt(locale, "contact.subtitle")}
         image={MARINA_BOAT}
       />
 
@@ -38,7 +40,7 @@ export default function ContactPage() {
                     <span className="text-3xl">{it.icon}</span>
                     <h3 className="mt-3 text-sm font-bold text-turquoise-600">{it.label}</h3>
                     {it.href ? (
-                      <a href={it.href} dir={it.label === "الهاتف" ? "ltr" : undefined} className="mt-1 block font-semibold text-navy-900 hover:text-ocean-600">
+                      <a href={it.href} dir={it.ltr ? "ltr" : undefined} className="mt-1 block font-semibold text-navy-900 hover:text-ocean-600">
                         {it.value}
                       </a>
                     ) : (
@@ -57,8 +59,8 @@ export default function ContactPage() {
                 className="mt-6 flex items-center justify-between gap-4 rounded-[24px] bg-gradient-to-l from-emerald-500 to-teal-500 p-6 text-white shadow-luxe transition-transform hover:scale-[1.01]"
               >
                 <div>
-                  <h3 className="text-lg font-extrabold">تواصل سريع عبر واتساب</h3>
-                  <p className="text-sm text-white/85">أسرع طريقة لتأكيد حجزك والرد على استفساراتك.</p>
+                  <h3 className="text-lg font-extrabold">{tt(locale, "contact.waTitle")}</h3>
+                  <p className="text-sm text-white/85">{tt(locale, "contact.waDesc")}</p>
                 </div>
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" className="shrink-0"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2z" /></svg>
               </a>
@@ -66,8 +68,8 @@ export default function ContactPage() {
 
             <Reveal delay={0.15}>
               <p className="mt-6 text-navy-900/60">
-                تفضّل التصفح أولاً؟ اطّلع على{" "}
-                <Link href="/booking" className="font-bold text-ocean-600 hover:text-turquoise-500">باقاتنا وأسعارنا</Link>.
+                {tt(locale, "contact.browseFirst")}{" "}
+                <Link href="/booking" className="font-bold text-ocean-600 hover:text-turquoise-500">{tt(locale, "contact.packagesPrices")}</Link>.
               </p>
             </Reveal>
           </div>

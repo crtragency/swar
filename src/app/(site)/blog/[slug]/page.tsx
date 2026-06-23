@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { BLOG_POSTS, getPost } from "@/lib/blog";
+import { BLOG_POSTS, getPost, postText } from "@/lib/blog";
 import { ALL_PHOTOS } from "@/components/home/images";
 import { SITE_URL as SITE } from "@/lib/site";
+import { tt } from "@/lib/i18n-core";
+import { getServerLocale } from "@/lib/locale-server";
 
 export function generateStaticParams() {
   return BLOG_POSTS.map((p) => ({ slug: p.slug }));
@@ -36,6 +38,9 @@ export default function BlogArticle({ params }: { params: { slug: string } }) {
   const idx = BLOG_POSTS.findIndex((p) => p.slug === post.slug);
   const image = ALL_PHOTOS[(idx * 5 + 12) % ALL_PHOTOS.length];
   const url = `${SITE}/blog/${post.slug}`;
+  const locale = getServerLocale();
+  const title = postText(locale, post, "title");
+  const category = postText(locale, post, "category");
 
   const articleLd = {
     "@context": "https://schema.org",
@@ -71,11 +76,11 @@ export default function BlogArticle({ params }: { params: { slug: string } }) {
           <Image src={image} alt={post.coverAlt} fill priority sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-navy-950/40" />
           <div className="container-px relative z-10 pb-12">
-            <span className="rounded-full bg-gold-400 px-4 py-1.5 text-xs font-bold text-navy-950">{post.category}</span>
-            <h1 className="mt-4 max-w-3xl font-cairo text-3xl font-extrabold leading-tight text-white text-balance drop-shadow sm:text-5xl">{post.title}</h1>
+            <span className="rounded-full bg-gold-400 px-4 py-1.5 text-xs font-bold text-navy-950">{category}</span>
+            <h1 className="mt-4 max-w-3xl font-cairo text-3xl font-extrabold leading-tight text-white text-balance drop-shadow sm:text-5xl">{title}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-white/75">
               <time dateTime={post.isoDate}>{post.date}</time>
-              <span>• {post.readMinutes} دقائق قراءة</span>
+              <span>• {post.readMinutes} {tt(locale, "art.readMin")}</span>
             </div>
           </div>
         </div>
@@ -108,7 +113,7 @@ export default function BlogArticle({ params }: { params: { slug: string } }) {
 
             {/* FAQ */}
             <section className="mt-12">
-              <h2 className="text-2xl font-extrabold text-navy-900 sm:text-3xl">أسئلة شائعة</h2>
+              <h2 className="text-2xl font-extrabold text-navy-900 sm:text-3xl">{tt(locale, "art.faq")}</h2>
               <div className="mt-5 space-y-4">
                 {post.faq.map((f) => (
                   <details key={f.q} className="group rounded-2xl border border-navy-50 bg-navy-50/40 p-5">
@@ -121,7 +126,7 @@ export default function BlogArticle({ params }: { params: { slug: string } }) {
 
             {/* Internal links */}
             <section className="mt-12 rounded-[24px] bg-navy-50/60 p-7">
-              <h2 className="text-xl font-extrabold text-navy-900">اقرأ أيضاً وروابط مفيدة</h2>
+              <h2 className="text-xl font-extrabold text-navy-900">{tt(locale, "art.related")}</h2>
               <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                 {post.related.map((l) => (
                   <li key={l.href + l.label}>
@@ -135,7 +140,7 @@ export default function BlogArticle({ params }: { params: { slug: string } }) {
 
             {/* Outbound references */}
             <section className="mt-8">
-              <h2 className="text-lg font-bold text-navy-900">مصادر خارجية</h2>
+              <h2 className="text-lg font-bold text-navy-900">{tt(locale, "art.refs")}</h2>
               <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                 {post.references.map((l) => (
                   <li key={l.href}>
@@ -149,12 +154,12 @@ export default function BlogArticle({ params }: { params: { slug: string } }) {
 
             {/* CTA */}
             <div className="mt-12 flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-gradient-to-l from-ocean-600 to-turquoise-500 p-7 text-white">
-              <p className="text-lg font-bold">جاهز لخوض التجربة بنفسك؟ احجز رحلتك البحرية في ثول الآن.</p>
-              <Link href="/booking" className="btn-gold text-sm">احجز الآن</Link>
+              <p className="text-lg font-bold">{tt(locale, "art.cta")}</p>
+              <Link href="/booking" className="btn-gold text-sm">{tt(locale, "cta.book")}</Link>
             </div>
 
             <Link href="/blog" className="mt-10 inline-flex items-center gap-2 font-bold text-ocean-600 hover:text-turquoise-500">
-              <span>→</span> العودة إلى جميع المقالات
+              <span>→</span> {tt(locale, "art.back")}
             </Link>
           </div>
         </div>

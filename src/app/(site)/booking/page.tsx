@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import BookingPackages from "@/components/booking/BookingPackages";
 import { FISHING } from "@/components/home/images";
+import { tt } from "@/lib/i18n-core";
+import { getServerLocale } from "@/lib/locale-server";
 
 export const metadata: Metadata = {
   title: "الحجوزات وأسعار الرحلات",
@@ -10,12 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default function BookingPage() {
+  const locale = getServerLocale();
   return (
     <main>
       <PageHero
-        eyebrow="الحجوزات"
-        title="أسعار وباقات رحلات سوار البحرية"
-        subtitle="اختر باقتك المثالية واحجز تجربتك البحرية الفاخرة في ثول — خصم 25% على جميع الرحلات."
+        eyebrow={tt(locale, "booking.eyebrow")}
+        title={tt(locale, "booking.title")}
+        subtitle={tt(locale, "booking.subtitle")}
         image={FISHING}
       />
       <BookingPackages />

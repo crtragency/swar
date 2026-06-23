@@ -1,5 +1,5 @@
-// Server-safe i18n helpers (no "use client"), importable from both
-// Server and Client Components.
+// Server-safe i18n helpers + dictionary (no "use client"), importable from
+// both Server and Client Components.
 
 export type Locale = "ar" | "en";
 export const DEFAULT_LOCALE: Locale = "ar";
@@ -8,4 +8,158 @@ export const dir = (l: Locale) => (l === "ar" ? "rtl" : "ltr");
 /** Pick the right side of a bilingual value. */
 export function pick<T>(locale: Locale, ar: T, en: T): T {
   return locale === "en" ? en : ar;
+}
+
+export const STRINGS: Record<string, { ar: string; en: string }> = {
+  "nav.home": { ar: "الرئيسية", en: "Home" },
+  "nav.about": { ar: "من نحن", en: "About" },
+  "nav.booking": { ar: "الحجوزات", en: "Booking" },
+  "nav.blog": { ar: "المدونة", en: "Blog" },
+  "nav.contact": { ar: "التواصل", en: "Contact" },
+  "nav.media": { ar: "الوسائط", en: "Media" },
+  "cta.book": { ar: "احجز الآن", en: "Book Now" },
+  "cta.bookWa": { ar: "احجز عبر واتساب", en: "Book via WhatsApp" },
+  "common.more": { ar: "المزيد", en: "Explore" },
+  "common.viewAll": { ar: "عرض الكل", en: "View all" },
+  "common.readMore": { ar: "اقرأ المزيد", en: "Read more" },
+  "common.sar": { ar: "ريال", en: "SAR" },
+
+  "hero.badge": { ar: "سوار · رحلات بحرية فاخرة في ثول", en: "Sewar · Luxury sea trips in Thoul" },
+  "hero.title": { ar: "عِش معنا متعة بحرية لا تُنسى", en: "Live an unforgettable sea adventure with us" },
+  "hero.subtitle": { ar: "خُض تجربة بحرية لا مثيل لها", en: "Experience a sea journey like no other" },
+  "hero.bookings": { ar: "الحجوزات", en: "Bookings" },
+
+  "pricing.eyebrow": { ar: "باقات الحجز", en: "Booking Packages" },
+  "pricing.title": { ar: "أسعار رحلات بحرية في ثول", en: "Sea trip prices in Thoul" },
+  "pricing.desc": { ar: "اختر الباقة التي تناسبك واحجز تجربتك البحرية الفاخرة بأفضل الأسعار وأرقى الخدمات.", en: "Choose the package that suits you and book your luxury sea experience at the best prices." },
+  "pricing.discount": { ar: "على جميع الرحلات بمناسبة بداية موسم الصيف", en: "on all trips for the start of the summer season" },
+  "pricing.from": { ar: "يبدأ من", en: "From" },
+  "pricing.save": { ar: "وفّر", en: "Save" },
+  "pricing.viewAll": { ar: "عرض كل الباقات والتفاصيل", en: "View all packages and details" },
+
+  "gallery.eyebrow": { ar: "معرض الصور", en: "Gallery" },
+  "gallery.title": { ar: "أجمل لحظاتنا في البحر", en: "Our finest moments at sea" },
+  "gallery.desc": { ar: "لمحات من رحلاتنا البحرية الفاخرة، حيث تتحول كل لحظة إلى ذكرى لا تُنسى.", en: "Glimpses of our luxury sea trips, where every moment becomes an unforgettable memory." },
+
+  "stats.years": { ar: "سنة خبرة", en: "Years of experience" },
+  "stats.satisfaction": { ar: "رضا العملاء", en: "Customer satisfaction" },
+  "stats.trips": { ar: "رحلات مكتملة", en: "Completed trips" },
+  "stats.travelers": { ar: "مسافرون سعداء", en: "Happy travelers" },
+
+  "blog.eyebrow": { ar: "مدونة سوار", en: "Sewar Blog" },
+  "blog.title": { ar: "المدونة", en: "Blog" },
+  "blog.desc": { ar: "مقالات ونصائح ملهمة من عالم السياحة البحرية الفاخرة.", en: "Inspiring articles and tips from the world of luxury marine tourism." },
+  "blog.all": { ar: "جميع المقالات", en: "All articles" },
+  "blog.read": { ar: "اقرأ المقال", en: "Read article" },
+  "blog.minRead": { ar: "دقائق قراءة", en: "min read" },
+  "blog.faq": { ar: "أسئلة شائعة", en: "FAQ" },
+  "blog.related": { ar: "اقرأ أيضاً وروابط مفيدة", en: "Read also & useful links" },
+  "blog.refs": { ar: "مصادر خارجية", en: "External references" },
+  "blog.backAll": { ar: "العودة إلى جميع المقالات", en: "Back to all articles" },
+  "blog.ctaTitle": { ar: "جاهز لخوض التجربة بنفسك؟ احجز رحلتك البحرية في ثول الآن.", en: "Ready to live the experience? Book your sea trip in Thoul now." },
+
+  "reviews.eyebrow": { ar: "آراء العملاء", en: "Reviews" },
+  "reviews.title": { ar: "آراء العملاء", en: "Customer Reviews" },
+  "reviews.desc": { ar: "ثقة عملائنا هي بوصلتنا نحو التميز. تقييمات حقيقية من عملائنا على خرائط Google.", en: "Our customers' trust is our compass. Real reviews from our customers on Google Maps." },
+  "reviews.googleBadge": { ar: "تقييمات Google", en: "Google reviews" },
+  "reviews.count": { ar: "تقييم", en: "reviews" },
+  "reviews.readAll": { ar: "اقرأ كل التقييمات على Google", en: "Read all reviews on Google" },
+  "reviews.customer": { ar: "عميل سوار البحرية", en: "Sewar Marine customer" },
+
+  "footer.ctaTitle": { ar: "جاهز لتجربة بحرية لا تُنسى؟", en: "Ready for an unforgettable sea experience?" },
+  "footer.ctaDesc": { ar: "احجز رحلتك الآن واستمتع بخصم 25% على جميع الرحلات بمناسبة بداية موسم الصيف.", en: "Book now and enjoy 25% off all trips for the start of the summer season." },
+  "footer.brandDesc": { ar: "رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر. عِش معنا متعة بحرية لا تُنسى وخُض تجربة بحرية لا مثيل لها.", en: "Luxury sea trips in Thoul on the Red Sea coast. Live an unforgettable sea adventure with us." },
+  "footer.quickLinks": { ar: "روابط سريعة", en: "Quick links" },
+  "footer.contactUs": { ar: "تواصل معنا", en: "Contact us" },
+  "footer.location": { ar: "ثول · المملكة العربية السعودية · البحر الأحمر", en: "Thoul · Saudi Arabia · Red Sea" },
+  "footer.rights": { ar: "جميع الحقوق محفوظة.", en: "All rights reserved." },
+  "footer.privacy": { ar: "سياسة الخصوصية", en: "Privacy Policy" },
+  "footer.terms": { ar: "الشروط والأحكام", en: "Terms & Conditions" },
+
+  // pages
+  "about.eyebrow": { ar: "من نحن", en: "About us" },
+  "about.title": { ar: "سوار البحرية", en: "Sewar Marine" },
+  "about.subtitle": { ar: "رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر — عِش معنا متعة بحرية لا تُنسى.", en: "Luxury sea trips in Thoul on the Red Sea coast — live an unforgettable sea adventure with us." },
+  "about.storyEyebrow": { ar: "قصتنا", en: "Our story" },
+  "about.storyTitle": { ar: "رحلتنا في عالم البحر", en: "Our journey in the world of the sea" },
+  "about.story1": { ar: "انطلقت سوار البحرية من حُب البحر وشغف تقديم تجارب بحرية لا تُنسى على ساحل البحر الأحمر في ثول. نؤمن أن كل رحلة هي قصة تستحق أن تُروى.", en: "Sewar Marine was born from a love of the sea and a passion for delivering unforgettable sea experiences on the Red Sea coast in Thoul. We believe every trip is a story worth telling." },
+  "about.story2": { ar: "نوفر أسطولاً من اليخوت المجهزة بأعلى معايير الراحة والسلامة، مع طاقم محترف يحرص على أدق التفاصيل ليمنحك تجربة بحرية فاخرة بكل ما تحمله الكلمة من معنى.", en: "We offer a fleet of yachts equipped to the highest standards of comfort and safety, with a professional crew that cares about every detail to give you a truly luxurious sea experience." },
+  "about.story3": { ar: "من رحلات السباحة والاستجمام إلى الصيد ومشاهدة الدلافين والحفلات الخاصة، نصمم لك تجربة تناسب ذوقك ومناسبتك.", en: "From swimming and relaxation trips to fishing, dolphin watching and private parties, we design an experience that suits your taste and occasion." },
+  "about.valuesEyebrow": { ar: "لماذا سوار؟", en: "Why Sewar?" },
+  "about.valuesTitle": { ar: "قيمنا التي نبحر بها", en: "The values we sail by" },
+  "about.valuesDesc": { ar: "نلتزم بأعلى معايير الجودة والسلامة لنمنحك تجربة بحرية استثنائية.", en: "We commit to the highest standards of quality and safety to give you an exceptional sea experience." },
+  "about.value1.t": { ar: "خبرة بحرية", en: "Marine expertise" },
+  "about.value1.d": { ar: "سنوات من الخبرة في تنظيم أرقى الرحلات البحرية على ساحل البحر الأحمر.", en: "Years of experience organizing the finest sea trips on the Red Sea coast." },
+  "about.value2.t": { ar: "سلامة تامة", en: "Total safety" },
+  "about.value2.d": { ar: "أدوات سلامة كاملة ومعتمدة في جميع رحلاتنا لراحة بالك التامة.", en: "Complete, certified safety equipment on all our trips for your total peace of mind." },
+  "about.value3.t": { ar: "خدمة فاخرة", en: "Luxury service" },
+  "about.value3.d": { ar: "طاقم محترف وضيافة راقية تجعل كل لحظة في رحلتك استثنائية.", en: "A professional crew and refined hospitality that make every moment of your trip exceptional." },
+  "about.value4.t": { ar: "وجهات ساحرة", en: "Charming destinations" },
+  "about.value4.d": { ar: "أجمل مواقع ثول والبحر الأحمر من جزر رملية ومواقع صيد ومشاهدة دلافين.", en: "The most beautiful spots of Thoul and the Red Sea — sandy islands, fishing spots and dolphin watching." },
+  "about.fleetEyebrow": { ar: "أسطولنا", en: "Our fleet" },
+  "about.fleetTitle": { ar: "يخوت مجهزة بالكامل لراحتك", en: "Fully equipped yachts for your comfort" },
+  "about.fleetDesc": { ar: "تأتي يخوتنا مجهزة بكل ما تحتاجه لرحلة مريحة وآمنة، لتستمتع بوقتك دون أي قلق.", en: "Our yachts come equipped with everything you need for a comfortable, safe trip so you can enjoy your time worry-free." },
+  "about.bookTrip": { ar: "احجز رحلتك الآن", en: "Book your trip now" },
+  "about.f1": { ar: "يتسع لـ11 شخص", en: "Holds up to 11 people" },
+  "about.f2": { ar: "غرفة نوم خاصة", en: "Private bedroom" },
+  "about.f3": { ar: "مطبخ تحضيري متكامل", en: "Full kitchenette" },
+  "about.f4": { ar: "دورة مياه", en: "Bathroom" },
+  "about.f5": { ar: "ماء حلو للغسيل والاستحمام", en: "Fresh water for washing & shower" },
+  "about.f6": { ar: "أدوات سلامة كاملة", en: "Full safety equipment" },
+
+  "contact.eyebrow": { ar: "التواصل", en: "Contact" },
+  "contact.title": { ar: "تواصل معنا", en: "Contact us" },
+  "contact.subtitle": { ar: "نحن هنا للإجابة على استفساراتك ومساعدتك في حجز رحلتك البحرية القادمة.", en: "We're here to answer your questions and help you book your next sea trip." },
+  "contact.location": { ar: "الموقع", en: "Location" },
+  "contact.phone": { ar: "الهاتف", en: "Phone" },
+  "contact.email": { ar: "البريد الإلكتروني", en: "Email" },
+  "contact.hours": { ar: "أوقات العمل", en: "Working hours" },
+  "contact.hoursVal": { ar: "يومياً من 8 صباحاً حتى 10 مساءً", en: "Daily from 8 AM to 10 PM" },
+  "contact.locationVal": { ar: "ثول، المنطقة الغربية، المملكة العربية السعودية", en: "Thoul, Western Region, Saudi Arabia" },
+  "contact.waTitle": { ar: "تواصل سريع عبر واتساب", en: "Quick contact via WhatsApp" },
+  "contact.waDesc": { ar: "أسرع طريقة لتأكيد حجزك والرد على استفساراتك.", en: "The fastest way to confirm your booking and answer your questions." },
+  "contact.browseFirst": { ar: "تفضّل التصفح أولاً؟ اطّلع على", en: "Prefer to browse first? Check out" },
+  "contact.packagesPrices": { ar: "باقاتنا وأسعارنا", en: "our packages & prices" },
+  "contact.formTitle": { ar: "أرسل طلب حجزك", en: "Send your booking request" },
+  "contact.formDesc": { ar: "سنستلم طلبك عبر واتساب ونؤكد لك الموعد فوراً.", en: "We'll receive your request via WhatsApp and confirm your slot instantly." },
+  "contact.fName": { ar: "الاسم الكامل", en: "Full name" },
+  "contact.fNamePh": { ar: "أدخل اسمك", en: "Enter your name" },
+  "contact.fPhone": { ar: "رقم الجوال", en: "Mobile number" },
+  "contact.fDate": { ar: "تاريخ الرحلة", en: "Trip date" },
+  "contact.fPersons": { ar: "عدد الأشخاص", en: "Number of people" },
+  "contact.fPackage": { ar: "الباقة", en: "Package" },
+  "contact.fNotes": { ar: "ملاحظات إضافية", en: "Additional notes" },
+  "contact.fNotesPh": { ar: "أي طلبات خاصة...", en: "Any special requests..." },
+  "contact.send": { ar: "إرسال عبر واتساب", en: "Send via WhatsApp" },
+  "contact.callUs": { ar: "أو اتصل بنا مباشرة على", en: "Or call us directly at" },
+
+  "booking.eyebrow": { ar: "الحجوزات", en: "Booking" },
+  "booking.title": { ar: "أسعار وباقات رحلات سوار البحرية", en: "Sewar Marine trip prices & packages" },
+  "booking.subtitle": { ar: "اختر باقتك المثالية واحجز تجربتك البحرية الفاخرة في ثول — خصم 25% على جميع الرحلات.", en: "Choose your perfect package and book your luxury sea experience in Thoul — 25% off all trips." },
+  "booking.bankTitle": { ar: "بيانات التحويل البنكي", en: "Bank transfer details" },
+  "booking.bank": { ar: "البنك", en: "Bank" },
+  "booking.accName": { ar: "اسم الحساب", en: "Account name" },
+  "booking.iban": { ar: "رقم الآيبان (IBAN)", en: "IBAN" },
+  "booking.copy": { ar: "اضغط للنسخ", en: "Tap to copy" },
+  "booking.copied": { ar: "تم النسخ ✓", en: "Copied ✓" },
+  "booking.cancelPolicy": { ar: "سياسة الإلغاء: في حال إلغاء الرحلة من قِبَل العميل لأي سبب، لا يُرد المبلغ المحوَّل ولا يُستبدل. في حال وجود مشكلة من طرفنا، يُرد المبلغ كاملاً.", en: "Cancellation policy: if the client cancels for any reason, the transferred amount is non-refundable and non-exchangeable. If the issue is on our end, a full refund is provided." },
+  "booking.discountSub": { ar: "العرض ساري لفترة محدودة — احجز الآن!", en: "Limited-time offer — book now!" },
+  "booking.customizeBook": { ar: "خصّص رحلتك واحجز", en: "Customize & book" },
+  "booking.mostPopular": { ar: "الأكثر تميزاً", en: "Most premium" },
+
+  "media.eyebrow": { ar: "الوسائط", en: "Media" },
+  "media.title": { ar: "معرض الصور", en: "Photo gallery" },
+  "media.subtitle": { ar: "لحظات حقيقية من رحلاتنا البحرية الفاخرة على متن يخوت سوار.", en: "Real moments from our luxury sea trips aboard Sewar yachts." },
+
+  "art.readMin": { ar: "دقائق قراءة", en: "min read" },
+  "art.cta": { ar: "جاهز لخوض التجربة بنفسك؟ احجز رحلتك البحرية في ثول الآن.", en: "Ready to live the experience? Book your sea trip in Thoul now." },
+  "art.faq": { ar: "أسئلة شائعة", en: "Frequently asked questions" },
+  "art.related": { ar: "اقرأ أيضاً وروابط مفيدة", en: "Read also & useful links" },
+  "art.refs": { ar: "مصادر خارجية", en: "External references" },
+  "art.back": { ar: "العودة إلى جميع المقالات", en: "Back to all articles" },
+};
+
+/** Translate in Server Components / non-hook contexts. */
+export function tt(locale: Locale, key: string): string {
+  return STRINGS[key]?.[locale] ?? STRINGS[key]?.ar ?? key;
 }
