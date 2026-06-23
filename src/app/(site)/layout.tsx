@@ -1,5 +1,6 @@
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { SITE_URL, CONTACT } from "@/lib/site";
 
 const businessLd = {
@@ -29,6 +30,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <Navbar />
       {children}
       <Footer />
+      <FloatingWhatsApp />
     </>
   );
 }
