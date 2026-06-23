@@ -13,10 +13,9 @@ export default function Footer() {
   return (
     <footer
       id="contact"
-      className="relative overflow-hidden bg-navy-950 pt-20 text-white"
+      className="relative overflow-hidden border-t border-navy-100 bg-white pt-20 text-navy-900"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gold-line" />
-      <div className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full bg-ocean-500/10 blur-3xl" />
 
       <div className="container-px relative">
         <Reveal>
@@ -34,10 +33,8 @@ export default function Footer() {
         <div className="grid gap-12 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <span className="inline-flex h-16 items-center rounded-2xl bg-white px-4 shadow-md">
-              <Image src={LOGO} alt="شعار سوار البحرية" className="h-10 w-auto" />
-            </span>
-            <p className="mt-5 leading-relaxed text-white/65">{t("footer.brandDesc")}</p>
+            <Image src={LOGO} alt="شعار سوار البحرية" className="h-12 w-auto" />
+            <p className="mt-5 leading-relaxed text-navy-900/60">{t("footer.brandDesc")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {SOCIALS.map((soc) => (
                 <a
@@ -47,7 +44,7 @@ export default function Footer() {
                   title={soc.label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 transition-all hover:-translate-y-1 hover:border-gold-400 hover:text-gold-400"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-navy-200 bg-navy-50 text-navy-700 transition-all hover:-translate-y-1 hover:border-gold-400 hover:text-gold-600"
                 >
                   <SocialIcon name={soc.key} />
                 </a>
@@ -61,7 +58,7 @@ export default function Footer() {
             <ul className="mt-5 flex flex-col gap-3">
               {NAV.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-white/65 transition-colors hover:text-gold-400">
+                  <Link href={l.href} className="text-navy-900/65 transition-colors hover:text-gold-600">
                     {t(l.key)}
                   </Link>
                 </li>
@@ -72,20 +69,20 @@ export default function Footer() {
           {/* Contact */}
           <div>
             <h4 className="text-lg font-bold">{t("footer.contactUs")}</h4>
-            <ul className="mt-5 flex flex-col gap-4 text-white/65">
+            <ul className="mt-5 flex flex-col gap-4 text-navy-900/65">
               <li className="flex items-start gap-3">
                 <PinIcon />
                 <span>{t("footer.location")}</span>
               </li>
               <li className="flex items-center gap-3">
                 <PhoneIcon />
-                <a dir="ltr" href={CONTACT.phoneHref} className="hover:text-gold-400">
+                <a dir="ltr" href={CONTACT.phoneHref} className="hover:text-gold-600">
                   {CONTACT.phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <MailIcon />
-                <a href={`mailto:${CONTACT.email}`} className="hover:text-gold-400">
+                <a href={`mailto:${CONTACT.email}`} className="hover:text-gold-600">
                   {CONTACT.email}
                 </a>
               </li>
@@ -95,12 +92,12 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10">
-        <div className="container-px flex flex-col items-center justify-between gap-3 py-6 text-sm text-white/55 sm:flex-row">
+      <div className="border-t border-navy-100">
+        <div className="container-px flex flex-col items-center justify-between gap-3 py-6 text-sm text-navy-900/55 sm:flex-row">
           <p>© {new Date().getFullYear()} {CONTACT.brand} · {CONTACT.brandEn}. {t("footer.rights")}</p>
           <div className="flex gap-6">
-            <Link href="#" className="hover:text-white">{t("footer.privacy")}</Link>
-            <Link href="#" className="hover:text-white">{t("footer.terms")}</Link>
+            <Link href="#" className="hover:text-navy-900">{t("footer.privacy")}</Link>
+            <Link href="#" className="hover:text-navy-900">{t("footer.terms")}</Link>
           </div>
         </div>
       </div>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import PageHero from "@/components/PageHero";
 import MediaGallery from "@/components/media/MediaGallery";
 import { CABIN } from "@/components/home/images";
+import { tt } from "@/lib/i18n-core";
+import { getServerLocale } from "@/lib/locale-server";
 
 export const metadata: Metadata = {
   title: "الوسائط",
@@ -9,12 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default function MediaPage() {
+  const locale = getServerLocale();
   return (
     <main>
       <PageHero
-        eyebrow="الوسائط"
-        title="معرض الصور"
-        subtitle="لحظات حقيقية من رحلاتنا البحرية الفاخرة على متن يخوت سوار."
+        eyebrow={tt(locale, "media.eyebrow")}
+        title={tt(locale, "media.title")}
+        subtitle={tt(locale, "media.subtitle")}
         image={CABIN}
       />
       <MediaGallery />
