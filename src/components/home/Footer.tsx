@@ -4,10 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./ui";
 import { LOGO } from "./images";
-import { NAV, CONTACT, BOOK_CTA, SOCIALS } from "@/lib/site";
+import { NAV, CONTACT, SOCIALS } from "@/lib/site";
 import SocialIcon from "@/components/SocialIcon";
+import { useI18n } from "@/lib/i18n";
 
 export default function Footer() {
+  const { t } = useI18n();
   return (
     <footer
       id="contact"
@@ -20,15 +22,11 @@ export default function Footer() {
         <Reveal>
           <div className="mb-16 flex flex-col items-center gap-6 rounded-[32px] bg-gradient-to-l from-ocean-600 to-turquoise-500 px-8 py-12 text-center shadow-luxe sm:flex-row sm:justify-between sm:text-start">
             <div>
-              <h3 className="text-2xl font-extrabold sm:text-3xl">
-                جاهز لتجربة بحرية لا تُنسى؟
-              </h3>
-              <p className="mt-2 text-white/85">
-                احجز رحلتك الآن واستمتع بخصم 25% على جميع الرحلات بمناسبة بداية موسم الصيف.
-              </p>
+              <h3 className="text-2xl font-extrabold sm:text-3xl">{t("footer.ctaTitle")}</h3>
+              <p className="mt-2 text-white/85">{t("footer.ctaDesc")}</p>
             </div>
             <Link href="/booking" className="btn-gold shrink-0 text-base">
-              {BOOK_CTA}
+              {t("cta.book")}
             </Link>
           </div>
         </Reveal>
@@ -39,10 +37,7 @@ export default function Footer() {
             <span className="inline-flex h-16 items-center rounded-2xl bg-white px-4 shadow-md">
               <Image src={LOGO} alt="شعار سوار البحرية" className="h-10 w-auto" />
             </span>
-            <p className="mt-5 leading-relaxed text-white/65">
-              رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر. عِش معنا متعة بحرية لا
-              تُنسى وخُض تجربة بحرية لا مثيل لها.
-            </p>
+            <p className="mt-5 leading-relaxed text-white/65">{t("footer.brandDesc")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {SOCIALS.map((soc) => (
                 <a
@@ -62,12 +57,12 @@ export default function Footer() {
 
           {/* Quick links */}
           <div>
-            <h4 className="text-lg font-bold">روابط سريعة</h4>
+            <h4 className="text-lg font-bold">{t("footer.quickLinks")}</h4>
             <ul className="mt-5 flex flex-col gap-3">
               {NAV.map((l) => (
-                <li key={l.label}>
+                <li key={l.href}>
                   <Link href={l.href} className="text-white/65 transition-colors hover:text-gold-400">
-                    {l.label}
+                    {t(l.key)}
                   </Link>
                 </li>
               ))}
@@ -76,11 +71,11 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-lg font-bold">تواصل معنا</h4>
+            <h4 className="text-lg font-bold">{t("footer.contactUs")}</h4>
             <ul className="mt-5 flex flex-col gap-4 text-white/65">
               <li className="flex items-start gap-3">
                 <PinIcon />
-                <span>{CONTACT.location}</span>
+                <span>{t("footer.location")}</span>
               </li>
               <li className="flex items-center gap-3">
                 <PhoneIcon />
@@ -102,10 +97,10 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/10">
         <div className="container-px flex flex-col items-center justify-between gap-3 py-6 text-sm text-white/55 sm:flex-row">
-          <p>© {new Date().getFullYear()} {CONTACT.brand} · {CONTACT.brandEn}. جميع الحقوق محفوظة.</p>
+          <p>© {new Date().getFullYear()} {CONTACT.brand} · {CONTACT.brandEn}. {t("footer.rights")}</p>
           <div className="flex gap-6">
-            <Link href="#" className="hover:text-white">سياسة الخصوصية</Link>
-            <Link href="#" className="hover:text-white">الشروط والأحكام</Link>
+            <Link href="#" className="hover:text-white">{t("footer.privacy")}</Link>
+            <Link href="#" className="hover:text-white">{t("footer.terms")}</Link>
           </div>
         </div>
       </div>

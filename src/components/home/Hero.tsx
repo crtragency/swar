@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { HOME_IMAGES } from "./homeImages";
+import { useI18n } from "@/lib/i18n";
 
 const SLIDES = [
   { src: HOME_IMAGES.hero[0], alt: "يخت سوار البحرية وقت الغروب في البحر الأحمر" },
@@ -16,6 +17,7 @@ const AUTOPLAY_MS = 3000;
 
 export default function Hero() {
   const [index, setIndex] = useState(0);
+  const { t } = useI18n();
 
   useEffect(() => {
     const id = setInterval(
@@ -77,7 +79,7 @@ export default function Hero() {
           className="mb-5 inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-white/5 px-5 py-2 text-sm font-semibold text-gold-400 backdrop-blur-md"
         >
           <span className="h-2 w-2 rounded-full bg-gold-400" />
-          سوار · رحلات بحرية فاخرة في ثول
+          {t("hero.badge")}
         </motion.span>
 
         <motion.h1
@@ -86,7 +88,7 @@ export default function Hero() {
           transition={{ delay: 0.45, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-3xl font-cairo text-4xl font-extrabold leading-[1.15] text-white text-balance drop-shadow-lg sm:text-6xl lg:text-7xl"
         >
-          عِش معنا متعة بحرية لا تُنسى
+          {t("hero.title")}
         </motion.h1>
 
         <motion.p
@@ -95,7 +97,7 @@ export default function Hero() {
           transition={{ delay: 0.6, duration: 0.9 }}
           className="mt-6 max-w-xl text-lg font-medium text-white/85 sm:text-2xl"
         >
-          خُض تجربة بحرية لا مثيل لها
+          {t("hero.subtitle")}
         </motion.p>
 
         <motion.div
@@ -104,11 +106,11 @@ export default function Hero() {
           transition={{ delay: 0.78, duration: 0.9 }}
           className="mt-10 flex flex-wrap items-center gap-4"
         >
-          <Link href="#adventures" className="btn-gold text-base">
-            المزيد
+          <Link href="#pricing" className="btn-gold text-base">
+            {t("common.more")}
           </Link>
           <Link href="/booking" className="btn-outline text-base">
-            الحجوزات
+            {t("hero.bookings")}
           </Link>
         </motion.div>
       </div>

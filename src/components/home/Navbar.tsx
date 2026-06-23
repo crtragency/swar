@@ -6,12 +6,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { LOGO } from "./images";
-import { NAV, BOOK_CTA } from "@/lib/site";
+import { NAV } from "@/lib/site";
+import { useI18n } from "@/lib/i18n";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { t, locale, toggle } = useI18n();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -46,14 +48,14 @@ export default function Navbar() {
           {NAV.map((item) => {
             const active = pathname === item.href;
             return (
-              <li key={item.label}>
+              <li key={item.href}>
                 <Link
                   href={item.href}
                   className={`group relative text-[15px] font-semibold transition-colors ${
                     active ? "text-gold-600" : "text-navy-900/80 hover:text-navy-900"
                   }`}
                 >
-                  {item.label}
+                  {t(item.key)}
                   <span
                     className={`absolute -bottom-1.5 right-0 h-0.5 bg-gold-500 transition-all duration-300 ${
                       active ? "w-full" : "w-0 group-hover:w-full"
@@ -65,10 +67,18 @@ export default function Navbar() {
           })}
         </ul>
 
-        {/* CTA + mobile toggle */}
+        {/* CTA + language + mobile toggle */}
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label="Switch language"
+            className="rounded-full border border-navy-900/15 px-3 py-1.5 text-sm font-bold text-navy-900 transition-colors hover:border-gold-500 hover:text-gold-600"
+          >
+            {locale === "ar" ? "EN" : "ع"}
+          </button>
           <Link href="/booking" className="btn-gold hidden text-sm sm:inline-flex">
-            {BOOK_CTA}
+            {t("cta.book")}
           </Link>
           <button
             type="button"
@@ -98,7 +108,7 @@ export default function Navbar() {
           >
             <ul className="container-px mt-3 flex flex-col gap-1 rounded-3xl border border-navy-50 bg-white p-4 shadow-luxe">
               {NAV.map((item) => (
-                <li key={item.label}>
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     onClick={() => setOpen(false)}
@@ -106,13 +116,13 @@ export default function Navbar() {
                       pathname === item.href ? "text-gold-600" : "text-navy-900/85"
                     }`}
                   >
-                    {item.label}
+                    {t(item.key)}
                   </Link>
                 </li>
               ))}
               <li className="mt-2">
                 <Link href="/booking" onClick={() => setOpen(false)} className="btn-gold w-full">
-                  {BOOK_CTA}
+                  {t("cta.book")}
                 </Link>
               </li>
             </ul>

@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import heroOg from "../../الهيرو الاولي.webp";
 import { SITE_URL } from "@/lib/site";
+import { LocaleProvider } from "@/lib/i18n";
+import { dir } from "@/lib/i18n-core";
+import { getServerLocale } from "@/lib/locale-server";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -52,9 +55,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const locale = getServerLocale();
   return (
-    <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body className="font-cairo antialiased">{children}</body>
+    <html lang={locale} dir={dir(locale)} className={cairo.variable}>
+      <body className="font-cairo antialiased">
+        <LocaleProvider initial={locale}>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }
