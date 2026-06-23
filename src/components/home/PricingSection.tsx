@@ -5,11 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal } from "./ui";
-import { PACKAGES, DISCOUNT } from "@/lib/packages";
+import { PACKAGES, DISCOUNT, pkgText } from "@/lib/packages";
 import { HOME_IMAGES } from "./homeImages";
+import { useI18n, pick } from "@/lib/i18n";
 
 export default function PricingSection() {
   const trackRef = useRef<HTMLDivElement>(null);
+  const { t, locale } = useI18n();
+  const sar = pick(locale, "ريال", "SAR");
 
   const scroll = (dir: 1 | -1) => {
     const el = trackRef.current;
@@ -36,18 +39,16 @@ export default function PricingSection() {
             <Reveal>
               <span className="inline-flex items-center gap-3 text-sm font-bold uppercase tracking-[0.25em] text-turquoise-600">
                 <span className="h-px w-10 bg-gradient-to-l from-turquoise-500 to-transparent" />
-                باقات الحجز
+                {t("pricing.eyebrow")}
               </span>
             </Reveal>
             <Reveal delay={0.05}>
               <h2 className="mt-4 font-cairo text-4xl font-extrabold leading-[1.15] text-navy-900 sm:text-5xl">
-                أسعار رحلات بحرية في ثول
+                {t("pricing.title")}
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-4 text-lg leading-relaxed text-navy-900/60">
-                اختر الباقة التي تناسبك واحجز تجربتك البحرية الفاخرة بأفضل الأسعار وأرقى الخدمات.
-              </p>
+              <p className="mt-4 text-lg leading-relaxed text-navy-900/60">{t("pricing.desc")}</p>
             </Reveal>
           </div>
 
@@ -79,7 +80,7 @@ export default function PricingSection() {
           <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-gold-400/40 bg-gold-400/10 px-5 py-3">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-500 text-xs font-extrabold text-white">٪</span>
             <span className="text-sm font-bold text-navy-900 sm:text-[15px]">
-              خصم <span className="text-gold-600">{DISCOUNT.pct}%</span> على جميع الرحلات بمناسبة بداية موسم الصيف
+              {pick(locale, "خصم", "Save")} <span className="text-gold-600">{DISCOUNT.pct}%</span> {t("pricing.discount")}
             </span>
           </div>
         </Reveal>
@@ -106,7 +107,7 @@ export default function PricingSection() {
               <div className="relative h-52 overflow-hidden">
                 <Image
                   src={HOME_IMAGES.pricing[i]}
-                  alt={`${pkg.title} - ${pkg.subtitle}`}
+                  alt={pkgText(locale, pkg, "title")}
                   fill
                   sizes="330px"
                   className="object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.08]"
@@ -115,37 +116,37 @@ export default function PricingSection() {
 
                 {/* discount ribbon */}
                 <span className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-navy-900 shadow-md backdrop-blur">
-                  وفّر {DISCOUNT.pct}٪
+                  {t("pricing.save")} {DISCOUNT.pct}%
                 </span>
                 {pkg.featured && (
                   <span className="absolute left-4 top-4 rounded-full bg-gold-500 px-3 py-1 text-xs font-bold text-white shadow-md">
-                    الأكثر طلباً
+                    {pick(locale, "الأكثر طلباً", "Most popular")}
                   </span>
                 )}
 
                 <h3 className="absolute inset-x-0 bottom-0 p-5 text-2xl font-extrabold leading-tight text-white drop-shadow">
-                  {pkg.title}
+                  {pkgText(locale, pkg, "title")}
                 </h3>
               </div>
 
               {/* body */}
               <div className="flex flex-1 flex-col p-6">
-                <p className="min-h-[44px] text-sm leading-relaxed text-navy-900/55">{pkg.subtitle}</p>
+                <p className="min-h-[44px] text-sm leading-relaxed text-navy-900/55">{pkgText(locale, pkg, "subtitle")}</p>
 
                 <div className="my-5 h-px bg-navy-900/5" />
 
                 <div className="flex items-end justify-between gap-3">
                   <div>
-                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-navy-900/40">يبدأ من</span>
+                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-navy-900/40">{t("pricing.from")}</span>
                     <div className="mt-1 flex items-baseline gap-2">
                       <span className="font-cairo text-4xl font-black leading-none text-navy-900">{pkg.price.toLocaleString()}</span>
-                      <span className="text-sm font-semibold text-navy-900/55">{pkg.unit}</span>
+                      <span className="text-sm font-semibold text-navy-900/55">{pkgText(locale, pkg, "unit")}</span>
                     </div>
-                    <span className="text-xs text-navy-900/35 line-through">{pkg.oldPrice.toLocaleString()} ريال</span>
+                    <span className="text-xs text-navy-900/35 line-through">{pkg.oldPrice.toLocaleString()} {sar}</span>
                   </div>
                   <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-navy-50 px-3 py-1.5 text-xs font-semibold text-navy-800">
                     <span className="h-1.5 w-1.5 rounded-full bg-turquoise-500" />
-                    {pkg.capacity}
+                    {pkgText(locale, pkg, "capacity")}
                   </span>
                 </div>
 
@@ -153,7 +154,7 @@ export default function PricingSection() {
                   href="/booking"
                   className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-navy-900 py-3.5 font-bold text-white transition-colors duration-300 hover:bg-gold-500 hover:text-navy-950"
                 >
-                  احجز الآن
+                  {t("cta.book")}
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </Link>
               </div>
@@ -164,7 +165,7 @@ export default function PricingSection() {
         <Reveal>
           <div className="mt-10 text-center">
             <Link href="/booking" className="inline-flex items-center gap-2 font-bold text-navy-900 transition-colors hover:text-gold-600">
-              عرض كل الباقات والتفاصيل
+              {t("pricing.viewAll")}
               <span className="text-gold-500">←</span>
             </Link>
           </div>

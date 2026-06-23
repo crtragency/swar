@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
 import { HOME_IMAGES } from "./homeImages";
+import { useI18n } from "@/lib/i18n";
 
 const ALTS = [
   "لحظة بحرية على متن يخت سوار",
@@ -24,6 +25,7 @@ const IMAGES = HOME_IMAGES.gallery.map((src, i) => ({
 
 export default function GallerySection() {
   const [active, setActive] = useState<number | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -41,9 +43,9 @@ export default function GallerySection() {
     <section className="relative bg-navy-50/40 py-24 sm:py-32">
       <div className="container-px">
         <SectionHeading
-          eyebrow="معرض الصور"
-          title="أجمل لحظاتنا في البحر"
-          description="لمحات من رحلاتنا البحرية الفاخرة، حيث تتحول كل لحظة إلى ذكرى لا تُنسى."
+          eyebrow={t("gallery.eyebrow")}
+          title={t("gallery.title")}
+          description={t("gallery.desc")}
         />
 
         <div className="mt-16 grid auto-rows-[200px] grid-cols-2 gap-4 sm:gap-5 md:grid-cols-4">
