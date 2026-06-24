@@ -100,7 +100,16 @@ export default function DeveloperStudio() {
 }
 
 /* ───────────────────────────── Posts ───────────────────────────── */
+type PMode = "ai" | "manual";
+type MSection = { heading: string; body: string };
+type MFaq = { q: string; a: string };
+
+const slugifyClient = (s: string) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9؀-ۿ]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) ||
+  `post-${Date.now().toString(36)}`;
+
 function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: string }) {
+  const [mode, setMode] = useState<PMode>("manual");
   const [title, setTitle] = useState("");
   const [keyphrase, setKeyphrase] = useState("");
   const [loading, setLoading] = useState(false);
@@ -109,11 +118,23 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
   const [msg, setMsg] = useState("");
   const [publishing, setPublishing] = useState(false);
 
+  // manual composer fields
+  const [mCategory, setMCategory] = useState("أدلة بحرية");
+  const [mExcerpt, setMExcerpt] = useState("");
+  const [mIntro, setMIntro] = useState("");
+  const [mSections, setMSections] = useState<MSection[]>([{ heading: "", body: "" }]);
+  const [mFaq, setMFaq] = useState<MFaq[]>([{ q: "", a: "" }]);
+
   const loadPosts = useCallback(async () => {
     const res = await fetch(`/api/dev/posts?password=${encodeURIComponent(pw)}`, { cache: "no-store" });
     if (res.ok) setPosts((await res.json()).posts ?? []);
   }, [pw]);
   useEffect(() => { loadPosts(); }, [loadPosts]);
+
+  function resetForm() {
+    setTitle(""); setKeyphrase(""); setMExcerpt(""); setMIntro("");
+    setMSections([{ heading: "", body: "" }]); setMFaq([{ q: "", a: "" }]);
+  }
 
   async function generate() {
     setMsg("");
@@ -132,6 +153,49 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
     }
   }
 
+  // build a complete BlogPost from the manual fields (no AI needed)
+  function buildManual() {
+    setMsg("");
+    if (!title.trim()) return setMsg("✍️ اكتب عنوان المقال أولاً");
+    const kp = keyphrase.trim() || title.trim();
+    const sections = mSections
+      .filter((s) => s.heading.trim() || s.body.trim())
+      .map((s) => {
+        const lines = s.body.split("\n").map((l) => l.trim()).filter(Boolean);
+        const list = lines.filter((l) => l.startsWith("- ")).map((l) => l.slice(2).trim());
+        const paragraphs = lines.filter((l) => !l.startsWith("- "));
+        return { heading: s.heading.trim(), paragraphs, ...(list.length ? { list } : {}) };
+      });
+    const faq = mFaq.filter((f) => f.q.trim() && f.a.trim()).map((f) => ({ q: f.q.trim(), a: f.a.trim() }));
+    const words = (mIntro + " " + sections.map((s) => s.paragraphs.join(" ")).join(" ")).split(/\s+/).filter(Boolean).length;
+    const now = new Date();
+    const post: BlogPost = {
+      slug: slugifyClient(kp),
+      keyphrase: kp,
+      title: title.trim(),
+      excerpt: mExcerpt.trim() || mIntro.trim().slice(0, 155),
+      category: mCategory.trim() || "المدونة",
+      date: now.toLocaleDateString("ar-EG", { day: "numeric", month: "long", year: "numeric" }),
+      isoDate: now.toISOString().slice(0, 10),
+      readMinutes: Math.max(3, Math.round(words / 200)),
+      coverAlt: `${title.trim()} — سوار البحرية`,
+      intro: mIntro.trim(),
+      sections,
+      faq,
+      related: [
+        { label: "تصفّح الباقات والأسعار", href: "/booking" },
+        { label: "تعرّف على سوار البحرية", href: "/about" },
+        { label: "معرض الصور", href: "/media" },
+      ],
+      references: [
+        { label: "هيئة السياحة السعودية", href: "https://www.visitsaudi.com/ar", external: true },
+        { label: "البحر الأحمر على ويكيبيديا", href: "https://ar.wikipedia.org/wiki/البحر_الأحمر", external: true },
+      ],
+    };
+    setDraft(post);
+    setMsg("👁️ تمت المعاينة — راجع المقال على اليمين ثم انشره.");
+  }
+
   async function publish() {
     if (!draft) return;
     setPublishing(true);
@@ -139,7 +203,7 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
       const res = await fetch("/api/dev/posts", { method: "POST", headers: headers(), body: JSON.stringify({ post: draft }) });
       if (!res.ok) throw new Error("تعذّر النشر");
       setMsg("✅ تم نشر المقال على الموقع!");
-      setDraft(null); setTitle(""); setKeyphrase("");
+      setDraft(null); resetForm();
       loadPosts();
     } catch (e) {
       setMsg("❌ " + (e instanceof Error ? e.message : "خطأ"));
@@ -153,17 +217,80 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
     loadPosts();
   }
 
+  const setSection = (i: number, patch: Partial<MSection>) => setMSections((l) => l.map((s, j) => (j === i ? { ...s, ...patch } : s)));
+  const setFaq = (i: number, patch: Partial<MFaq>) => setMFaq((l) => l.map((f, j) => (j === i ? { ...f, ...patch } : f)));
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {/* generator */}
+      {/* composer */}
       <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl">
-        <h2 className="flex items-center gap-2 text-xl font-extrabold">✨ توليد مقال جديد</h2>
-        <p className="mt-1 text-sm text-white/50">اكتب العنوان، ويقوم الذكاء الاصطناعي بكتابة المقال كاملاً ومحسّناً للسيو.</p>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان المقال المقترح..." className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
-        <input value={keyphrase} onChange={(e) => setKeyphrase(e.target.value)} placeholder="الكلمة المفتاحية (اختياري)" className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
-        <button onClick={generate} disabled={loading} className="group relative mt-5 w-full overflow-hidden rounded-2xl bg-gradient-to-l from-violet-600 via-turquoise-500 to-gold-500 py-3.5 font-bold text-navy-950 transition hover:brightness-110 disabled:opacity-60">
-          {loading ? "⏳ جاري التوليد..." : "✨ توليد بالذكاء الاصطناعي"}
-        </button>
+        {/* mode switch */}
+        <div className="mb-5 flex gap-2 rounded-full border border-white/10 bg-white/5 p-1">
+          {(["manual", "ai"] as PMode[]).map((m) => (
+            <button key={m} onClick={() => { setMode(m); setDraft(null); setMsg(""); }}
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-bold transition ${mode === m ? "bg-white text-navy-950" : "text-white/70 hover:text-white"}`}>
+              {m === "manual" ? "✍️ كتابة يدوية" : "✨ بالذكاء الاصطناعي"}
+            </button>
+          ))}
+        </div>
+
+        {mode === "ai" ? (
+          <>
+            <h2 className="flex items-center gap-2 text-xl font-extrabold">✨ توليد مقال جديد</h2>
+            <p className="mt-1 text-sm text-white/50">اكتب العنوان، ويقوم الذكاء الاصطناعي بكتابة المقال كاملاً ومحسّناً للسيو (يتطلب مفتاح AI).</p>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان المقال المقترح..." className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            <input value={keyphrase} onChange={(e) => setKeyphrase(e.target.value)} placeholder="الكلمة المفتاحية (اختياري)" className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            <button onClick={generate} disabled={loading} className="group relative mt-5 w-full overflow-hidden rounded-2xl bg-gradient-to-l from-violet-600 via-turquoise-500 to-gold-500 py-3.5 font-bold text-navy-950 transition hover:brightness-110 disabled:opacity-60">
+              {loading ? "⏳ جاري التوليد..." : "✨ توليد بالذكاء الاصطناعي"}
+            </button>
+          </>
+        ) : (
+          <>
+            <h2 className="flex items-center gap-2 text-xl font-extrabold">✍️ كتابة مقال يدويًا</h2>
+            <p className="mt-1 text-sm text-white/50">اكتب المقال بنفسك — بدون أي مفتاح AI. كل حقل اختياري عدا العنوان.</p>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان المقال (يبدأ بالكلمة المفتاحية) *" className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <input value={keyphrase} onChange={(e) => setKeyphrase(e.target.value)} placeholder="الكلمة المفتاحية" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+              <input value={mCategory} onChange={(e) => setMCategory(e.target.value)} placeholder="التصنيف" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            </div>
+            <textarea value={mExcerpt} onChange={(e) => setMExcerpt(e.target.value)} placeholder="وصف الميتا (~155 حرف، يحتوي الكلمة المفتاحية)" rows={2} className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            <textarea value={mIntro} onChange={(e) => setMIntro(e.target.value)} placeholder="فقرة المقدمة..." rows={3} className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+
+            {/* sections */}
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-sm font-bold text-white/80">الأقسام</span>
+              <button onClick={() => setMSections((l) => [...l, { heading: "", body: "" }])} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/20">+ قسم</button>
+            </div>
+            {mSections.map((s, i) => (
+              <div key={i} className="mt-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex gap-2">
+                  <input value={s.heading} onChange={(e) => setSection(i, { heading: e.target.value })} placeholder={`عنوان القسم ${i + 1}`} className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-turquoise-400" />
+                  {mSections.length > 1 && <button onClick={() => setMSections((l) => l.filter((_, j) => j !== i))} className="rounded-lg bg-rose-500/70 px-2.5 text-xs font-bold">✕</button>}
+                </div>
+                <textarea value={s.body} onChange={(e) => setSection(i, { body: e.target.value })} placeholder="فقرات القسم — كل سطر فقرة. ابدأ السطر بـ - لعمل نقطة قائمة." rows={3} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-turquoise-400" />
+              </div>
+            ))}
+
+            {/* faq */}
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-sm font-bold text-white/80">الأسئلة الشائعة</span>
+              <button onClick={() => setMFaq((l) => [...l, { q: "", a: "" }])} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/20">+ سؤال</button>
+            </div>
+            {mFaq.map((f, i) => (
+              <div key={i} className="mt-2 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex gap-2">
+                  <input value={f.q} onChange={(e) => setFaq(i, { q: e.target.value })} placeholder={`سؤال ${i + 1}`} className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-turquoise-400" />
+                  {mFaq.length > 1 && <button onClick={() => setMFaq((l) => l.filter((_, j) => j !== i))} className="rounded-lg bg-rose-500/70 px-2.5 text-xs font-bold">✕</button>}
+                </div>
+                <textarea value={f.a} onChange={(e) => setFaq(i, { a: e.target.value })} placeholder="الإجابة" rows={2} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-turquoise-400" />
+              </div>
+            ))}
+
+            <button onClick={buildManual} className="mt-5 w-full rounded-2xl bg-gradient-to-l from-violet-600 via-turquoise-500 to-gold-500 py-3.5 font-bold text-navy-950 transition hover:brightness-110">
+              👁️ معاينة المقال
+            </button>
+          </>
+        )}
         {msg && <p className="mt-3 text-sm font-semibold text-white/80">{msg}</p>}
       </div>
 
