@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Reveal, SectionHeading } from "./ui";
 import { HOME_IMAGES } from "./homeImages";
+import SmartImage from "./SmartImage";
 import { useI18n } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
+import type { StaticImageData } from "next/image";
 
 const ALTS = [
   "لحظة بحرية على متن يخت سوار",
@@ -17,15 +19,17 @@ const ALTS = [
   "تفاصيل يخت سوار البحرية",
 ];
 const SPANS = ["row-span-2", "", "", "", "row-span-2", "", ""];
-const IMAGES = HOME_IMAGES.gallery.map((src, i) => ({
-  src,
-  alt: ALTS[i] || "صورة من رحلات سوار البحرية",
-  span: SPANS[i] || "",
-}));
 
 export default function GallerySection() {
   const [active, setActive] = useState<number | null>(null);
   const { t } = useI18n();
+  const { galleryImages } = useSettings();
+  const sources: (StaticImageData | string)[] = galleryImages.length ? galleryImages : HOME_IMAGES.gallery;
+  const IMAGES = sources.map((src, i) => ({
+    src,
+    alt: ALTS[i] || "صورة من رحلات سوار البحرية",
+    span: SPANS[i % SPANS.length] || "",
+  }));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -61,7 +65,7 @@ export default function GallerySection() {
                 aria-label={`عرض ${img.alt}`}
                 className="group relative h-full w-full overflow-hidden rounded-3xl shadow-luxe"
               >
-                <Image
+                <SmartImage
                   src={img.src}
                   alt={img.alt}
                   fill
@@ -122,7 +126,7 @@ export default function GallerySection() {
               onClick={(e) => e.stopPropagation()}
               className="relative h-[70vh] w-full max-w-4xl overflow-hidden rounded-3xl"
             >
-              <Image
+              <SmartImage
                 src={IMAGES[active].src}
                 alt={IMAGES[active].alt}
                 fill
