@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDynamicPosts, addPost, deletePost } from "@/lib/content-server";
+import { getAllPosts, addPost, deletePost } from "@/lib/content-server";
 import type { BlogPost } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,9 @@ const ok = (req: Request) =>
 
 export async function GET(req: Request) {
   if (!ok(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  return NextResponse.json({ posts: await getDynamicPosts() });
+  // Return every live article (static seed + developer-managed) so the studio
+  // can list, edit and delete all of them.
+  return NextResponse.json({ posts: await getAllPosts() });
 }
 
 export async function POST(req: Request) {

@@ -3,22 +3,24 @@ import Link from "next/link";
 import PageHero from "@/components/PageHero";
 import ContactForm from "@/components/ContactForm";
 import { Reveal } from "@/components/home/ui";
-import { CONTACT, waLink } from "@/lib/site";
 import { MARINA_BOAT } from "@/components/home/images";
 import { tt } from "@/lib/i18n-core";
 import { getServerLocale } from "@/lib/locale-server";
+import { getSiteSettings } from "@/lib/content-server";
+import { phoneHref, waLinkFrom } from "@/lib/settings-core";
 
 export const metadata: Metadata = {
   title: "التواصل",
   description: "تواصل مع سوار البحرية لحجز رحلتك البحرية الفاخرة في ثول — واتساب، هاتف، وبريد إلكتروني.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
   const locale = getServerLocale();
+  const s = await getSiteSettings();
   const INFO = [
     { icon: "📍", label: tt(locale, "contact.location"), value: tt(locale, "contact.locationVal") },
-    { icon: "📞", label: tt(locale, "contact.phone"), value: CONTACT.phone, href: CONTACT.phoneHref, ltr: true },
-    { icon: "✉️", label: tt(locale, "contact.email"), value: CONTACT.email, href: `mailto:${CONTACT.email}` },
+    { icon: "📞", label: tt(locale, "contact.phone"), value: s.phone, href: phoneHref(s.phone), ltr: true },
+    { icon: "✉️", label: tt(locale, "contact.email"), value: s.email, href: `mailto:${s.email}` },
     { icon: "🕐", label: tt(locale, "contact.hours"), value: tt(locale, "contact.hoursVal") },
   ];
   return (
@@ -53,7 +55,7 @@ export default function ContactPage() {
 
             <Reveal delay={0.1}>
               <a
-                href={waLink()}
+                href={waLinkFrom(s.whatsapp)}
                 target="_blank"
                 rel="noopener"
                 className="mt-6 flex items-center justify-between gap-4 rounded-[24px] bg-gradient-to-l from-emerald-500 to-teal-500 p-6 text-white shadow-luxe transition-transform hover:scale-[1.01]"

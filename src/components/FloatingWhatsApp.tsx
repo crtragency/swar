@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { waLink } from "@/lib/site";
 import { useI18n } from "@/lib/i18n";
+import { useSettings, waLinkFrom } from "@/lib/settings";
 import SocialIcon from "@/components/SocialIcon";
 
 export default function FloatingWhatsApp() {
   const { t } = useI18n();
+  const { whatsapp } = useSettings();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
 
   const send = () => {
     const text = msg.trim() || (t("wa.greeting") as string);
-    window.open(waLink(text), "_blank", "noopener");
+    window.open(waLinkFrom(whatsapp, text), "_blank", "noopener");
   };
 
   return (

@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { BlogPost } from "@/lib/blog";
 import type { Pkg } from "@/lib/packages";
+import type { SiteSettings, SocialLink } from "@/lib/settings-core";
 
-type Tab = "posts" | "packages";
+type Tab = "posts" | "packages" | "settings";
+const TAB_LABEL: Record<Tab, string> = { posts: "المقالات", packages: "الباقات", settings: "إعدادات الموقع" };
 
 export default function DeveloperStudio() {
   const [pw, setPw] = useState("");
@@ -65,7 +67,7 @@ export default function DeveloperStudio() {
                 <p className="text-sm text-white/50">سوار البحرية · إدارة المحتوى بالذكاء الاصطناعي</p>
               </div>
               <div className="flex gap-2 rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur">
-                {(["posts", "packages"] as Tab[]).map((tk) => (
+                {(["posts", "packages", "settings"] as Tab[]).map((tk) => (
                   <button
                     key={tk}
                     onClick={() => setTab(tk)}
@@ -73,7 +75,7 @@ export default function DeveloperStudio() {
                       tab === tk ? "bg-white text-navy-950" : "text-white/70 hover:text-white"
                     }`}
                   >
-                    {tk === "posts" ? "المقالات" : "الباقات"}
+                    {TAB_LABEL[tk]}
                   </button>
                 ))}
               </div>
@@ -88,7 +90,7 @@ export default function DeveloperStudio() {
                   exit={{ opacity: 0, y: -16 }}
                   transition={{ duration: 0.35 }}
                 >
-                  {tab === "posts" ? <PostsTab headers={headers} pw={pw} /> : <PackagesTab headers={headers} pw={pw} />}
+                  {tab === "posts" ? <PostsTab headers={headers} pw={pw} /> : tab === "packages" ? <PackagesTab headers={headers} pw={pw} /> : <SettingsTab headers={headers} pw={pw} />}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -124,6 +126,7 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
   const [mIntro, setMIntro] = useState("");
   const [mSections, setMSections] = useState<MSection[]>([{ heading: "", body: "" }]);
   const [mFaq, setMFaq] = useState<MFaq[]>([{ q: "", a: "" }]);
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     const res = await fetch(`/api/dev/posts?password=${encodeURIComponent(pw)}`, { cache: "no-store" });
@@ -134,6 +137,28 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
   function resetForm() {
     setTitle(""); setKeyphrase(""); setMExcerpt(""); setMIntro("");
     setMSections([{ heading: "", body: "" }]); setMFaq([{ q: "", a: "" }]);
+    setMCategory("أدلة بحرية"); setEditingSlug(null);
+  }
+
+  // load an existing article into the manual composer for editing
+  function loadForEdit(p: BlogPost) {
+    setMode("manual");
+    setEditingSlug(p.slug);
+    setTitle(p.title);
+    setKeyphrase(p.keyphrase);
+    setMCategory(p.category);
+    setMExcerpt(p.excerpt);
+    setMIntro(p.intro);
+    setMSections(
+      (p.sections.length ? p.sections : [{ heading: "", paragraphs: [], list: [] }]).map((s) => ({
+        heading: s.heading,
+        body: [...s.paragraphs, ...((s.list ?? []).map((li) => `- ${li}`))].join("\n"),
+      }))
+    );
+    setMFaq(p.faq.length ? p.faq.map((f) => ({ q: f.q, a: f.a })) : [{ q: "", a: "" }]);
+    setDraft(null);
+    setMsg(`✏️ تم تحميل المقال للتعديل — عدّل ثم اضغط معاينة فالنشر.`);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function generate() {
@@ -170,7 +195,7 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
     const words = (mIntro + " " + sections.map((s) => s.paragraphs.join(" ")).join(" ")).split(/\s+/).filter(Boolean).length;
     const now = new Date();
     const post: BlogPost = {
-      slug: slugifyClient(kp),
+      slug: editingSlug || slugifyClient(kp),
       keyphrase: kp,
       title: title.trim(),
       excerpt: mExcerpt.trim() || mIntro.trim().slice(0, 155),
@@ -246,8 +271,11 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
           </>
         ) : (
           <>
-            <h2 className="flex items-center gap-2 text-xl font-extrabold">✍️ كتابة مقال يدويًا</h2>
-            <p className="mt-1 text-sm text-white/50">اكتب المقال بنفسك — بدون أي مفتاح AI. كل حقل اختياري عدا العنوان.</p>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-xl font-extrabold">{editingSlug ? "✏️ تعديل مقال" : "✍️ كتابة مقال يدويًا"}</h2>
+              {editingSlug && <button onClick={resetForm} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/20">إلغاء التعديل</button>}
+            </div>
+            <p className="mt-1 text-sm text-white/50">{editingSlug ? `تعديل /blog/${editingSlug} — سيُحدّث المقال على الموقع عند النشر.` : "اكتب المقال بنفسك — بدون أي مفتاح AI. كل حقل اختياري عدا العنوان."}</p>
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان المقال (يبدأ بالكلمة المفتاحية) *" className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
             <div className="mt-3 grid grid-cols-2 gap-3">
               <input value={keyphrase} onChange={(e) => setKeyphrase(e.target.value)} placeholder="الكلمة المفتاحية" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
@@ -320,11 +348,12 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
         )}
       </div>
 
-      {/* published list */}
+      {/* all articles */}
       <div className="lg:col-span-2 rounded-[26px] border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl">
-        <h2 className="text-xl font-extrabold">المقالات المنشورة ({posts.length})</h2>
+        <h2 className="text-xl font-extrabold">كل المقالات على الموقع ({posts.length})</h2>
+        <p className="mt-1 text-sm text-white/45">اضغط «تعديل» على أي مقال لتحريره ثم إعادة نشره، أو «حذف» لإزالته من الموقع.</p>
         {posts.length === 0 ? (
-          <p className="mt-4 text-sm text-white/40">لا توجد مقالات منشورة من الاستوديو بعد.</p>
+          <p className="mt-4 text-sm text-white/40">لا توجد مقالات بعد.</p>
         ) : (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {posts.map((p) => (
@@ -334,6 +363,7 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
                   <p className="truncate text-xs text-white/40">{p.date} · /blog/{p.slug}</p>
                 </div>
                 <div className="flex shrink-0 gap-2">
+                  <button onClick={() => loadForEdit(p)} className="rounded-lg bg-turquoise-500/80 px-3 py-1.5 text-xs font-bold text-navy-950 hover:bg-turquoise-400">تعديل</button>
                   <a href={`/blog/${p.slug}`} target="_blank" rel="noopener" className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/20">عرض</a>
                   <button onClick={() => remove(p.slug)} className="rounded-lg bg-rose-500/80 px-3 py-1.5 text-xs font-bold hover:bg-rose-500">حذف</button>
                 </div>
@@ -360,6 +390,16 @@ function PackagesTab({ headers, pw }: { headers: () => Record<string, string>; p
 
   const edit = (i: number, patch: Partial<Pkg>) => setList((l) => l.map((p, j) => (j === i ? { ...p, ...patch } : p)));
   const removeAt = (i: number) => setList((l) => l.filter((_, j) => j !== i));
+  // includes[] helpers
+  const setInclude = (i: number, k: number, v: string) => edit(i, { includes: (list[i].includes ?? []).map((x, j) => (j === k ? v : x)) });
+  const addInclude = (i: number) => edit(i, { includes: [...(list[i].includes ?? []), "عنصر جديد"] });
+  const delInclude = (i: number, k: number) => edit(i, { includes: (list[i].includes ?? []).filter((_, j) => j !== k) });
+  // addons[] helpers
+  const setAddon = (i: number, k: number, patch: Partial<{ label: string; price: number }>) =>
+    edit(i, { addons: (list[i].addons ?? []).map((a, j) => (j === k ? { ...a, ...patch } : a)) });
+  const addAddon = (i: number) =>
+    edit(i, { addons: [...(list[i].addons ?? []), { id: "ad-" + Date.now().toString(36), label: "إضافة جديدة", price: 100 }] });
+  const delAddon = (i: number, k: number) => edit(i, { addons: (list[i].addons ?? []).filter((_, j) => j !== k) });
   const add = () =>
     setList((l) => [
       ...l,
@@ -406,7 +446,42 @@ function PackagesTab({ headers, pw }: { headers: () => Record<string, string>; p
               <L label="السعة"><input value={p.capacity} onChange={(e) => edit(i, { capacity: e.target.value })} className="dv-in w-full" /></L>
               <L label="المدة الأساسية"><input value={p.baseDuration} onChange={(e) => edit(i, { baseDuration: e.target.value })} className="dv-in w-full" /></L>
               <L label="السعر الأساسي يغطي"><input type="number" value={p.maxBase} onChange={(e) => edit(i, { maxBase: +e.target.value })} className="dv-in w-full" /></L>
+              <L label="سعر الشخص الإضافي"><input type="number" value={p.extraPerPerson} onChange={(e) => edit(i, { extraPerPerson: +e.target.value })} className="dv-in w-full" /></L>
+              <L label="الحد الأقصى للأشخاص"><input type="number" value={p.maxPersons} onChange={(e) => edit(i, { maxPersons: +e.target.value })} className="dv-in w-full" /></L>
             </div>
+
+            <L label="وصف اليخت"><textarea value={p.yacht} onChange={(e) => edit(i, { yacht: e.target.value })} rows={2} className="dv-in mt-3 w-full" /></L>
+            <L label="ملاحظة (اختياري)"><textarea value={p.note ?? ""} onChange={(e) => edit(i, { note: e.target.value })} rows={2} className="dv-in mt-3 w-full" /></L>
+
+            {/* includes */}
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-[11px] text-white/40">يشمل الباقة</span>
+              <button onClick={() => addInclude(i)} className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-bold hover:bg-white/20">+ عنصر</button>
+            </div>
+            <div className="mt-1 flex flex-col gap-1">
+              {(p.includes ?? []).map((inc, k) => (
+                <div key={k} className="flex gap-1">
+                  <input value={inc} onChange={(e) => setInclude(i, k, e.target.value)} className="dv-in w-full text-sm" />
+                  <button onClick={() => delInclude(i, k)} className="rounded-md bg-rose-500/60 px-2 text-xs font-bold">✕</button>
+                </div>
+              ))}
+            </div>
+
+            {/* addons */}
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-[11px] text-white/40">الإضافات الاختيارية (السعر بالريال)</span>
+              <button onClick={() => addAddon(i)} className="rounded-md bg-white/10 px-2 py-1 text-[11px] font-bold hover:bg-white/20">+ إضافة</button>
+            </div>
+            <div className="mt-1 flex flex-col gap-1">
+              {(p.addons ?? []).map((ad, k) => (
+                <div key={ad.id} className="flex gap-1">
+                  <input value={ad.label} onChange={(e) => setAddon(i, k, { label: e.target.value })} className="dv-in w-full text-sm" />
+                  <input type="number" value={ad.price} onChange={(e) => setAddon(i, k, { price: +e.target.value })} className="dv-in w-20 text-sm" />
+                  <button onClick={() => delAddon(i, k)} className="rounded-md bg-rose-500/60 px-2 text-xs font-bold">✕</button>
+                </div>
+              ))}
+            </div>
+
             <label className="mt-3 flex items-center gap-2 text-sm text-white/70">
               <input type="checkbox" checked={!!p.featured} onChange={(e) => edit(i, { featured: e.target.checked })} className="h-4 w-4 accent-gold-500" />
               باقة مميزة
@@ -425,6 +500,96 @@ function L({ label, children }: { label: string; children: React.ReactNode }) {
       <span className="text-[11px] text-white/40">{label}</span>
       {children}
     </label>
+  );
+}
+
+/* ───────────────────────────── Site Settings ───────────────────────────── */
+function SettingsTab({ headers, pw }: { headers: () => Record<string, string>; pw: string }) {
+  const [s, setS] = useState<SiteSettings | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const load = useCallback(async () => {
+    const res = await fetch(`/api/dev/settings?password=${encodeURIComponent(pw)}`, { cache: "no-store" });
+    if (res.ok) setS((await res.json()).settings);
+  }, [pw]);
+  useEffect(() => { load(); }, [load]);
+
+  if (!s) return <p className="text-sm text-white/50">جاري التحميل...</p>;
+  const set = (patch: Partial<SiteSettings>) => setS((cur) => (cur ? { ...cur, ...patch } : cur));
+  const setSoc = (k: number, patch: Partial<SocialLink>) => set({ socials: s.socials.map((x, j) => (j === k ? { ...x, ...patch } : x)) });
+  const addSoc = () => set({ socials: [...s.socials, { key: "whatsapp", label: "رابط جديد", href: "https://" }] });
+  const delSoc = (k: number) => set({ socials: s.socials.filter((_, j) => j !== k) });
+
+  async function save() {
+    setSaving(true); setMsg("");
+    try {
+      const res = await fetch("/api/dev/settings", { method: "PUT", headers: headers(), body: JSON.stringify({ settings: s }) });
+      if (!res.ok) throw new Error("تعذّر الحفظ");
+      setMsg("✅ تم حفظ الإعدادات ونشرها على الموقع!");
+    } catch (e) {
+      setMsg("❌ " + (e instanceof Error ? e.message : "خطأ"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-white/50">عدّل بيانات التواصل والسوشيال والخصم والحساب البنكي — تنطبق على الموقع كله فورًا بعد الحفظ.</p>
+        <button onClick={save} disabled={saving} className="rounded-xl bg-gradient-to-l from-turquoise-500 to-gold-500 px-5 py-2 text-sm font-bold text-navy-950 disabled:opacity-60">{saving ? "..." : "حفظ ونشر"}</button>
+      </div>
+      {msg && <p className="mt-3 text-sm font-semibold text-white/80">{msg}</p>}
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        {/* contact */}
+        <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">📞 بيانات التواصل</h3>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <L label="اسم العلامة (عربي)"><input value={s.brand} onChange={(e) => set({ brand: e.target.value })} className="dv-in w-full" /></L>
+            <L label="اسم العلامة (إنجليزي)"><input value={s.brandEn} onChange={(e) => set({ brandEn: e.target.value })} className="dv-in w-full" /></L>
+            <L label="رقم الهاتف"><input value={s.phone} onChange={(e) => set({ phone: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+            <L label="واتساب (أرقام فقط)"><input value={s.whatsapp} onChange={(e) => set({ whatsapp: e.target.value.replace(/\D/g, "") })} dir="ltr" className="dv-in w-full" /></L>
+            <L label="البريد الإلكتروني"><input value={s.email} onChange={(e) => set({ email: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+            <L label="الموقع/المدينة"><input value={s.location} onChange={(e) => set({ location: e.target.value })} className="dv-in w-full" /></L>
+          </div>
+        </div>
+
+        {/* discount + bank */}
+        <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">💳 الخصم والحساب البنكي</h3>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <L label="نسبة الخصم %"><input type="number" value={s.discountPct} onChange={(e) => set({ discountPct: +e.target.value })} className="dv-in w-full" /></L>
+            <L label="البنك"><input value={s.bankName} onChange={(e) => set({ bankName: e.target.value })} className="dv-in w-full" /></L>
+            <L label="اسم الحساب"><input value={s.accName} onChange={(e) => set({ accName: e.target.value })} className="dv-in w-full" /></L>
+            <L label="الآيبان IBAN"><input value={s.iban} onChange={(e) => set({ iban: e.target.value })} dir="ltr" className="dv-in w-full font-mono" /></L>
+          </div>
+          <L label="نص الخصم (عربي)"><input value={s.discountAr} onChange={(e) => set({ discountAr: e.target.value })} className="dv-in mt-3 w-full" /></L>
+          <L label="نص الخصم (إنجليزي)"><input value={s.discountEn} onChange={(e) => set({ discountEn: e.target.value })} dir="ltr" className="dv-in mt-3 w-full" /></L>
+        </div>
+
+        {/* socials */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-extrabold">🔗 روابط السوشيال ميديا</h3>
+            <button onClick={addSoc} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/20">+ رابط</button>
+          </div>
+          <p className="mt-1 text-[11px] text-white/40">المفتاح يحدّد الأيقونة: whatsapp · instagram · snapchat · tiktok · telegram · facebook · youtube</p>
+          <div className="mt-4 grid gap-2">
+            {s.socials.map((soc, k) => (
+              <div key={k} className="grid grid-cols-[8rem_8rem_1fr_auto] gap-2">
+                <input value={soc.key} onChange={(e) => setSoc(k, { key: e.target.value })} placeholder="المفتاح" className="dv-in text-sm" dir="ltr" />
+                <input value={soc.label} onChange={(e) => setSoc(k, { label: e.target.value })} placeholder="الاسم" className="dv-in text-sm" />
+                <input value={soc.href} onChange={(e) => setSoc(k, { href: e.target.value })} placeholder="https://" className="dv-in text-sm" dir="ltr" />
+                <button onClick={() => delSoc(k)} className="rounded-md bg-rose-500/60 px-3 text-xs font-bold">✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`.dv-in{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 12px;color:#fff;outline:none}.dv-in:focus{border-color:#21c0c0}`}</style>
+    </div>
   );
 }
 

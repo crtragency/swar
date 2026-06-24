@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./ui";
 import { LOGO } from "./images";
-import { NAV, CONTACT, SOCIALS } from "@/lib/site";
+import { NAV } from "@/lib/site";
 import SocialIcon from "@/components/SocialIcon";
 import { useI18n } from "@/lib/i18n";
+import { useSettings, phoneHref } from "@/lib/settings";
 
 export default function Footer() {
   const { t } = useI18n();
+  const { socials: SOCIALS, phone, email, brand, brandEn } = useSettings();
   return (
     <footer
       id="contact"
@@ -76,14 +78,14 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <PhoneIcon />
-                <a dir="ltr" href={CONTACT.phoneHref} className="hover:text-gold-600">
-                  {CONTACT.phone}
+                <a dir="ltr" href={phoneHref(phone)} className="hover:text-gold-600">
+                  {phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <MailIcon />
-                <a href={`mailto:${CONTACT.email}`} className="hover:text-gold-600">
-                  {CONTACT.email}
+                <a href={`mailto:${email}`} className="hover:text-gold-600">
+                  {email}
                 </a>
               </li>
             </ul>
@@ -94,7 +96,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-navy-100">
         <div className="container-px flex flex-col items-center justify-between gap-3 py-6 text-sm text-navy-900/55 sm:flex-row">
-          <p>© {new Date().getFullYear()} {CONTACT.brand} · {CONTACT.brandEn}. {t("footer.rights")}</p>
+          <p>© {new Date().getFullYear()} {brand} · {brandEn}. {t("footer.rights")}</p>
           <div className="flex gap-6">
             <Link href="#" className="hover:text-navy-900">{t("footer.privacy")}</Link>
             <Link href="#" className="hover:text-navy-900">{t("footer.terms")}</Link>

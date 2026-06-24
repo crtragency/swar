@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { DISCOUNT, BANK, type Pkg } from "@/lib/packages";
+import { BANK, type Pkg } from "@/lib/packages";
+import { useSettings } from "@/lib/settings";
 
 const DEPART_TIMES = ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
 function timeLabel(t: string) {
@@ -18,6 +19,7 @@ const CANCEL_POLICY =
   "في حال إلغاء الرحلة من قِبَل العميل لأي سبب، لا يُرد المبلغ المحوَّل ولا يُستبدل. في حال وجود مشكلة من طرفنا، يُرد المبلغ كاملاً.";
 
 export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null; image?: StaticImageData; onClose: () => void }) {
+  const { discountPct, bankName, accName, iban } = useSettings();
   const [rowIdx, setRowIdx] = useState(0);
   const [tierIdx, setTierIdx] = useState(0);
   const [persons, setPersons] = useState(2);
@@ -76,7 +78,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const dayTypeExtra = pkg?.dayType && weekend ? pkg.dayType : 0;
 
   const subtotal = baseOriginal + addonsTotal + extraCost + dayTypeExtra;
-  const seasonDiscount = Math.round((subtotal * DISCOUNT.pct) / 100);
+  const seasonDiscount = Math.round((subtotal * discountPct) / 100);
   const afterSeason = subtotal - seasonDiscount;
   const promoDiscount = promoPct ? Math.round((afterSeason * promoPct) / 100) : 0;
   const total = afterSeason - promoDiscount;
@@ -165,7 +167,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950 to-navy-950/30" />
               <button type="button" onClick={onClose} aria-label="إغلاق" className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-colors hover:bg-white/30">✕</button>
               <div className="absolute inset-x-0 bottom-0 p-5">
-                <span className="rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">خصم {DISCOUNT.pct}%</span>
+                <span className="rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">خصم {discountPct}%</span>
                 <h3 className="mt-2 text-2xl font-extrabold text-white drop-shadow">{pkg.title}</h3>
               </div>
             </div>
@@ -275,7 +277,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 {/* price breakdown */}
                 <div className="mt-5 space-y-2 rounded-2xl bg-navy-50/60 p-5 text-sm">
                   <Line label="المجموع قبل الخصم" value={`${subtotal.toLocaleString()} ريال`} />
-                  <Line label={`خصم موسم الصيف (${DISCOUNT.pct}%)`} value={`− ${seasonDiscount.toLocaleString()} ريال`} green />
+                  <Line label={`خصم موسم الصيف (${discountPct}%)`} value={`− ${seasonDiscount.toLocaleString()} ريال`} green />
                   {promoDiscount > 0 && <Line label={`كود خصم (${promoPct}%)`} value={`− ${promoDiscount.toLocaleString()} ريال`} green />}
                 </div>
 
@@ -370,6 +372,7 @@ function Stepper({ value, min, max, onChange, small }: { value: number; min: num
 }
 
 function BankBox({ copied, setCopied }: { copied: boolean; setCopied: (v: boolean) => void }) {
+  const { bankName, accName, iban } = useSettings();
   return (
     <div className="mt-4 rounded-2xl border border-ocean-500/20 bg-navy-50/50 p-5">
       {BANK.payUrl && (
@@ -385,15 +388,15 @@ function BankBox({ copied, setCopied }: { copied: boolean; setCopied: (v: boolea
       )}
       <p className="text-sm font-bold text-navy-900">{BANK.payUrl ? "أو حوّل يدوياً" : "بيانات التحويل البنكي"}</p>
       <div className="mt-3 space-y-2 text-sm">
-        <div className="flex justify-between"><span className="text-navy-900/55">البنك</span><span className="font-bold text-navy-900">{BANK.bank}</span></div>
-        <div className="flex justify-between"><span className="text-navy-900/55">اسم الحساب</span><span className="font-bold text-navy-900">{BANK.name}</span></div>
+        <div className="flex justify-between"><span className="text-navy-900/55">البنك</span><span className="font-bold text-navy-900">{bankName}</span></div>
+        <div className="flex justify-between"><span className="text-navy-900/55">اسم الحساب</span><span className="font-bold text-navy-900">{accName}</span></div>
       </div>
       <button
         type="button"
-        onClick={() => { navigator.clipboard?.writeText(BANK.iban); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+        onClick={() => { navigator.clipboard?.writeText(iban); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
         className="mt-3 w-full rounded-xl border border-dashed border-ocean-500/40 bg-white px-4 py-3 text-center font-mono text-sm font-bold tracking-wide text-navy-900 transition-colors hover:bg-navy-50"
       >
-        {BANK.iban}
+        {iban}
       </button>
       <p className="mt-1 text-center text-xs text-turquoise-600">{copied ? "تم نسخ الآيبان ✓" : "اضغط لنسخ الآيبان"}</p>
     </div>
