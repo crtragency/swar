@@ -33,7 +33,7 @@ export default function Footer() {
         <div className="grid gap-12 pb-14 md:grid-cols-2 lg:grid-cols-3">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Image src={LOGO} alt="شعار سوار البحرية" className="h-12 w-auto" />
+            <Image src={LOGO} alt="شعار سوار البحرية" className="h-20 w-auto sm:h-24" />
             <p className="mt-5 leading-relaxed text-navy-900/60">{t("footer.brandDesc")}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {SOCIALS.map((soc) => (
