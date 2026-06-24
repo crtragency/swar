@@ -5,13 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal } from "./ui";
-import { PACKAGES as DEFAULT_PACKAGES, DISCOUNT, pkgText, type Pkg } from "@/lib/packages";
+import { PACKAGES as DEFAULT_PACKAGES, pkgText, type Pkg } from "@/lib/packages";
 import { HOME_IMAGES } from "./homeImages";
 import { useI18n, pick } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
 
 export default function PricingSection({ packages }: { packages?: Pkg[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const { t, locale } = useI18n();
+  const { discountPct } = useSettings();
   const sar = pick(locale, "ريال", "SAR");
   const PACKAGES = packages && packages.length ? packages : DEFAULT_PACKAGES;
 
@@ -81,7 +83,7 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
           <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-gold-400/40 bg-gold-400/10 px-5 py-3">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-500 text-xs font-extrabold text-white">٪</span>
             <span className="text-sm font-bold text-navy-900 sm:text-[15px]">
-              {pick(locale, "خصم", "Save")} <span className="text-gold-600">{DISCOUNT.pct}%</span> {t("pricing.discount")}
+              {pick(locale, "خصم", "Save")} <span className="text-gold-600">{discountPct}%</span> {t("pricing.discount")}
             </span>
           </div>
         </Reveal>
@@ -117,7 +119,7 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
 
                 {/* discount ribbon */}
                 <span className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-navy-900 shadow-md backdrop-blur">
-                  {t("pricing.save")} {DISCOUNT.pct}%
+                  {t("pricing.save")} {discountPct}%
                 </span>
                 {pkg.featured && (
                   <span className="absolute left-4 top-4 rounded-full bg-gold-500 px-3 py-1 text-xs font-bold text-white shadow-md">

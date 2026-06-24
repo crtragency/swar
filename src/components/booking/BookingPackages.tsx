@@ -4,10 +4,11 @@ import { useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/home/ui";
-import { PACKAGES as DEFAULT_PACKAGES, DISCOUNT, BANK, pkgText, type Pkg } from "@/lib/packages";
+import { PACKAGES as DEFAULT_PACKAGES, pkgText, type Pkg } from "@/lib/packages";
 import { ALL_PHOTOS, FISHING, HERO_SUNSET, MARINA_BOAT, CABIN } from "@/components/home/images";
 import BookingModal from "./BookingModal";
 import { useI18n, pick } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
 
 const PKG_IMAGE: Record<string, StaticImageData> = {
   swim: ALL_PHOTOS[1],
@@ -21,6 +22,7 @@ const PKG_IMAGE: Record<string, StaticImageData> = {
 export default function BookingPackages({ packages }: { packages?: Pkg[] }) {
   const [active, setActive] = useState<{ pkg: Pkg; image: StaticImageData } | null>(null);
   const { t, locale } = useI18n();
+  const { discountAr, discountEn, bankName, accName, iban } = useSettings();
   const PACKAGES = packages && packages.length ? packages : DEFAULT_PACKAGES;
 
   return (
@@ -28,7 +30,7 @@ export default function BookingPackages({ packages }: { packages?: Pkg[] }) {
       <div className="container-px">
         <Reveal>
           <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-1 rounded-3xl border border-gold-400/40 bg-white px-6 py-5 text-center shadow-luxe">
-            <span className="text-lg font-extrabold text-navy-900 sm:text-xl">{pick(locale, DISCOUNT.ar, DISCOUNT.en)}</span>
+            <span className="text-lg font-extrabold text-navy-900 sm:text-xl">{pick(locale, discountAr, discountEn)}</span>
             <span className="text-sm font-semibold text-navy-900/55">{t("booking.discountSub")}</span>
           </div>
         </Reveal>
@@ -51,9 +53,9 @@ export default function BookingPackages({ packages }: { packages?: Pkg[] }) {
           <div className="mt-16 overflow-hidden rounded-[28px] border border-ocean-500/15 bg-white p-8 shadow-luxe sm:p-10">
             <h3 className="text-2xl font-extrabold text-navy-900">{t("booking.bankTitle")}</h3>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <BankRow label={t("booking.bank")} value={BANK.bank} />
-              <BankRow label={t("booking.accName")} value={BANK.name} />
-              <BankRow label={t("booking.iban")} value={BANK.iban} mono />
+              <BankRow label={t("booking.bank")} value={bankName} />
+              <BankRow label={t("booking.accName")} value={accName} />
+              <BankRow label={t("booking.iban")} value={iban} mono />
             </div>
             <p className="mt-6 rounded-2xl bg-navy-50/70 px-5 py-4 text-sm leading-relaxed text-navy-900/70">
               {t("booking.cancelPolicy")}
@@ -87,6 +89,7 @@ function BankRow({ label, value, mono }: { label: string; value: string; mono?: 
 
 function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData; onBook: () => void }) {
   const { t, locale } = useI18n();
+  const { discountPct } = useSettings();
   const sar = pick(locale, "ريال", "SAR");
   return (
     <motion.article
@@ -101,7 +104,7 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
         <Image src={image} alt={pkgText(locale, pkg, "title")} fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/35 to-transparent" />
         <span className="absolute right-5 top-5 rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">
-          {pick(locale, "خصم", "Save")} {DISCOUNT.pct}%
+          {pick(locale, "خصم", "Save")} {discountPct}%
         </span>
         {pkg.featured && (
           <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-extrabold text-navy-950">
