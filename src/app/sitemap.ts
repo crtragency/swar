@@ -1,15 +1,20 @@
 import type { MetadataRoute } from "next";
-import { BLOG_POSTS } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
+import { getAllPosts } from "@/lib/content-server";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// regenerate so developer-published/deleted articles stay in sync
+export const revalidate = 600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages = ["", "/about", "/booking", "/blog", "/contact", "/media"].map((p) => ({
     url: `${SITE_URL}${p}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: p === "" ? 1 : 0.8,
   }));
-  const posts = BLOG_POSTS.map((p) => ({
+  // include developer-published articles and exclude deleted ones
+  const allPosts = await getAllPosts();
+  const posts = allPosts.map((p) => ({
     url: `${SITE_URL}/blog/${p.slug}`,
     lastModified: new Date(p.isoDate),
     changeFrequency: "monthly" as const,
