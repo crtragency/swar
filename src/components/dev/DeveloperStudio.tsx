@@ -109,7 +109,7 @@ const slugifyClient = (s: string) =>
   `post-${Date.now().toString(36)}`;
 
 function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: string }) {
-  const [mode, setMode] = useState<PMode>("manual");
+  const [mode, setMode] = useState<PMode>("ai");
   const [title, setTitle] = useState("");
   const [keyphrase, setKeyphrase] = useState("");
   const [loading, setLoading] = useState(false);
@@ -226,22 +226,22 @@ function PostsTab({ headers, pw }: { headers: () => Record<string, string>; pw: 
       <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl">
         {/* mode switch */}
         <div className="mb-5 flex gap-2 rounded-full border border-white/10 bg-white/5 p-1">
-          {(["manual", "ai"] as PMode[]).map((m) => (
+          {(["ai", "manual"] as PMode[]).map((m) => (
             <button key={m} onClick={() => { setMode(m); setDraft(null); setMsg(""); }}
               className={`flex-1 rounded-full px-4 py-2 text-sm font-bold transition ${mode === m ? "bg-white text-navy-950" : "text-white/70 hover:text-white"}`}>
-              {m === "manual" ? "✍️ كتابة يدوية" : "✨ بالذكاء الاصطناعي"}
+              {m === "ai" ? "⚡ توليد تلقائي" : "✍️ كتابة يدوية"}
             </button>
           ))}
         </div>
 
         {mode === "ai" ? (
           <>
-            <h2 className="flex items-center gap-2 text-xl font-extrabold">✨ توليد مقال جديد</h2>
-            <p className="mt-1 text-sm text-white/50">اكتب العنوان، ويقوم الذكاء الاصطناعي بكتابة المقال كاملاً ومحسّناً للسيو (يتطلب مفتاح AI).</p>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="عنوان المقال المقترح..." className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
-            <input value={keyphrase} onChange={(e) => setKeyphrase(e.target.value)} placeholder="الكلمة المفتاحية (اختياري)" className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            <h2 className="flex items-center gap-2 text-xl font-extrabold">⚡ اكتب العنوان وسيتولّد المقال</h2>
+            <p className="mt-1 text-sm text-white/50">اكتب العنوان اللي بتفكر فيه فقط، ويتم توليد مقال كامل محسّن للسيو فورًا — بدون أي مفتاح أو إعدادات.</p>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: رحلات بحرية عائلية في جدة..." className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
+            <input value={keyphrase} onChange={(e) => setKeyphrase(e.target.value)} placeholder="الكلمة المفتاحية (اختياري — تُستخرج من العنوان تلقائيًا)" className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-turquoise-400" />
             <button onClick={generate} disabled={loading} className="group relative mt-5 w-full overflow-hidden rounded-2xl bg-gradient-to-l from-violet-600 via-turquoise-500 to-gold-500 py-3.5 font-bold text-navy-950 transition hover:brightness-110 disabled:opacity-60">
-              {loading ? "⏳ جاري التوليد..." : "✨ توليد بالذكاء الاصطناعي"}
+              {loading ? "⏳ جاري التوليد..." : "⚡ توليد المقال"}
             </button>
           </>
         ) : (
