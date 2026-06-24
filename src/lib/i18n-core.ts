@@ -157,6 +157,13 @@ export const STRINGS: Record<string, { ar: string; en: string }> = {
   "art.related": { ar: "اقرأ أيضاً وروابط مفيدة", en: "Read also & useful links" },
   "art.refs": { ar: "مصادر خارجية", en: "External references" },
   "art.back": { ar: "العودة إلى جميع المقالات", en: "Back to all articles" },
+
+  "wa.title": { ar: "سوار البحرية", en: "Sewar Marine" },
+  "wa.status": { ar: "نرد عادةً خلال دقائق", en: "Typically replies within minutes" },
+  "wa.greeting": { ar: "مرحباً بك في سوار البحرية 🌊 كيف يمكننا مساعدتك؟", en: "Welcome to Sewar Marine 🌊 How can we help you?" },
+  "wa.placeholder": { ar: "اكتب رسالتك هنا...", en: "Type your message..." },
+  "wa.send": { ar: "إرسال عبر واتساب", en: "Send on WhatsApp" },
+  "wa.open": { ar: "تواصل معنا على واتساب", en: "Chat with us on WhatsApp" },
 };
 
 /** Translate in Server Components / non-hook contexts. */
