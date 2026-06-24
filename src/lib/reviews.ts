@@ -80,12 +80,29 @@ async function getBusinessProfileReviews(): Promise<ReviewsData | null> {
   }
 }
 
+async function resolvePlaceId(key: string): Promise<string | null> {
+  // Auto-find the listing by name when GOOGLE_PLACE_ID isn't provided.
+  try {
+    const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: { "X-Goog-Api-Key": key, "X-Goog-FieldMask": "places.id", "Content-Type": "application/json" },
+      body: JSON.stringify({ textQuery: "رحلات سوار البحرية Sewar Marine ثول", languageCode: "ar" }),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const d = (await res.json()) as { places?: { id?: string }[] };
+    return d.places?.[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getGoogleReviews(): Promise<ReviewsData> {
   const bp = await getBusinessProfileReviews();
   if (bp) return bp;
 
   const key = process.env.GOOGLE_PLACES_API_KEY;
-  const placeId = process.env.GOOGLE_PLACE_ID;
+  const placeId = process.env.GOOGLE_PLACE_ID || (key ? await resolvePlaceId(key) : null);
   if (key && placeId) {
     try {
       const res = await fetch(`https://places.googleapis.com/v1/places/${placeId}?languageCode=ar`, {

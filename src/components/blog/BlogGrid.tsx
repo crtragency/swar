@@ -4,15 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/home/ui";
-import { BLOG_POSTS, postText } from "@/lib/blog";
+import { postText, type BlogPost } from "@/lib/blog";
 import { ALL_PHOTOS } from "@/components/home/images";
 import { useI18n } from "@/lib/i18n";
 
-// Distinct image per post (offset so it differs from the homepage selection).
-const POSTS = BLOG_POSTS.map((p, i) => ({ ...p, image: ALL_PHOTOS[(i * 5 + 12) % ALL_PHOTOS.length] }));
-
-export default function BlogGrid() {
+export default function BlogGrid({ posts }: { posts: BlogPost[] }) {
   const { t, locale } = useI18n();
+  const POSTS = posts.map((p, i) => ({ ...p, image: ALL_PHOTOS[(i * 5 + 12) % ALL_PHOTOS.length] }));
   return (
     <section className="bg-navy-50/40 py-20 sm:py-28">
       <div className="container-px grid gap-7 md:grid-cols-2 lg:grid-cols-3">

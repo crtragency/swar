@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/home/ui";
-import { PACKAGES, DISCOUNT, BANK, pkgText, type Pkg } from "@/lib/packages";
+import { PACKAGES as DEFAULT_PACKAGES, DISCOUNT, BANK, pkgText, type Pkg } from "@/lib/packages";
 import { ALL_PHOTOS, FISHING, HERO_SUNSET, MARINA_BOAT, CABIN } from "@/components/home/images";
 import BookingModal from "./BookingModal";
 import { useI18n, pick } from "@/lib/i18n";
@@ -18,9 +18,10 @@ const PKG_IMAGE: Record<string, StaticImageData> = {
   vip: HERO_SUNSET,
 };
 
-export default function BookingPackages() {
+export default function BookingPackages({ packages }: { packages?: Pkg[] }) {
   const [active, setActive] = useState<{ pkg: Pkg; image: StaticImageData } | null>(null);
   const { t, locale } = useI18n();
+  const PACKAGES = packages && packages.length ? packages : DEFAULT_PACKAGES;
 
   return (
     <section className="relative bg-navy-50/40 py-20 sm:py-28">

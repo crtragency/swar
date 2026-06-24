@@ -2,18 +2,19 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { BLOG_POSTS, getPost, postText } from "@/lib/blog";
+import { BLOG_POSTS, postText } from "@/lib/blog";
 import { ALL_PHOTOS } from "@/components/home/images";
 import { SITE_URL as SITE } from "@/lib/site";
 import { tt } from "@/lib/i18n-core";
 import { getServerLocale } from "@/lib/locale-server";
+import { getPostBySlug } from "@/lib/content-server";
 
 export function generateStaticParams() {
   return BLOG_POSTS.map((p) => ({ slug: p.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const post = getPost(params.slug);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = await getPostBySlug(params.slug);
   if (!post) return { title: "مقال غير موجود" };
   const url = `${SITE}/blog/${post.slug}`;
   return {
@@ -32,11 +33,12 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function BlogArticle({ params }: { params: { slug: string } }) {
-  const post = getPost(params.slug);
+export default async function BlogArticle({ params }: { params: { slug: string } }) {
+  const post = await getPostBySlug(params.slug);
   if (!post) notFound();
-  const idx = BLOG_POSTS.findIndex((p) => p.slug === post.slug);
-  const image = ALL_PHOTOS[(idx * 5 + 12) % ALL_PHOTOS.length];
+  // stable image pick by slug (works for static and dynamic posts)
+  const hash = post.slug.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const image = ALL_PHOTOS[(hash * 5 + 12) % ALL_PHOTOS.length];
   const url = `${SITE}/blog/${post.slug}`;
   const locale = getServerLocale();
   const title = postText(locale, post, "title");
