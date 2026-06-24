@@ -4,12 +4,14 @@ import GallerySection from "@/components/home/GallerySection";
 import StatsSection from "@/components/home/StatsSection";
 import BlogSection from "@/components/home/BlogSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import { getPackagesMerged } from "@/lib/content-server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const packages = await getPackagesMerged();
   return (
     <main>
       <Hero />
-      <PricingSection />
+      <PricingSection packages={packages} />
       <GallerySection />
       <StatsSection />
       <BlogSection />

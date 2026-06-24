@@ -188,3 +188,45 @@ function toRowPatch(p: Partial<Booking>): Record<string, unknown> {
   if (p.status !== undefined) m.status = p.status;
   return m;
 }
+
+/* ───────────────────── generic JSON content store ─────────────────────── */
+// Used for developer-managed content (blog posts, package overrides).
+const gc = globalThis as unknown as { __sewarContent?: Record<string, unknown> };
+if (!gc.__sewarContent) gc.__sewarContent = {};
+
+export async function getContent<T>(key: string, fallback: T): Promise<T> {
+  if (SB_URL && SB_KEY) {
+    const res = await fetch(`${SB_URL}/rest/v1/site_content?key=eq.${encodeURIComponent(key)}&select=value`, {
+      headers: sbHeaders(),
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const rows = (await res.json()) as { value: T }[];
+      if (rows.length) return rows[0].value;
+    }
+    return fallback;
+  }
+  if (KV_URL && KV_TOKEN) {
+    const { result } = await kv(["GET", `content:${key}`]);
+    return result ? (JSON.parse(result as string) as T) : fallback;
+  }
+  return (gc.__sewarContent![key] as T) ?? fallback;
+}
+
+export async function setContent(key: string, value: unknown): Promise<void> {
+  if (SB_URL && SB_KEY) {
+    const res = await fetch(`${SB_URL}/rest/v1/site_content?on_conflict=key`, {
+      method: "POST",
+      headers: { ...sbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ key, value }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Supabase content upsert ${res.status}`);
+    return;
+  }
+  if (KV_URL && KV_TOKEN) {
+    await kv(["SET", `content:${key}`, JSON.stringify(value)]);
+    return;
+  }
+  gc.__sewarContent![key] = value;
+}

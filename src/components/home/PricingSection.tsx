@@ -5,14 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Reveal } from "./ui";
-import { PACKAGES, DISCOUNT, pkgText } from "@/lib/packages";
+import { PACKAGES as DEFAULT_PACKAGES, DISCOUNT, pkgText, type Pkg } from "@/lib/packages";
 import { HOME_IMAGES } from "./homeImages";
 import { useI18n, pick } from "@/lib/i18n";
 
-export default function PricingSection() {
+export default function PricingSection({ packages }: { packages?: Pkg[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const { t, locale } = useI18n();
   const sar = pick(locale, "ريال", "SAR");
+  const PACKAGES = packages && packages.length ? packages : DEFAULT_PACKAGES;
 
   const scroll = (dir: 1 | -1) => {
     const el = trackRef.current;
@@ -106,7 +107,7 @@ export default function PricingSection() {
               {/* image */}
               <div className="relative h-52 overflow-hidden">
                 <Image
-                  src={HOME_IMAGES.pricing[i]}
+                  src={HOME_IMAGES.pricing[i % HOME_IMAGES.pricing.length]}
                   alt={pkgText(locale, pkg, "title")}
                   fill
                   sizes="330px"

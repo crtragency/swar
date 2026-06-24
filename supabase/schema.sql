@@ -30,3 +30,11 @@ create index if not exists bookings_created_at_idx on public.bookings (created_a
 
 alter table public.bookings enable row level security;
 -- (no policies on purpose → only the service role key can access the data)
+
+-- Developer-managed content (blog posts published from the studio, package edits).
+create table if not exists public.site_content (
+  key   text primary key,
+  value jsonb
+);
+alter table public.site_content enable row level security;
+-- (no policies → only the service role key can read/write)
