@@ -520,6 +520,11 @@ function SettingsTab({ headers, pw }: { headers: () => Record<string, string>; p
   const setSoc = (k: number, patch: Partial<SocialLink>) => set({ socials: s.socials.map((x, j) => (j === k ? { ...x, ...patch } : x)) });
   const addSoc = () => set({ socials: [...s.socials, { key: "whatsapp", label: "رابط جديد", href: "https://" }] });
   const delSoc = (k: number) => set({ socials: s.socials.filter((_, j) => j !== k) });
+  const setHero = (patch: Partial<SiteSettings["hero"]>) => set({ hero: { ...s.hero, ...patch } });
+  const setStat = (k: number, patch: Partial<SiteSettings["stats"][number]>) => set({ stats: s.stats.map((x, j) => (j === k ? { ...x, ...patch } : x)) });
+  const setReview = (k: number, patch: Partial<SiteSettings["reviews"][number]>) => set({ reviews: s.reviews.map((x, j) => (j === k ? { ...x, ...patch } : x)) });
+  const addReview = () => set({ reviews: [...s.reviews, { name: "اسم العميل", rating: 5, when: "", text: "نص التقييم" }] });
+  const delReview = (k: number) => set({ reviews: s.reviews.filter((_, j) => j !== k) });
 
   async function save() {
     setSaving(true); setMsg("");
@@ -583,6 +588,69 @@ function SettingsTab({ headers, pw }: { headers: () => Record<string, string>; p
                 <input value={soc.label} onChange={(e) => setSoc(k, { label: e.target.value })} placeholder="الاسم" className="dv-in text-sm" />
                 <input value={soc.href} onChange={(e) => setSoc(k, { href: e.target.value })} placeholder="https://" className="dv-in text-sm" dir="ltr" />
                 <button onClick={() => delSoc(k)} className="rounded-md bg-rose-500/60 px-3 text-xs font-bold">✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* homepage hero */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">🏠 الصفحة الرئيسية — الواجهة (الهيرو)</h3>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <L label="الشريط العلوي (عربي)"><input value={s.hero.badgeAr} onChange={(e) => setHero({ badgeAr: e.target.value })} className="dv-in w-full" /></L>
+            <L label="الشريط العلوي (إنجليزي)"><input value={s.hero.badgeEn} onChange={(e) => setHero({ badgeEn: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+            <L label="العنوان الرئيسي (عربي)"><input value={s.hero.titleAr} onChange={(e) => setHero({ titleAr: e.target.value })} className="dv-in w-full" /></L>
+            <L label="العنوان الرئيسي (إنجليزي)"><input value={s.hero.titleEn} onChange={(e) => setHero({ titleEn: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+            <L label="العنوان الفرعي (عربي)"><input value={s.hero.subtitleAr} onChange={(e) => setHero({ subtitleAr: e.target.value })} className="dv-in w-full" /></L>
+            <L label="العنوان الفرعي (إنجليزي)"><input value={s.hero.subtitleEn} onChange={(e) => setHero({ subtitleEn: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+          </div>
+        </div>
+
+        {/* stats */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">📊 الإحصائيات</h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {s.stats.map((st, k) => (
+              <div key={k} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <L label="الرقم"><input type="number" value={st.value} onChange={(e) => setStat(k, { value: +e.target.value })} className="dv-in w-full" /></L>
+                  <L label="اللاحقة (% / k)"><input value={st.suffix} onChange={(e) => setStat(k, { suffix: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+                  <L label="الوصف (عربي)"><input value={st.labelAr} onChange={(e) => setStat(k, { labelAr: e.target.value })} className="dv-in w-full" /></L>
+                  <L label="الوصف (إنجليزي)"><input value={st.labelEn} onChange={(e) => setStat(k, { labelEn: e.target.value })} dir="ltr" className="dv-in w-full" /></L>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* reviews */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-lg font-extrabold">⭐ آراء العملاء</h3>
+            <div className="flex gap-2 rounded-full border border-white/10 bg-white/5 p-1">
+              {(["auto", "manual"] as const).map((m) => (
+                <button key={m} onClick={() => set({ reviewsMode: m })}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${s.reviewsMode === m ? "bg-white text-navy-950" : "text-white/70 hover:text-white"}`}>
+                  {m === "auto" ? "تلقائي (Google)" : "يدوي (المحدّدة بالأسفل)"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="mt-1 text-[11px] text-white/40">«تلقائي» يعرض تقييمات Google عند توفّر المفتاح (وإلا تقييمات افتراضية). «يدوي» يعرض التقييمات التي تكتبها هنا فقط.</p>
+          <div className="mt-3 flex items-center justify-end">
+            <button onClick={addReview} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/20">+ تقييم</button>
+          </div>
+          <div className="mt-2 grid gap-3 md:grid-cols-2">
+            {s.reviews.map((rv, k) => (
+              <div key={k} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="flex gap-2">
+                  <input value={rv.name} onChange={(e) => setReview(k, { name: e.target.value })} placeholder="اسم العميل" className="dv-in flex-1 text-sm font-bold" />
+                  <select value={rv.rating} onChange={(e) => setReview(k, { rating: +e.target.value })} className="dv-in text-sm">
+                    {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n} className="text-navy-950">{n} ★</option>)}
+                  </select>
+                  <button onClick={() => delReview(k)} className="rounded-md bg-rose-500/60 px-2.5 text-xs font-bold">✕</button>
+                </div>
+                <textarea value={rv.text} onChange={(e) => setReview(k, { text: e.target.value })} placeholder="نص التقييم" rows={2} className="dv-in mt-2 w-full text-sm" />
               </div>
             ))}
           </div>
