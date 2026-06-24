@@ -32,6 +32,8 @@ export type SiteSettings = {
   stats: Stat[];
   reviewsMode: "auto" | "manual";
   reviews: ReviewItem[];
+  heroImages: string[]; // image URLs; empty = use the built-in photos
+  galleryImages: string[]; // image URLs; empty = use the built-in photos
 };
 
 const DEFAULT_HERO: HeroContent = {
@@ -70,6 +72,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   stats: DEFAULT_STATS,
   reviewsMode: "auto",
   reviews: DEFAULT_REVIEWS,
+  heroImages: [],
+  galleryImages: [],
 };
 
 export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSettings {
@@ -81,6 +85,8 @@ export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSetti
     hero: { ...DEFAULT_HERO, ...(partial.hero ?? {}) },
     stats: partial.stats && partial.stats.length ? partial.stats : DEFAULT_SETTINGS.stats,
     reviews: partial.reviews && partial.reviews.length ? partial.reviews : DEFAULT_SETTINGS.reviews,
+    heroImages: partial.heroImages ?? [],
+    galleryImages: partial.galleryImages ?? [],
   };
 }
 

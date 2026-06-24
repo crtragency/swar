@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { BlogPost } from "@/lib/blog";
 import type { Pkg } from "@/lib/packages";
 import type { SiteSettings, SocialLink } from "@/lib/settings-core";
+import { ALL_PHOTOS } from "@/components/home/images";
 
 type Tab = "posts" | "packages" | "settings";
 const TAB_LABEL: Record<Tab, string> = { posts: "المقالات", packages: "الباقات", settings: "إعدادات الموقع" };
@@ -655,8 +656,99 @@ function SettingsTab({ headers, pw }: { headers: () => Record<string, string>; p
             ))}
           </div>
         </div>
+
+        {/* hero images */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">🖼️ صور الواجهة (الهيرو)</h3>
+          <ImageListEditor images={s.heroImages} onChange={(v) => set({ heroImages: v })} pw={pw} />
+        </div>
+
+        {/* gallery images */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">🏞️ صور المعرض</h3>
+          <ImageListEditor images={s.galleryImages} onChange={(v) => set({ galleryImages: v })} pw={pw} />
+        </div>
       </div>
       <style>{`.dv-in{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 12px;color:#fff;outline:none}.dv-in:focus{border-color:#21c0c0}`}</style>
+    </div>
+  );
+}
+
+/* ───────────────────────────── Image list editor ───────────────────────────── */
+function ImageListEditor({ images, onChange, pw }: { images: string[]; onChange: (v: string[]) => void; pw: string }) {
+  const [url, setUrl] = useState("");
+  const [picking, setPicking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  const add = (src: string) => { if (src.trim()) onChange([...images, src.trim()]); };
+  const removeAt = (i: number) => onChange(images.filter((_, j) => j !== i));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= images.length) return;
+    const next = [...images];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  async function upload(file: File) {
+    setBusy(true); setErr("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/dev/upload", { method: "POST", headers: { "x-dev-password": pw }, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "تعذّر الرفع");
+      add(data.url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "خطأ في الرفع");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3">
+      {images.length === 0 ? (
+        <p className="rounded-xl bg-white/5 px-4 py-3 text-sm text-white/45">يتم استخدام صور الموقع الافتراضية. أضف صورًا لتحلّ محلّها.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {images.map((src, i) => (
+            <div key={i} className="group relative overflow-hidden rounded-xl border border-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="h-28 w-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-black/50 p-1">
+                <button onClick={() => move(i, -1)} className="rounded bg-white/15 px-2 text-xs font-bold hover:bg-white/30">→</button>
+                <button onClick={() => removeAt(i)} className="rounded bg-rose-500/80 px-2 text-xs font-bold">حذف</button>
+                <button onClick={() => move(i, 1)} className="rounded bg-white/15 px-2 text-xs font-bold hover:bg-white/30">←</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="الصق رابط صورة (https://...)" dir="ltr" className="dv-in min-w-[12rem] flex-1 text-sm" />
+        <button onClick={() => { add(url); setUrl(""); }} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/20">إضافة رابط</button>
+        <label className={`cursor-pointer rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/20 ${busy ? "opacity-60" : ""}`}>
+          {busy ? "جاري الرفع..." : "⬆️ رفع صورة"}
+          <input type="file" accept="image/*" className="hidden" disabled={busy} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
+        </label>
+        <button onClick={() => setPicking((v) => !v)} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/20">🗂️ اختر من صور الموقع</button>
+        {images.length > 0 && <button onClick={() => onChange([])} className="rounded-xl bg-white/5 px-4 py-2 text-sm font-bold text-white/60 hover:bg-white/10">إعادة للافتراضي</button>}
+      </div>
+      {err && <p className="mt-2 text-sm font-semibold text-rose-400">{err}</p>}
+
+      {picking && (
+        <div className="mt-3 grid max-h-72 grid-cols-3 gap-2 overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-2 sm:grid-cols-5">
+          {ALL_PHOTOS.map((p, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <button key={i} onClick={() => add(p.src)} className="overflow-hidden rounded-lg border border-white/10 transition hover:ring-2 hover:ring-turquoise-400">
+              <img src={p.src} alt="" className="h-20 w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

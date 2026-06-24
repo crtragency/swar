@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { HOME_IMAGES } from "./homeImages";
+import SmartImage from "./SmartImage";
 import { useI18n, pick } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 
-const SLIDES = [
+const DEFAULT_SLIDES = [
   { src: HOME_IMAGES.hero[0], alt: "يخت سوار البحرية وقت الغروب في البحر الأحمر" },
   { src: HOME_IMAGES.hero[1], alt: "تجربة صيد بحرية مع سوار في ثول" },
   { src: HOME_IMAGES.hero[2], alt: "يخت سوار في مرسى ثول" },
@@ -19,7 +19,10 @@ const AUTOPLAY_MS = 3000;
 export default function Hero() {
   const [index, setIndex] = useState(0);
   const { t, locale } = useI18n();
-  const { hero } = useSettings();
+  const { hero, heroImages } = useSettings();
+  const SLIDES = heroImages.length
+    ? heroImages.map((src, i) => ({ src: src as string, alt: `صورة الواجهة ${i + 1} — سوار البحرية` }))
+    : DEFAULT_SLIDES;
 
   useEffect(() => {
     const id = setInterval(
@@ -54,7 +57,7 @@ export default function Hero() {
                   transition={{ duration: AUTOPLAY_MS / 1000 + 4, ease: "linear" }}
                   className="absolute inset-0"
                 >
-                  <Image
+                  <SmartImage
                     src={slide.src}
                     alt={slide.alt}
                     fill
