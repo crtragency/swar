@@ -9,9 +9,8 @@ import { useI18n, pick } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
 
 const DEFAULT_SLIDES = [
-  { src: HOME_IMAGES.hero[0], alt: "يخت سوار البحرية وقت الغروب في البحر الأحمر" },
-  { src: HOME_IMAGES.hero[1], alt: "تجربة صيد بحرية مع سوار في ثول" },
-  { src: HOME_IMAGES.hero[2], alt: "يخت سوار في مرسى ثول" },
+  { src: HOME_IMAGES.hero[0], alt: "يخت سوار البحرية في البحر الأحمر" },
+  { src: HOME_IMAGES.hero[1], alt: "تجربة بحرية مع سوار في ثول" },
 ];
 
 const AUTOPLAY_MS = 3000;
