@@ -43,8 +43,7 @@ export default function DashboardBookingForm() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
-  const [availUsage, setAvailUsage] = useState<Record<string, number>>({});
-  const BOAT_CAP = 11;
+  const [availSlots, setAvailSlots] = useState<Record<string, string[]>>({});
 
   const pkg = useMemo(() => PACKAGES.find((p) => p.id === pkgId) ?? PACKAGES[0], [pkgId]);
 
@@ -53,7 +52,7 @@ export default function DashboardBookingForm() {
     setQty({}); setToggles({}); setWeekend(false); setDate("");
     setDepartTime(pkg.id === "dolphin" ? "09:00" : "09:00");
     setError(""); setDoneId(null);
-    fetch("/api/availability").then((r) => r.json()).then((d) => setAvailUsage(d.usage ?? {})).catch(() => {});
+    fetch("/api/availability").then((r) => r.json()).then((d) => setAvailSlots(d.slots ?? {})).catch(() => {});
   }, [pkgId, pkg.maxBase, pkg.id]);
 
   useEffect(() => {
@@ -83,10 +82,9 @@ export default function DashboardBookingForm() {
   const deposit = Math.ceil(total / 2);
   const amountDue = payType === "deposit" ? deposit : total;
 
-  // Availability (staff can still override — just shows a warning)
-  const bookedOnDate = date ? (availUsage[date] ?? 0) : 0;
-  const remainingSeats = BOAT_CAP - bookedOnDate;
-  const dateFull = date ? remainingSeats <= 0 : false;
+  // Availability (staff sees warning but can still override)
+  const bookedTimesOnDate = date ? (availSlots[date] ?? []) : [];
+  const slotTaken = !!(date && departTime && availSlots[date]?.includes(departTime));
 
   const selectedOption = useMemo(() => {
     if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.name ?? "";
@@ -235,15 +233,18 @@ export default function DashboardBookingForm() {
       <div className="mt-4 grid grid-cols-2 gap-3">
         <label className="block">
           <span className="db-label">تاريخ الرحلة</span>
-          <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className={`db-in ${dateFull ? "border-red-400" : ""}`} />
-          {date && dateFull && <p className="mt-1 text-xs font-bold text-red-600">⚠️ محجوز بالكامل ({bookedOnDate}/{BOAT_CAP}) — يمكنك المتابعة كمدير</p>}
-          {date && !dateFull && remainingSeats <= 4 && <p className="mt-1 text-xs font-semibold text-amber-600">متبقي: {remainingSeats} مقاعد</p>}
+          <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="db-in" />
+          {bookedTimesOnDate.length > 0 && <p className="mt-1 text-xs text-slate-400">مواعيد محجوزة: {bookedTimesOnDate.join("، ")}</p>}
         </label>
         <label className="block">
           <span className="db-label">وقت الانطلاق</span>
-          <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className="db-in" disabled={pkg.id === "dolphin"}>
-            {getDepartTimes(pkg.id).map((t) => <option key={t} value={t}>{timeLabel(t)}</option>)}
+          <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className={`db-in ${slotTaken ? "border-red-400" : ""}`} disabled={pkg.id === "dolphin"}>
+            {getDepartTimes(pkg.id).map((t) => {
+              const taken = bookedTimesOnDate.includes(t);
+              return <option key={t} value={t}>{timeLabel(t)}{taken ? " — محجوز" : ""}</option>;
+            })}
           </select>
+          {slotTaken && <p className="mt-1 text-xs font-bold text-amber-600">⚠️ هذا الوقت محجوز — يمكنك المتابعة كمدير</p>}
         </label>
       </div>
 
