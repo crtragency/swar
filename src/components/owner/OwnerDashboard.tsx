@@ -72,13 +72,14 @@ export default function OwnerDashboard() {
     const thisMonthRevenue = confirmed.filter((b) => b.date.startsWith(cm)).reduce((s, b) => s + b.total, 0);
     const lastMonthRevenue = confirmed.filter((b) => b.date.startsWith(lm)).reduce((s, b) => s + b.total, 0);
     const todayRevenue = confirmed.filter((b) => b.date === td).reduce((s, b) => s + b.total, 0);
-    const cash = confirmed.filter((b) => b.payMethod === "arrival").reduce((s, b) => s + b.total, 0);
     const bank = confirmed.filter((b) => b.payMethod === "bank").reduce((s, b) => s + b.total, 0);
+    const online = confirmed.filter((b) => b.payMethod === "online").reduce((s, b) => s + b.total, 0);
+    const pos = confirmed.filter((b) => b.payMethod === "pos").reduce((s, b) => s + b.total, 0);
     const pendingRevenue = pending.reduce((s, b) => s + b.total, 0);
     const byPkg: Record<string, number> = {};
     confirmed.forEach((b) => { byPkg[b.packageTitle] = (byPkg[b.packageTitle] ?? 0) + b.total; });
     const pkgList = Object.entries(byPkg).sort((a, b) => b[1] - a[1]);
-    return { total: bookings.length, confirmed: confirmed.length, pending: pending.length, cancelled: cancelled.length, totalRevenue, thisMonthRevenue, lastMonthRevenue, todayRevenue, cash, bank, pendingRevenue, pkgList };
+    return { total: bookings.length, confirmed: confirmed.length, pending: pending.length, cancelled: cancelled.length, totalRevenue, thisMonthRevenue, lastMonthRevenue, todayRevenue, bank, online, pos, pendingRevenue, pkgList };
   }, [bookings]);
 
   if (!authed) {
@@ -244,7 +245,8 @@ export default function OwnerDashboard() {
               <motion.div className="mb-8 grid grid-cols-2 gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
                 {[
                   { icon: "💳", label: "تحويل بنكي", value: stats.bank },
-                  { icon: "💵", label: "عند الوصول (كاش)", value: stats.cash },
+                  { icon: "🌐", label: "دفع عبر الموقع", value: stats.online },
+                  { icon: "🖥️", label: "نقطة بيع (POS)", value: stats.pos },
                 ].map((p, i) => (
                   <motion.div key={i} variants={fadeUp} custom={i + 8} whileHover={{ y: -3 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}
                     className="rounded-2xl bg-white p-5 shadow-sm">
@@ -325,7 +327,7 @@ export default function OwnerDashboard() {
                         <BInfo label="الانطلاق" value={b.departTime || "—"} ltr />
                         <BInfo label="الأشخاص" value={String(b.persons)} />
                         <BInfo label="الإجمالي" value={`${fmt(b.total)} ريال`} />
-                        <BInfo label="الدفع" value={b.payMethod === "bank" ? "تحويل بنكي" : "كاش عند الوصول"} />
+                        <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : "تحويل بنكي"} />
                         {b.payType === "deposit" && <BInfo label="المقدّم" value={`${fmt(b.deposit)} ريال`} />}
                       </div>
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}

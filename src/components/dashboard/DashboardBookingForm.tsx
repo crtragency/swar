@@ -39,6 +39,7 @@ export default function DashboardBookingForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
   const [payType, setPayType] = useState<"full" | "deposit">("full");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -80,7 +81,7 @@ export default function DashboardBookingForm() {
   const seasonDiscount = Math.round((subtotal * DISCOUNT_PCT) / 100);
   const total = subtotal - seasonDiscount;
   const deposit = Math.ceil(total / 2);
-  const amountDue = payType === "deposit" ? deposit : total;
+  const amountDue = payMethod === "bank" && payType === "deposit" ? deposit : total;
 
   // Duration of the currently selected option
   const selectedDuration = useMemo(() => {
@@ -140,7 +141,7 @@ export default function DashboardBookingForm() {
           packageId: pkg.id, packageTitle: pkg.title, option: selectedOption,
           persons, addons: addonSummary, date, departTime, durationHours: effectiveDuration,
           name: name.trim(), phone: phone.trim(), notes: notes.trim(),
-          payMethod: "bank", payType, deposit: payType === "deposit" ? deposit : 0,
+          payMethod, payType: payMethod === "bank" ? payType : "full", deposit: payMethod === "bank" && payType === "deposit" ? deposit : 0,
           total, amountDue, promo: "",
         }),
       });
@@ -171,13 +172,16 @@ export default function DashboardBookingForm() {
           <p>📅 {date} · {timeLabel(departTime)}</p>
           <p>👥 {persons} أشخاص</p>
           <p className="font-bold">💰 الإجمالي: {total.toLocaleString()} ريال</p>
-          {payType === "deposit" && <p className="text-amber-700">المقدّم المطلوب: {deposit.toLocaleString()} ريال</p>}
+          {payMethod === "bank" && payType === "deposit" && <p className="text-amber-700">المقدّم المطلوب: {deposit.toLocaleString()} ريال</p>}
+          <p>💳 {payMethod === "online" ? "دفع إلكتروني عبر الموقع" : payMethod === "pos" ? "نقطة بيع (POS)" : "تحويل بنكي"}</p>
         </div>
+        {payMethod === "bank" && (
         <div className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600">
           <p className="font-bold text-slate-800">بيانات التحويل البنكي</p>
           <p className="mt-1">{BANK.bank} — {BANK.name}</p>
           <p className="mt-1 font-mono text-xs">{BANK.iban}</p>
         </div>
+        )}
         <button onClick={reset} className="mt-6 w-full rounded-xl bg-slate-800 py-3 font-bold text-white hover:opacity-80">حجز جديد</button>
       </motion.div>
     );
@@ -298,9 +302,28 @@ export default function DashboardBookingForm() {
         </label>
       </div>
 
-      {/* payment type */}
+      {/* payment method */}
       <div className="mt-4">
-        <span className="db-label block mb-2">نوع الدفع (تحويل بنكي)</span>
+        <span className="db-label block mb-2">طريقة الدفع</span>
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            { val: "bank", icon: "💳", label: "تحويل بنكي" },
+            { val: "online", icon: "🌐", label: "عبر الموقع" },
+            { val: "pos", icon: "🖥️", label: "نقطة بيع" },
+          ] as const).map((m) => (
+            <button key={m.val} type="button" onClick={() => setPayMethod(m.val)}
+              className={`rounded-xl border-2 p-3 text-center text-sm transition-colors ${payMethod === m.val ? "border-teal-500 bg-teal-50" : "border-slate-200 bg-slate-50"}`}>
+              <div className="text-lg">{m.icon}</div>
+              <div className="mt-0.5 text-xs font-bold text-slate-700">{m.label}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* payment type — bank only */}
+      {payMethod === "bank" && (
+      <div className="mt-3">
+        <span className="db-label block mb-2">نوع الدفع</span>
         <div className="grid grid-cols-2 gap-3">
           {(["full", "deposit"] as const).map((pt) => (
             <button key={pt} type="button" onClick={() => setPayType(pt)}
@@ -311,12 +334,13 @@ export default function DashboardBookingForm() {
           ))}
         </div>
       </div>
+      )}
 
       {/* total */}
       <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-800 px-5 py-4 text-white">
         <div>
-          <span className="text-xs text-white/60">{payType === "deposit" ? "المطلوب الآن (50%)" : "الإجمالي بعد الخصم"}</span>
-          {payType === "deposit" && <span className="block text-xs text-white/40">من إجمالي {total.toLocaleString()} ريال</span>}
+          <span className="text-xs text-white/60">{payMethod === "bank" && payType === "deposit" ? "المطلوب الآن (50%)" : "الإجمالي بعد الخصم"}</span>
+          {payMethod === "bank" && payType === "deposit" && <span className="block text-xs text-white/40">من إجمالي {total.toLocaleString()} ريال</span>}
         </div>
         <span className="text-2xl font-extrabold text-amber-400">{amountDue.toLocaleString()} <span className="text-sm font-normal text-white/60">ريال</span></span>
       </div>
