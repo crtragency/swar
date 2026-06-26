@@ -111,6 +111,8 @@ async function sendBookingNotification(b: Booking) {
   }
 }
 
+const BOAT_CAPACITY = 11;
+
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -125,6 +127,36 @@ export async function POST(req: Request) {
   if (!name || !phone || !date) {
     return NextResponse.json({ error: "الحقول الأساسية مطلوبة" }, { status: 422 });
   }
+
+  const incomingPersons = Number(body.persons) || 1;
+
+  // ── Capacity check ──────────────────────────────────────────────────────────
+  // Allow owner/captain to bypass (they can manually override)
+  const isStaff = !!getRole(req);
+  if (!isStaff) {
+    try {
+      const existing = await getBookings();
+      const booked = existing
+        .filter((b) => b.date === date && b.status !== "cancelled")
+        .reduce((s, b) => s + (b.persons || 0), 0);
+      const remaining = BOAT_CAPACITY - booked;
+      if (remaining <= 0) {
+        return NextResponse.json(
+          { error: "عذراً، القارب محجوز بالكامل في هذا التاريخ. يُرجى اختيار تاريخ آخر.", full: true },
+          { status: 409 },
+        );
+      }
+      if (incomingPersons > remaining) {
+        return NextResponse.json(
+          { error: `المقاعد المتبقية في هذا التاريخ: ${remaining} فقط. يُرجى تقليل عدد الأشخاص أو اختيار تاريخ آخر.`, remaining },
+          { status: 409 },
+        );
+      }
+    } catch {
+      // if store fails to read, allow the booking through (availability check is best-effort)
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   const booking: Booking = {
     id: newId(),

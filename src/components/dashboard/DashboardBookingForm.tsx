@@ -43,6 +43,8 @@ export default function DashboardBookingForm() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
+  const [availUsage, setAvailUsage] = useState<Record<string, number>>({});
+  const BOAT_CAP = 11;
 
   const pkg = useMemo(() => PACKAGES.find((p) => p.id === pkgId) ?? PACKAGES[0], [pkgId]);
 
@@ -51,6 +53,7 @@ export default function DashboardBookingForm() {
     setQty({}); setToggles({}); setWeekend(false); setDate("");
     setDepartTime(pkg.id === "dolphin" ? "09:00" : "09:00");
     setError(""); setDoneId(null);
+    fetch("/api/availability").then((r) => r.json()).then((d) => setAvailUsage(d.usage ?? {})).catch(() => {});
   }, [pkgId, pkg.maxBase, pkg.id]);
 
   useEffect(() => {
@@ -79,6 +82,11 @@ export default function DashboardBookingForm() {
   const total = subtotal - seasonDiscount;
   const deposit = Math.ceil(total / 2);
   const amountDue = payType === "deposit" ? deposit : total;
+
+  // Availability (staff can still override — just shows a warning)
+  const bookedOnDate = date ? (availUsage[date] ?? 0) : 0;
+  const remainingSeats = BOAT_CAP - bookedOnDate;
+  const dateFull = date ? remainingSeats <= 0 : false;
 
   const selectedOption = useMemo(() => {
     if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.name ?? "";
@@ -227,7 +235,9 @@ export default function DashboardBookingForm() {
       <div className="mt-4 grid grid-cols-2 gap-3">
         <label className="block">
           <span className="db-label">تاريخ الرحلة</span>
-          <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="db-in" />
+          <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className={`db-in ${dateFull ? "border-red-400" : ""}`} />
+          {date && dateFull && <p className="mt-1 text-xs font-bold text-red-600">⚠️ محجوز بالكامل ({bookedOnDate}/{BOAT_CAP}) — يمكنك المتابعة كمدير</p>}
+          {date && !dateFull && remainingSeats <= 4 && <p className="mt-1 text-xs font-semibold text-amber-600">متبقي: {remainingSeats} مقاعد</p>}
         </label>
         <label className="block">
           <span className="db-label">وقت الانطلاق</span>

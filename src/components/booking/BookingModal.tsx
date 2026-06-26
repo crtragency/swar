@@ -61,6 +61,9 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [doneId, setDoneId] = useState<string | null>(null);
+  // Availability
+  const [availUsage, setAvailUsage] = useState<Record<string, number>>({});
+  const BOAT_CAP = 11;
 
   useEffect(() => {
     if (pkg) {
@@ -69,6 +72,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       setDepartTime(pkg.id === "dolphin" ? DOLPHIN_TIME : "09:00");
       setName(""); setPhone(""); setNotes(""); setPromoCode(""); setPromoPct(0); setPromoMsg(null);
       setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
+      // Fetch availability
+      fetch("/api/availability").then((r) => r.json()).then((d) => setAvailUsage(d.usage ?? {})).catch(() => {});
     }
   }, [pkg]);
 
@@ -112,6 +117,12 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const deposit = Math.ceil(total / 2);
   const amountDue = payMethod === "bank" && payType === "deposit" ? deposit : total;
 
+  // Availability for selected date
+  const bookedOnDate = date ? (availUsage[date] ?? 0) : 0;
+  const remainingSeats = BOAT_CAP - bookedOnDate;
+  const dateFull = remainingSeats <= 0;
+  const dateOverflow = !dateFull && persons > remainingSeats;
+
   const selectedOption = useMemo(() => {
     if (!pkg) return "";
     if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.name ?? "";
@@ -147,6 +158,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
     if (!name.trim()) return setError("يرجى إدخال الاسم الكامل");
     if (!/^05\d{8}$/.test(phone.trim())) return setError("رقم الجوال غير صحيح — يبدأ بـ 05 ويتكوّن من 10 أرقام");
     if (!date) return setError("يرجى اختيار تاريخ الرحلة");
+    if (dateFull) return setError("عذراً، القارب محجوز بالكامل في هذا التاريخ. يُرجى اختيار تاريخ آخر.");
+    if (dateOverflow) return setError(`المقاعد المتبقية في هذا التاريخ: ${remainingSeats} فقط.`);
     setSubmitting(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -282,7 +295,15 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
 
                 {/* details */}
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <Field label="تاريخ الرحلة"><input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="sw-in" /></Field>
+                  <Field label="تاريخ الرحلة">
+                    <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className={`sw-in ${dateFull && date ? "border-red-400 ring-1 ring-red-400" : ""}`} />
+                    {date && !dateFull && remainingSeats <= 5 && (
+                      <p className="mt-1 text-xs font-semibold text-amber-600">⚠️ مقاعد متبقية: {remainingSeats} فقط</p>
+                    )}
+                    {date && dateFull && (
+                      <p className="mt-1 text-xs font-semibold text-red-600">🚫 هذا التاريخ محجوز بالكامل</p>
+                    )}
+                  </Field>
                   <Field label="وقت الانطلاق">
                     <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className="sw-in" disabled={pkg.id === "dolphin"}>
                       {getDepartTimes(pkg.id).map((t) => (<option key={t} value={t}>{timeLabel(t)}</option>))}
@@ -343,8 +364,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
 
                 {error && <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
 
-                <button onClick={submit} disabled={submitting} className="btn-ocean mt-4 w-full disabled:opacity-60">
-                  {submitting ? "جاري الإرسال..." : "تأكيد الحجز"}
+                <button onClick={submit} disabled={submitting || dateFull || dateOverflow} className="btn-ocean mt-4 w-full disabled:opacity-60">
+                  {submitting ? "جاري الإرسال..." : dateFull ? "🚫 التاريخ محجوز بالكامل" : dateOverflow ? `⚠️ المقاعد المتبقية: ${remainingSeats}` : "تأكيد الحجز"}
                 </button>
               </div>
             )}
