@@ -75,7 +75,7 @@ export default function Navbar() {
             aria-label="Switch language"
             className="rounded-full border border-navy-900/15 px-3 py-1.5 text-sm font-bold text-navy-900 transition-colors hover:border-gold-500 hover:text-gold-600"
           >
-            {locale === "ar" ? "EN" : "ع"}
+            {locale === "ar" ? "EN" : "ar"}
           </button>
           <Link href="/booking" className="btn-gold hidden text-sm sm:inline-flex">
             {t("cta.book")}
