@@ -68,6 +68,7 @@ export const PACKAGES: Pkg[] = [
     maxBase: 5,
     extraPerPerson: 105,
     maxPersons: 11,
+    dayType: 210,
     yacht: YACHT_FEATURES,
     rows: [
       { label: "السعر الأساسي — 4 ساعات + مشروبات · لـ 5 أشخاص + أدوات سلامة", oldPrice: 1260, price: 945 },
@@ -121,6 +122,7 @@ export const PACKAGES: Pkg[] = [
     maxBase: 5,
     extraPerPerson: 105,
     maxPersons: 11,
+    dayType: 210,
     yacht: YACHT_FEATURES,
     rows: [
       { label: "⏱️ نصف ساعة — حتى 5 أشخاص", oldPrice: 263, price: 197 },
@@ -143,6 +145,7 @@ export const PACKAGES: Pkg[] = [
     maxBase: 5,
     extraPerPerson: 105,
     maxPersons: 10,
+    dayType: 210,
     yacht: YACHT_FEATURES,
     tiers: [
       {
@@ -183,6 +186,7 @@ export const PACKAGES: Pkg[] = [
     maxBase: 5,
     extraPerPerson: 53,
     maxPersons: 10,
+    dayType: 210,
     yacht: "يتسع لـ10 أشخاص · غرفة نوم خاصة · مطبخ تحضيري متكامل · دورة مياه · ماء حلو للغسيل والاستحمام",
     rows: [
       { label: "🌅 الرحلة الصباحية — 9:00 ص حتى 12:00 م", oldPrice: 945, price: 709, note: "حتى 5 أشخاص" },
@@ -211,6 +215,7 @@ export const PACKAGES: Pkg[] = [
     maxBase: 5,
     extraPerPerson: 105,
     maxPersons: 11,
+    dayType: 210,
     yacht: YACHT_FEATURES,
     includes: [
       "🕗 8 ساعات كاملة",
