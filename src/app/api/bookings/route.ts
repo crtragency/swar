@@ -5,12 +5,23 @@ export const dynamic = "force-dynamic";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "sewar2026";
+const CAPTAIN_PASSWORD = process.env.CAPTAIN_PASSWORD || "captain2026";
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || "owner2026";
 
-function isAdmin(req: Request) {
+type Role = "admin" | "captain" | "owner" | null;
+
+function getRole(req: Request): Role {
   const params = new URL(req.url).searchParams;
   const user = req.headers.get("x-admin-user") || params.get("user");
   const pass = req.headers.get("x-admin-password") || params.get("password");
-  return user === ADMIN_USERNAME && pass === ADMIN_PASSWORD;
+  if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) return "admin";
+  if (user === "captain" && pass === CAPTAIN_PASSWORD) return "captain";
+  if (user === "owner" && pass === OWNER_PASSWORD) return "owner";
+  return null;
+}
+
+function isAdmin(req: Request) {
+  return getRole(req) === "admin";
 }
 
 function newId() {
@@ -64,12 +75,30 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  if (!isAdmin(req)) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const role = getRole(req);
+  if (!role) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const bookings = await getBookings();
-    return NextResponse.json({ bookings });
+    const all = await getBookings();
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (role === "captain") {
+      // Captain sees only upcoming confirmed/pending trips (today + future), limited fields
+      const upcoming = all
+        .filter((b) => b.status !== "cancelled" && b.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date) || a.departTime.localeCompare(b.departTime))
+        .map(({ id, packageTitle, option, persons, addons, date, departTime, name, phone, notes, status }) => ({
+          id, packageTitle, option, persons, addons, date, departTime, name, phone, notes, status,
+        }));
+      return NextResponse.json({ bookings: upcoming, role: "captain" });
+    }
+
+    if (role === "owner") {
+      // Owner sees everything for revenue analysis
+      return NextResponse.json({ bookings: all, role: "owner" });
+    }
+
+    // admin
+    return NextResponse.json({ bookings: all, role: "admin" });
   } catch {
     return NextResponse.json({ error: "error" }, { status: 500 });
   }
