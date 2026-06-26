@@ -116,8 +116,8 @@ export const PACKAGES: Pkg[] = [
     emoji: "🕐",
     title: "رحلات بالساعة",
     subtitle: "جولة بحرية مرنة · من المرسى مباشرةً",
-    oldPrice: 263,
-    price: 197,
+    oldPrice: 368,
+    price: 276,
     unit: "ريال",
     capacity: "لـ 5 أشخاص",
     accent: "gold",
@@ -129,7 +129,6 @@ export const PACKAGES: Pkg[] = [
     durationHours: 1,
     yacht: YACHT_FEATURES,
     rows: [
-      { label: "⏱️ نصف ساعة — حتى 5 أشخاص", oldPrice: 263, price: 197, durationHours: 0.5 },
       { label: "🕐 ساعة كاملة — حتى 5 أشخاص", oldPrice: 368, price: 276, durationHours: 1 },
       { label: "🕑 ساعتان — حتى 5 أشخاص", oldPrice: 630, price: 473, durationHours: 2 },
     ],
