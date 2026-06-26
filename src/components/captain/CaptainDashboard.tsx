@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { PACKAGES, DISCOUNT } from "@/lib/packages";
 
 type Trip = {
   id: string;
@@ -50,6 +51,7 @@ export default function CaptainDashboard() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [tab, setTab] = useState<"trips" | "prices">("trips");
 
   async function load(pass = password) {
     setLoading(true);
@@ -152,7 +154,7 @@ export default function CaptainDashboard() {
             <img src="/icon.webp" alt="سوار البحرية" className="h-10 w-auto object-contain" />
             <div>
               <h1 className="text-base font-extrabold leading-none">لوحة الكابتن</h1>
-              <p className="mt-0.5 text-xs text-white/40">سوار البحرية — جدول الرحلات</p>
+              <p className="mt-0.5 text-xs text-white/40">سوار البحرية</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -162,29 +164,121 @@ export default function CaptainDashboard() {
             <button onClick={() => { setAuthed(false); setPassword(""); setTrips([]); }} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold transition-colors hover:bg-white/20">خروج</button>
           </div>
         </div>
+        {/* tabs */}
+        <div className="mx-auto flex max-w-4xl gap-1 px-5 pb-3">
+          {(["trips", "prices"] as const).map((t) => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`relative rounded-t-lg px-5 py-1.5 text-sm font-bold transition-colors ${tab === t ? "text-[#050e1f]" : "text-white/50 hover:text-white"}`}>
+              {tab === t && <motion.span layoutId="cap-tab" className="absolute inset-0 rounded-t-lg bg-white" style={{ zIndex: -1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
+              {t === "trips" ? "⚓ الرحلات" : "💰 الأسعار"}
+            </button>
+          ))}
+        </div>
       </motion.header>
 
       <div className="mx-auto max-w-4xl px-5 py-8">
-        {/* summary pills */}
-        <motion.div
-          className="mb-8 grid grid-cols-3 gap-4"
-          initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}
-        >
-          {[
-            { label: "رحلات اليوم", value: todayTrips.length, color: "from-emerald-500 to-teal-500" },
-            { label: "رحلات الغد", value: tomorrowTrips.length, color: "from-blue-500 to-cyan-500" },
-            { label: "رحلات لاحقة", value: laterTrips.length, color: "from-slate-400 to-slate-500" },
-          ].map((p, i) => (
-            <motion.div key={i} variants={fadeUp} custom={i} className={`rounded-2xl bg-gradient-to-br ${p.color} p-5 text-white shadow-lg`}>
-              <div className="text-3xl font-extrabold">{p.value}</div>
-              <div className="mt-1 text-xs text-white/75">{p.label}</div>
+        <AnimatePresence mode="wait">
+          {tab === "trips" && (
+            <motion.div key="trips" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+              {/* summary pills */}
+              <motion.div className="mb-8 grid grid-cols-3 gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
+                {[
+                  { label: "رحلات اليوم", value: todayTrips.length, color: "from-emerald-500 to-teal-500" },
+                  { label: "رحلات الغد", value: tomorrowTrips.length, color: "from-blue-500 to-cyan-500" },
+                  { label: "رحلات لاحقة", value: laterTrips.length, color: "from-slate-400 to-slate-500" },
+                ].map((p, i) => (
+                  <motion.div key={i} variants={fadeUp} custom={i} className={`rounded-2xl bg-gradient-to-br ${p.color} p-5 text-white shadow-lg`}>
+                    <div className="text-3xl font-extrabold">{p.value}</div>
+                    <div className="mt-1 text-xs text-white/75">{p.label}</div>
+                  </motion.div>
+                ))}
+              </motion.div>
+              <Section title="🌅 رحلات اليوم" trips={todayTrips} emptyMsg="لا توجد رحلات اليوم" highlight startIndex={3} />
+              <Section title="🌤️ رحلات الغد" trips={tomorrowTrips} emptyMsg="لا توجد رحلات الغد" startIndex={10} />
+              <Section title="📅 رحلات لاحقة" trips={laterTrips} emptyMsg="لا توجد رحلات لاحقة" grouped startIndex={17} />
             </motion.div>
-          ))}
-        </motion.div>
+          )}
 
-        <Section title="🌅 رحلات اليوم" trips={todayTrips} emptyMsg="لا توجد رحلات اليوم" highlight startIndex={3} />
-        <Section title="🌤️ رحلات الغد" trips={tomorrowTrips} emptyMsg="لا توجد رحلات الغد" startIndex={10} />
-        <Section title="📅 رحلات لاحقة" trips={laterTrips} emptyMsg="لا توجد رحلات لاحقة" grouped startIndex={17} />
+          {tab === "prices" && (
+            <motion.div key="prices" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+              {/* discount banner */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                className="mb-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-400 px-5 py-4 text-white shadow-lg"
+              >
+                <p className="font-extrabold">🏷️ {DISCOUNT.ar}</p>
+                <p className="mt-0.5 text-sm text-white/80">خصم {DISCOUNT.pct}% مطبّق على الأسعار الظاهرة</p>
+              </motion.div>
+
+              <motion.div className="grid gap-4 sm:grid-cols-2" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.08 } } }}>
+                {PACKAGES.map((pkg, i) => (
+                  <motion.div key={pkg.id} variants={fadeUp} custom={i}
+                    whileHover={{ y: -3, boxShadow: "0 12px 40px rgba(0,0,0,.10)" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                    className="rounded-2xl bg-white p-5 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xl">{pkg.emoji}</p>
+                        <p className="mt-1 font-extrabold text-slate-800">{pkg.title}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{pkg.subtitle}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-slate-400 line-through">{pkg.oldPrice.toLocaleString()} ريال</p>
+                        <p className="text-xl font-extrabold text-emerald-600">{pkg.price.toLocaleString()}</p>
+                        <p className="text-xs text-slate-400">{pkg.unit}</p>
+                      </div>
+                    </div>
+
+                    {/* rows (durations) */}
+                    {pkg.rows && pkg.rows.length > 1 && (
+                      <div className="mt-3 space-y-1.5">
+                        {pkg.rows.map((r, ri) => (
+                          <div key={ri} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                            <span className="text-slate-600">{r.label}</span>
+                            <span className="font-bold text-slate-800">{r.price.toLocaleString()} ريال</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* tiers (party) */}
+                    {pkg.tiers && (
+                      <div className="mt-3 space-y-1.5">
+                        {pkg.tiers.map((tier, ti) => (
+                          <div key={ti} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                            <span className="text-slate-600">{tier.name} — {tier.note}</span>
+                            <span className="font-bold text-slate-800">{tier.price.toLocaleString()} ريال</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* addons */}
+                    {pkg.addons && (
+                      <div className="mt-3">
+                        <p className="mb-1.5 text-xs font-bold text-slate-400">الإضافات</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {pkg.addons.map((a) => (
+                            <span key={a.id} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                              {a.label} — <strong>{a.price.toLocaleString()} ريال</strong>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap gap-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                      <span>👥 {pkg.capacity}</span>
+                      <span>⏱️ {pkg.baseDuration}</span>
+                      {pkg.extraPerPerson && <span>➕ {pkg.extraPerPerson} ريال/شخص إضافي</span>}
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
