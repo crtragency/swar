@@ -6,12 +6,33 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BANK, type Pkg } from "@/lib/packages";
 import { useSettings } from "@/lib/settings";
 
-const DEPART_TIMES = ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+// Packages that can depart any hour of the day
+const ALLDAY_PKG_IDS = new Set(["fish", "hour", "party", "vip"]);
+// Dolphin: fixed morning only
+const DOLPHIN_TIME = "09:00";
+
+const DEPART_TIMES_24H = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
+const DEPART_TIMES_DAY = ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+
+function getDepartTimes(pkgId?: string) {
+  if (!pkgId) return DEPART_TIMES_DAY;
+  if (pkgId === "dolphin") return [DOLPHIN_TIME];
+  if (ALLDAY_PKG_IDS.has(pkgId)) return DEPART_TIMES_24H;
+  return DEPART_TIMES_DAY;
+}
+
 function timeLabel(t: string) {
   const h = parseInt(t.slice(0, 2), 10);
   const am = h < 12;
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:00 ${am ? "ص" : "م"}`;
+}
+
+// Thu=4, Fri=5, Sat=6
+function isWeekend(dateStr: string) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr + "T12:00:00").getDay();
+  return d === 4 || d === 5 || d === 6;
 }
 
 const PROMO_CODES: Record<string, number> = { SEWAR10: 10 };
@@ -34,7 +55,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const [promoCode, setPromoCode] = useState("");
   const [promoPct, setPromoPct] = useState(0);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [payMethod, setPayMethod] = useState<"bank" | "arrival">("bank");
+  const [payMethod] = useState<"bank" | "arrival">("bank");
   const [payType, setPayType] = useState<"full" | "deposit">("full");
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -44,11 +65,17 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   useEffect(() => {
     if (pkg) {
       setRowIdx(0); setTierIdx(0); setPersons(Math.min(2, pkg.maxBase));
-      setQty({}); setToggles({}); setWeekend(false); setDate(""); setDepartTime("09:00");
+      setQty({}); setToggles({}); setWeekend(false); setDate("");
+      setDepartTime(pkg.id === "dolphin" ? DOLPHIN_TIME : "09:00");
       setName(""); setPhone(""); setNotes(""); setPromoCode(""); setPromoPct(0); setPromoMsg(null);
-      setPayMethod("bank"); setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
+      setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
     }
   }, [pkg]);
+
+  // Auto-detect weekend (Thu/Fri/Sat) from selected date
+  useEffect(() => {
+    if (pkg?.dayType) setWeekend(isWeekend(date));
+  }, [date, pkg?.dayType]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -180,7 +207,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 <div className="mt-5 rounded-2xl bg-navy-50/70 p-5 text-start text-sm leading-loose text-navy-900/75">
                   <p>👥 عدد الأشخاص: {persons}</p>
                   <p>⏱️ الباقة: {selectedOption}</p>
-                  <p>💳 طريقة الدفع: {payMethod === "bank" ? `تحويل بنكي${payType === "deposit" ? " — دفعة مقدمة 50%" : ""}` : "الدفع عند الوصول"}</p>
+                  <p>💳 طريقة الدفع: تحويل بنكي{payType === "deposit" ? " — دفعة مقدمة 50%" : ""}</p>
                   <p className="font-bold text-navy-900">المبلغ المطلوب: {amountDue.toLocaleString()} ريال {payType === "deposit" && payMethod === "bank" ? `(من إجمالي ${total.toLocaleString()})` : ""}</p>
                 </div>
                 {payMethod === "bank" && <BankBox copied={copied} setCopied={setCopied} />}
@@ -211,14 +238,11 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                   </Field>
                 ) : null}
 
-                {/* day type */}
-                {pkg.dayType ? (
-                  <Field label="نوع اليوم">
-                    <select value={weekend ? "weekend" : "weekday"} onChange={(e) => setWeekend(e.target.value === "weekend")} className="sw-in">
-                      <option value="weekday">وسط الأسبوع</option>
-                      <option value="weekend">نهاية الأسبوع (+{pkg.dayType} ريال)</option>
-                    </select>
-                  </Field>
+                {/* weekend auto-notice */}
+                {pkg.dayType && weekend && date ? (
+                  <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                    🌙 <strong>نهاية الأسبوع</strong> — تمت إضافة رسوم +{pkg.dayType.toLocaleString()} ريال تلقائياً (الخميس / الجمعة / السبت)
+                  </div>
                 ) : null}
 
                 {/* persons */}
@@ -259,7 +283,11 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 {/* details */}
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <Field label="تاريخ الرحلة"><input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="sw-in" /></Field>
-                  <Field label="وقت الانطلاق"><select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className="sw-in">{DEPART_TIMES.map((t) => (<option key={t} value={t}>{timeLabel(t)}</option>))}</select></Field>
+                  <Field label="وقت الانطلاق">
+                    <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className="sw-in" disabled={pkg.id === "dolphin"}>
+                      {getDepartTimes(pkg.id).map((t) => (<option key={t} value={t}>{timeLabel(t)}</option>))}
+                    </select>
+                  </Field>
                   <Field label="الاسم الكامل"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="أدخل اسمك" className="sw-in" /></Field>
                   <Field label="رقم الجوال"><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XXXXXXXX" className="sw-in" /></Field>
                   <Field label="ملاحظات إضافية" full><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي طلبات خاصة..." className="sw-in resize-none" /></Field>
@@ -281,15 +309,10 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                   {promoDiscount > 0 && <Line label={`كود خصم (${promoPct}%)`} value={`− ${promoDiscount.toLocaleString()} ريال`} green />}
                 </div>
 
-                {/* payment method */}
-                <p className="mt-5 text-sm font-bold text-navy-900">طريقة الدفع</p>
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  {([["bank", "تحويل بنكي", "حوّل المبلغ على الآيبان"], ["arrival", "الدفع عند الوصول", "ادفع في يوم الرحلة"]] as const).map(([val, t, sub]) => (
-                    <button key={val} type="button" onClick={() => setPayMethod(val)} className={`rounded-2xl border-2 p-4 text-center transition-all ${payMethod === val ? "border-turquoise-500 bg-turquoise-500/5" : "border-navy-50 bg-navy-50/40"}`}>
-                      <div className="text-sm font-bold text-navy-900">{t}</div>
-                      <div className="mt-1 text-xs text-navy-900/55">{sub}</div>
-                    </button>
-                  ))}
+                {/* payment method — bank transfer only */}
+                <div className="mt-5 rounded-2xl border-2 border-turquoise-500 bg-turquoise-500/5 p-4 text-center">
+                  <div className="text-sm font-bold text-navy-900">💳 تحويل بنكي</div>
+                  <div className="mt-1 text-xs text-navy-900/55">حوّل المبلغ على الآيبان</div>
                 </div>
 
                 {/* deposit option (bank only) */}

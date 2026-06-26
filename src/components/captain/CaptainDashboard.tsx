@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PACKAGES, DISCOUNT } from "@/lib/packages";
+import DashboardBookingForm from "@/components/dashboard/DashboardBookingForm";
 
 type Trip = {
   id: string;
@@ -51,7 +52,7 @@ export default function CaptainDashboard() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"trips" | "prices">("trips");
+  const [tab, setTab] = useState<"trips" | "prices" | "new">("trips");
 
   async function load(pass = password) {
     setLoading(true);
@@ -166,11 +167,11 @@ export default function CaptainDashboard() {
         </div>
         {/* tabs */}
         <div className="mx-auto flex max-w-4xl gap-1 px-5 pb-3">
-          {(["trips", "prices"] as const).map((t) => (
+          {(["trips", "prices", "new"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`relative rounded-t-lg px-5 py-1.5 text-sm font-bold transition-colors ${tab === t ? "text-[#050e1f]" : "text-white/50 hover:text-white"}`}>
               {tab === t && <motion.span layoutId="cap-tab" className="absolute inset-0 rounded-t-lg bg-white" style={{ zIndex: -1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
-              {t === "trips" ? "⚓ الرحلات" : "💰 الأسعار"}
+              {t === "trips" ? "⚓ الرحلات" : t === "prices" ? "💰 الأسعار" : "➕ حجز جديد"}
             </button>
           ))}
         </div>
@@ -276,6 +277,12 @@ export default function CaptainDashboard() {
                   </motion.div>
                 ))}
               </motion.div>
+            </motion.div>
+          )}
+
+          {tab === "new" && (
+            <motion.div key="new" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+              <DashboardBookingForm />
             </motion.div>
           )}
         </AnimatePresence>

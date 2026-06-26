@@ -21,7 +21,6 @@ export default async function ContactPage() {
     { icon: "📍", label: tt(locale, "contact.location"), value: tt(locale, "contact.locationVal") },
     { icon: "📞", label: tt(locale, "contact.phone"), value: s.phone, href: phoneHref(s.phone), ltr: true },
     { icon: "✉️", label: tt(locale, "contact.email"), value: s.email, href: `mailto:${s.email}` },
-    { icon: "🕐", label: tt(locale, "contact.hours"), value: tt(locale, "contact.hoursVal") },
   ];
   return (
     <main>
