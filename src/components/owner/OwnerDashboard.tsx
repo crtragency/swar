@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Booking } from "@/lib/store";
+import DashboardBookingForm from "@/components/dashboard/DashboardBookingForm";
 
 function thisMonth() {
   const d = new Date();
@@ -41,7 +42,7 @@ export default function OwnerDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"overview" | "bookings">("overview");
+  const [tab, setTab] = useState<"overview" | "bookings" | "new">("overview");
 
   async function load(pass = password) {
     setLoading(true);
@@ -183,7 +184,7 @@ export default function OwnerDashboard() {
         </div>
         {/* tabs */}
         <div className="mx-auto flex max-w-5xl gap-1 px-5 pb-3">
-          {(["overview", "bookings"] as const).map((t) => (
+          {(["overview", "bookings", "new"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -192,7 +193,7 @@ export default function OwnerDashboard() {
               {tab === t && (
                 <motion.span layoutId="owner-tab-bg" className="absolute inset-0 rounded-t-lg bg-white" style={{ zIndex: -1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />
               )}
-              {t === "overview" ? "نظرة عامة" : `جميع الحجوزات (${bookings.length})`}
+              {t === "overview" ? "نظرة عامة" : t === "bookings" ? `جميع الحجوزات (${bookings.length})` : "➕ حجز جديد"}
             </button>
           ))}
         </div>
@@ -333,6 +334,12 @@ export default function OwnerDashboard() {
                   ))}
                 </motion.div>
               )}
+            </motion.div>
+          )}
+
+          {tab === "new" && (
+            <motion.div key="new" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+              <DashboardBookingForm />
             </motion.div>
           )}
         </AnimatePresence>
