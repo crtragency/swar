@@ -82,23 +82,39 @@ export default function OwnerDashboard() {
 
   if (!authed) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0d0820] px-5">
-        {/* animated particles */}
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-5" style={{ background: "linear-gradient(160deg,#020d18 0%,#051e30 45%,#082840 100%)" }}>
+        {/* animated ocean glow layers */}
         <motion.div className="pointer-events-none absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute h-1 w-1 rounded-full bg-purple-400/30"
-              style={{ left: `${15 + i * 14}%`, top: `${20 + (i % 3) * 20}%` }}
-              animate={{ y: [-20, 20, -20], opacity: [0.2, 0.6, 0.2] }}
-              transition={{ duration: 4 + i, repeat: Infinity, ease: "easeInOut", delay: i * 0.7 }}
-            />
-          ))}
+          {/* soft teal glow */}
           <motion.div
             className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse at 50% 60%, rgba(124,58,237,0.12) 0%, transparent 70%)" }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            style={{ background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(13,148,136,0.18) 0%, transparent 70%)" }}
+            animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* gold accent top-right */}
+          <motion.div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse 50% 40% at 85% 15%, rgba(202,153,60,0.10) 0%, transparent 60%)" }}
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          />
+          {/* floating light dots */}
+          {[...Array(7)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-teal-300/20"
+              style={{ width: 3 + (i % 3), height: 3 + (i % 3), left: `${10 + i * 12}%`, top: `${15 + (i % 4) * 18}%` }}
+              animate={{ y: [-16, 16, -16], opacity: [0.15, 0.5, 0.15] }}
+              transition={{ duration: 5 + i * 0.8, repeat: Infinity, ease: "easeInOut", delay: i * 0.6 }}
+            />
+          ))}
+          {/* horizontal shimmer line */}
+          <motion.div
+            className="absolute left-0 right-0 h-px"
+            style={{ top: "55%", background: "linear-gradient(90deg, transparent, rgba(13,148,136,0.25), transparent)" }}
+            animate={{ scaleX: [0.6, 1.2, 0.6], opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           />
         </motion.div>
 
@@ -107,7 +123,7 @@ export default function OwnerDashboard() {
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="relative w-full max-w-sm rounded-[28px] bg-white/97 p-8 shadow-[0_24px_80px_rgba(0,0,0,.5)] backdrop-blur"
+          className="relative w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_32px_80px_rgba(0,0,0,.6),0_0_0_1px_rgba(13,148,136,0.15)] backdrop-blur"
         >
           <div className="mb-5 flex justify-center">
             <img src="/icon.webp" alt="سوار البحرية" className="h-16 w-auto object-contain" />
@@ -148,7 +164,7 @@ export default function OwnerDashboard() {
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="sticky top-0 z-10 bg-[#0d0820] text-white shadow-[0_4px_32px_rgba(0,0,0,.6)]"
+        className="sticky top-0 z-10 text-white shadow-[0_4px_32px_rgba(0,0,0,.5)]" style={{ background: "linear-gradient(135deg,#020d18,#051e30)" }}
       >
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
           <div className="flex items-center gap-3">
