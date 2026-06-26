@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addBooking, getBookings, updateBooking, type Booking } from "@/lib/store";
+import { deriveDuration } from "@/lib/packages";
 
 export const dynamic = "force-dynamic";
 
@@ -128,18 +129,41 @@ export async function POST(req: Request) {
 
   const departTime = String(body.departTime || "").trim();
 
-  // ── Time-slot check ─────────────────────────────────────────────────────────
-  // One booking per departure time per date. Staff (captain/owner) can override.
+  // ── Time-range conflict check ───────────────────────────────────────────────
+  // Trips must not overlap including a 1-hour cleaning buffer after each trip.
+  // Staff (captain/owner) can override via dashboard.
   const isStaff = !!getRole(req);
+  const incomingPackageId = String(body.packageId || "");
+  const incomingOption = String(body.option || "");
+  const incomingDur = Number(body.durationHours) || deriveDuration(incomingPackageId, incomingOption);
+  const BUFFER = 1;
+
+  function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
+
   if (!isStaff && departTime) {
     try {
       const existing = await getBookings();
-      const slotTaken = existing.some(
-        (b) => b.date === date && b.departTime === departTime && b.status !== "cancelled",
-      );
-      if (slotTaken) {
+      const newStart = toH(departTime);
+      const newEnd = newStart + incomingDur + BUFFER;
+
+      const conflict = existing.find((b) => {
+        if (b.date !== date || b.status === "cancelled" || !b.departTime) return false;
+        const bStart = toH(b.departTime);
+        const bDur = deriveDuration(b.packageId, b.option);
+        const bEnd = bStart + bDur + BUFFER;
+        // overlap: [newStart, newEnd) ∩ [bStart, bEnd) ≠ ∅
+        return newStart < bEnd && bStart < newEnd;
+      });
+
+      if (conflict) {
+        const cDur = deriveDuration(conflict.packageId, conflict.option);
+        const cEndH = toH(conflict.departTime) + cDur;
+        const cEndHHMM = `${String(Math.floor(cEndH)).padStart(2, "0")}:00`;
         return NextResponse.json(
-          { error: `هذا الموعد (${departTime}) محجوز بالفعل في يوم ${date}. يُرجى اختيار وقت انطلاق آخر.`, slotFull: true },
+          {
+            error: `يوجد تعارض مع رحلة أخرى في هذا اليوم. القارب غير متاح حتى ${cEndHHMM} (+ ساعة تنظيف). يُرجى اختيار وقت آخر.`,
+            conflict: true,
+          },
           { status: 409 },
         );
       }

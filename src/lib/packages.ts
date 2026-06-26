@@ -22,8 +22,8 @@ export const BANK = {
 export const YACHT_FEATURES =
   "يتسع لـ11 شخص · غرفة نوم خاصة · مطبخ تحضيري متكامل · دورة مياه · ماء حلو للغسيل والاستحمام";
 
-export type Tier = { name: string; oldPrice: number; price: number; note: string; items: string[] };
-export type Row = { label: string; oldPrice?: number; price: number; note?: string };
+export type Tier = { name: string; oldPrice: number; price: number; note: string; items: string[]; durationHours: number };
+export type Row = { label: string; oldPrice?: number; price: number; note?: string; durationHours?: number };
 // Optional add-on. `stepper` => quantity selectable up to `max`; otherwise a toggle.
 export type Addon = { id: string; label: string; price: number; stepper?: boolean; max?: number };
 
@@ -46,6 +46,7 @@ export type Pkg = {
   extraPerPerson: number; // cost per extra person above maxBase
   maxPersons: number; // capacity cap
   dayType?: number; // weekend surcharge (e.g. fishing +200)
+  durationHours: number; // base trip duration (excluding buffer)
   rows?: Row[]; // selectable durations
   tiers?: Tier[]; // selectable party tiers
   addons?: Addon[]; // optional add-ons
@@ -69,9 +70,10 @@ export const PACKAGES: Pkg[] = [
     extraPerPerson: 105,
     maxPersons: 11,
     dayType: 210,
+    durationHours: 4,
     yacht: YACHT_FEATURES,
     rows: [
-      { label: "السعر الأساسي — 4 ساعات + مشروبات · لـ 5 أشخاص + أدوات سلامة", oldPrice: 1260, price: 945 },
+      { label: "السعر الأساسي — 4 ساعات + مشروبات · لـ 5 أشخاص + أدوات سلامة", oldPrice: 1260, price: 945, durationHours: 4 },
     ],
     addons: [
       { id: "extra_hour", label: "⏱️ ساعة إضافية", price: 105, stepper: true, max: 4 },
@@ -96,11 +98,12 @@ export const PACKAGES: Pkg[] = [
     extraPerPerson: 105,
     maxPersons: 11,
     dayType: 210,
+    durationHours: 6,
     yacht: YACHT_FEATURES,
     rows: [
-      { label: "🕕 6 ساعات — حتى 5 أشخاص", oldPrice: 1470, price: 1103 },
-      { label: "🕗 8 ساعات — حتى 5 أشخاص", oldPrice: 1680, price: 1260 },
-      { label: "🕙 10 ساعات — حتى 5 أشخاص", oldPrice: 1995, price: 1496 },
+      { label: "🕕 6 ساعات — حتى 5 أشخاص", oldPrice: 1470, price: 1103, durationHours: 6 },
+      { label: "🕗 8 ساعات — حتى 5 أشخاص", oldPrice: 1680, price: 1260, durationHours: 8 },
+      { label: "🕙 10 ساعات — حتى 5 أشخاص", oldPrice: 1995, price: 1496, durationHours: 10 },
     ],
     addons: [
       { id: "gear_rent", label: "🎣 عدة صيد + طُعم (استئجار من عندنا)", price: 263 },
@@ -123,11 +126,12 @@ export const PACKAGES: Pkg[] = [
     extraPerPerson: 105,
     maxPersons: 11,
     dayType: 210,
+    durationHours: 1,
     yacht: YACHT_FEATURES,
     rows: [
-      { label: "⏱️ نصف ساعة — حتى 5 أشخاص", oldPrice: 263, price: 197 },
-      { label: "🕐 ساعة كاملة — حتى 5 أشخاص", oldPrice: 368, price: 276 },
-      { label: "🕑 ساعتان — حتى 5 أشخاص", oldPrice: 630, price: 473 },
+      { label: "⏱️ نصف ساعة — حتى 5 أشخاص", oldPrice: 263, price: 197, durationHours: 0.5 },
+      { label: "🕐 ساعة كاملة — حتى 5 أشخاص", oldPrice: 368, price: 276, durationHours: 1 },
+      { label: "🕑 ساعتان — حتى 5 أشخاص", oldPrice: 630, price: 473, durationHours: 2 },
     ],
     includes: ["🌊 جولة البحر المفتوح", "❄️ مياه شرب وثلج", "🛟 أدوات السلامة كاملة"],
   },
@@ -146,6 +150,7 @@ export const PACKAGES: Pkg[] = [
     extraPerPerson: 105,
     maxPersons: 10,
     dayType: 210,
+    durationHours: 1,
     yacht: YACHT_FEATURES,
     tiers: [
       {
@@ -153,6 +158,7 @@ export const PACKAGES: Pkg[] = [
         oldPrice: 630,
         price: 473,
         note: "لـ 5 أشخاص",
+        durationHours: 1,
         items: ["تجهيز القارب بالزينة", "جولة بحرية · ساعة"],
       },
       {
@@ -160,6 +166,7 @@ export const PACKAGES: Pkg[] = [
         oldPrice: 1050,
         price: 788,
         note: "لـ 5 أشخاص",
+        durationHours: 1.5,
         items: ["تجهيز القارب بالزينة", "جولة · ساعة ونصف", "كيكة 🎂", "باقة ورود 💐", "مشروبات"],
       },
       {
@@ -167,6 +174,7 @@ export const PACKAGES: Pkg[] = [
         oldPrice: 1575,
         price: 1181,
         note: "لـ 5 أشخاص",
+        durationHours: 2,
         items: ["تجهيز القارب بالزينة", "جولة · ساعتان", "كيكة 🎂", "باقة ورود 💐", "مشروبات", "عشاء لشخصين 🍽️"],
       },
     ],
@@ -187,9 +195,10 @@ export const PACKAGES: Pkg[] = [
     extraPerPerson: 53,
     maxPersons: 10,
     dayType: 210,
+    durationHours: 3,
     yacht: "يتسع لـ10 أشخاص · غرفة نوم خاصة · مطبخ تحضيري متكامل · دورة مياه · ماء حلو للغسيل والاستحمام",
     rows: [
-      { label: "🌅 الرحلة الصباحية — 9:00 ص حتى 12:00 م", oldPrice: 945, price: 709, note: "حتى 5 أشخاص" },
+      { label: "🌅 الرحلة الصباحية — 9:00 ص حتى 12:00 م", oldPrice: 945, price: 709, note: "حتى 5 أشخاص", durationHours: 3 },
     ],
     includes: [
       "🐬 مشاهدة الدلافين",
@@ -216,6 +225,7 @@ export const PACKAGES: Pkg[] = [
     extraPerPerson: 105,
     maxPersons: 11,
     dayType: 210,
+    durationHours: 8,
     yacht: YACHT_FEATURES,
     includes: [
       "🕗 8 ساعات كاملة",
@@ -254,4 +264,20 @@ export const PKG_I18N: Record<string, PkgI18nFields> = {
 export function pkgText(locale: Locale, pkg: Pkg, field: keyof PkgI18nFields): string {
   if (locale === "en") return PKG_I18N[pkg.id]?.[field] ?? (pkg[field] as string);
   return pkg[field] as string;
+}
+
+// Derive trip duration (hours) from packageId + selected option label.
+// Used by the availability system to compute blocked time ranges.
+export function deriveDuration(packageId: string, option: string): number {
+  const pkg = PACKAGES.find((p) => p.id === packageId);
+  if (!pkg) return 4;
+  if (pkg.rows?.length) {
+    const row = pkg.rows.find((r) => r.label === option);
+    if (row?.durationHours != null) return row.durationHours;
+  }
+  if (pkg.tiers?.length) {
+    const tier = pkg.tiers.find((t) => t.name === option);
+    if (tier?.durationHours != null) return tier.durationHours;
+  }
+  return pkg.durationHours;
 }
