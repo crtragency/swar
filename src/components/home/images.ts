@@ -38,8 +38,12 @@ import im_img33_ from "../../../الهيرو الاولي.webp";
 import im_img34_ from "../../../الهيرو التالته.webp";
 import im_img35_ from "../../../الهيرو التانيه.webp";
 import im_img36_ from "../../../لوجو سوار.webp";
+import im_hero_new1 from "../../../6c4833b5-af3d-45c8-9c2c-fe5f87c9d29d.png";
+import im_hero_new2 from "../../../362da964-da2d-47be-a1f3-b4328523d5b6.png";
 
 export const LOGO = im_img36_;
+export const HERO_NEW1 = im_hero_new1;
+export const HERO_NEW2 = im_hero_new2;
 export const HERO_SUNSET = im_img33_;
 export const HERO_DECK = im_img35_;
 export const HERO_PORTRAIT = im_img34_;

@@ -1,8 +1,8 @@
 // Allocates unique photos across homepage sections — guarantees that no
 // single image is reused anywhere on the home page.
-import { ALL_PHOTOS, HERO_SUNSET, FISHING, MARINA_BOAT } from "./images";
+import { ALL_PHOTOS, HERO_NEW1, HERO_NEW2 } from "./images";
 
-const hero = [HERO_SUNSET, FISHING, MARINA_BOAT];
+const hero = [HERO_NEW1, HERO_NEW2];
 
 // Remaining pool (preserves order, excludes hero shots).
 const pool = ALL_PHOTOS.filter((p) => !hero.includes(p));
