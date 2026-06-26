@@ -28,6 +28,89 @@ function newId() {
   return "BK-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
+const NOTIFICATION_EMAILS = ["sewarmarine0@gmail.com", "sewarmarine@gmail.com"];
+
+async function sendBookingNotification(b: Booking) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return; // silently skip if not configured
+
+  const payLabel = b.payMethod === "bank"
+    ? (b.payType === "deposit" ? `تحويل بنكي — مقدّم 50% (${b.deposit.toLocaleString()} ريال)` : "تحويل بنكي — كامل")
+    : "عند الوصول (كاش)";
+
+  const html = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f0f8fb;font-family:'Segoe UI',Arial,sans-serif;direction:rtl">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+        <!-- header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0b5c8c,#21c0c0);padding:32px 36px;text-align:center">
+            <p style="margin:0;font-size:32px">⚓</p>
+            <h1 style="margin:8px 0 4px;color:#fff;font-size:22px;font-weight:800">حجز جديد — سوار البحرية</h1>
+            <p style="margin:0;color:rgba(255,255,255,.75);font-size:14px">${b.id}</p>
+          </td>
+        </tr>
+        <!-- body -->
+        <tr>
+          <td style="padding:32px 36px">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${row("📦 الباقة", b.packageTitle)}
+              ${b.option ? row("🔹 الخيار", b.option) : ""}
+              ${row("👤 الاسم", b.name)}
+              ${row("📞 الجوال", b.phone)}
+              ${row("📅 تاريخ الرحلة", b.date)}
+              ${b.departTime ? row("🕐 وقت الانطلاق", b.departTime) : ""}
+              ${row("👥 عدد الأشخاص", String(b.persons))}
+              ${b.addons.length ? row("➕ الإضافات", b.addons.join("، ")) : ""}
+              ${row("💳 الدفع", payLabel)}
+              ${row("💰 الإجمالي", `${b.total.toLocaleString()} ريال`)}
+              ${b.promo ? row("🎟️ كود الخصم", b.promo) : ""}
+              ${b.notes ? row("📝 الملاحظات", b.notes) : ""}
+            </table>
+            <div style="margin-top:28px;padding:16px 20px;background:#e8f6f8;border-radius:12px;border-right:4px solid #21c0c0">
+              <p style="margin:0;font-size:13px;color:#0b5c8c">يُرجى مراجعة اللوحة الإدارية لتأكيد الحجز أو التواصل مع العميل.</p>
+            </div>
+          </td>
+        </tr>
+        <!-- footer -->
+        <tr>
+          <td style="background:#f8fbfc;padding:20px 36px;text-align:center;border-top:1px solid #e5eef2">
+            <p style="margin:0;font-size:12px;color:#9ab">سوار البحرية · ثول · المملكة العربية السعودية</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  function row(label: string, value: string) {
+    return `<tr>
+      <td style="padding:8px 0;border-bottom:1px solid #f0f4f6;font-size:13px;color:#6b7a8d;width:160px;vertical-align:top">${label}</td>
+      <td style="padding:8px 0;border-bottom:1px solid #f0f4f6;font-size:14px;color:#1a2a3a;font-weight:600">${value}</td>
+    </tr>`;
+  }
+
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "سوار البحرية <noreply@sewarmarine.com>",
+        to: NOTIFICATION_EMAILS,
+        subject: `⚓ حجز جديد — ${b.packageTitle} · ${b.name}`,
+        html,
+      }),
+    });
+  } catch {
+    // non-blocking — booking is already saved
+  }
+}
+
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -70,6 +153,9 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "تعذّر حفظ الحجز" }, { status: 500 });
   }
+
+  // fire-and-forget email — never blocks the booking response
+  void sendBookingNotification(booking);
 
   return NextResponse.json({ ok: true, id: booking.id });
 }

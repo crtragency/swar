@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Trip = {
   id: string;
@@ -27,14 +28,21 @@ const STATUS_CLASS: Record<Trip["status"], string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
-function today() { return new Date().toISOString().slice(0, 10); }
-function tomorrow() {
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function tomorrowStr() {
   const d = new Date(); d.setDate(d.getDate() + 1);
   return d.toISOString().slice(0, 10);
 }
 function formatDate(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  return new Date(iso + "T00:00:00").toLocaleDateString("ar-SA", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
 }
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] } }),
+};
 
 export default function CaptainDashboard() {
   const [password, setPassword] = useState("");
@@ -60,20 +68,49 @@ export default function CaptainDashboard() {
     }
   }
 
-  const todayTrips = useMemo(() => trips.filter((t) => t.date === today()), [trips]);
-  const tomorrowTrips = useMemo(() => trips.filter((t) => t.date === tomorrow()), [trips]);
-  const laterTrips = useMemo(() => trips.filter((t) => t.date > tomorrow()), [trips]);
+  const todayTrips = useMemo(() => trips.filter((t) => t.date === todayStr()), [trips]);
+  const tomorrowTrips = useMemo(() => trips.filter((t) => t.date === tomorrowStr()), [trips]);
+  const laterTrips = useMemo(() => trips.filter((t) => t.date > tomorrowStr()), [trips]);
 
   if (!authed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a1628] px-5">
-        <form
-          onSubmit={(e) => { e.preventDefault(); load(); }}
-          className="w-full max-w-sm rounded-[24px] bg-white p-8 shadow-2xl"
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050e1f] px-5">
+        {/* animated sea waves background */}
+        <motion.div
+          className="pointer-events-none absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
         >
-          <div className="mb-2 text-center text-4xl">⚓</div>
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute inset-x-0 rounded-[100%]"
+              style={{
+                height: "60vh",
+                bottom: `${-20 + i * 8}%`,
+                background: `rgba(33,192,192,${0.04 - i * 0.01})`,
+                border: "1px solid rgba(33,192,192,0.08)",
+              }}
+              animate={{ y: [0, -12, 0], scale: [1, 1.01, 1] }}
+              transition={{ duration: 6 + i * 2, repeat: Infinity, ease: "easeInOut", delay: i * 1.2 }}
+            />
+          ))}
+        </motion.div>
+
+        <motion.form
+          onSubmit={(e) => { e.preventDefault(); load(); }}
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-sm rounded-[28px] bg-white/95 p-8 shadow-[0_24px_80px_rgba(0,0,0,.4)] backdrop-blur"
+        >
+          {/* Logo */}
+          <div className="mb-5 flex justify-center">
+            <img src="/icon.webp" alt="سوار البحرية" className="h-16 w-auto object-contain" />
+          </div>
           <h1 className="text-center text-2xl font-extrabold text-[#0a1628]">لوحة الكابتن</h1>
-          <p className="mt-1 text-center text-sm text-[#0a1628]/55">سوار البحرية — جدول الرحلات</p>
+          <p className="mt-1 text-center text-sm text-[#0a1628]/50">سوار البحرية — جدول الرحلات</p>
           <input
             type="password"
             value={password}
@@ -82,93 +119,140 @@ export default function CaptainDashboard() {
             className="cap-in mt-6"
             autoComplete="current-password"
           />
-          {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
+          {error && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm font-semibold text-red-600">
+              {error}
+            </motion.p>
+          )}
           <button type="submit" disabled={loading} className="mt-5 w-full rounded-xl bg-[#0a1628] py-3 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-            {loading ? "جاري الدخول..." : "دخول"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }} className="inline-block">⚓</motion.span>
+                جاري الدخول...
+              </span>
+            ) : "دخول"}
           </button>
-          <style>{`.cap-in{width:100%;padding:12px 14px;background:#f0f4f8;border:1px solid #cbd5e1;border-radius:12px;outline:none;font-family:inherit}.cap-in:focus{border-color:#0a1628}`}</style>
-        </form>
+          <style>{`.cap-in{width:100%;padding:12px 14px;background:#f0f4f8;border:1px solid #cbd5e1;border-radius:12px;outline:none;font-family:inherit;direction:ltr;text-align:center}.cap-in:focus{border-color:#0a1628;background:#e8eef4}`}</style>
+        </motion.form>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50" dir="rtl">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-[#0a1628] text-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4">
+      {/* header */}
+      <motion.header
+        initial={{ y: -60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="sticky top-0 z-10 border-b border-slate-800 bg-[#050e1f] text-white shadow-[0_4px_32px_rgba(0,0,0,.5)]"
+      >
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-3">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⚓</span>
+            <img src="/icon.webp" alt="سوار البحرية" className="h-10 w-auto object-contain" />
             <div>
-              <h1 className="text-lg font-extrabold">لوحة الكابتن</h1>
-              <p className="text-xs text-white/50">سوار البحرية — جدول الرحلات القادمة</p>
+              <h1 className="text-base font-extrabold leading-none">لوحة الكابتن</h1>
+              <p className="mt-0.5 text-xs text-white/40">سوار البحرية — جدول الرحلات</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => load()} disabled={loading} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/20 disabled:opacity-50">{loading ? "..." : "تحديث"}</button>
-            <button onClick={() => { setAuthed(false); setPassword(""); setTrips([]); }} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/20">خروج</button>
+            <button onClick={() => load()} disabled={loading} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold transition-colors hover:bg-white/20 disabled:opacity-50">
+              {loading ? <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }} className="inline-block">⟳</motion.span> : "تحديث"}
+            </button>
+            <button onClick={() => { setAuthed(false); setPassword(""); setTrips([]); }} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold transition-colors hover:bg-white/20">خروج</button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <div className="mx-auto max-w-4xl px-5 py-8">
         {/* summary pills */}
-        <div className="mb-8 grid grid-cols-3 gap-4">
-          <Pill label="رحلات اليوم" value={todayTrips.length} color="bg-emerald-500" />
-          <Pill label="رحلات الغد" value={tomorrowTrips.length} color="bg-blue-500" />
-          <Pill label="رحلات لاحقة" value={laterTrips.length} color="bg-slate-400" />
-        </div>
+        <motion.div
+          className="mb-8 grid grid-cols-3 gap-4"
+          initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+        >
+          {[
+            { label: "رحلات اليوم", value: todayTrips.length, color: "from-emerald-500 to-teal-500" },
+            { label: "رحلات الغد", value: tomorrowTrips.length, color: "from-blue-500 to-cyan-500" },
+            { label: "رحلات لاحقة", value: laterTrips.length, color: "from-slate-400 to-slate-500" },
+          ].map((p, i) => (
+            <motion.div key={i} variants={fadeUp} custom={i} className={`rounded-2xl bg-gradient-to-br ${p.color} p-5 text-white shadow-lg`}>
+              <div className="text-3xl font-extrabold">{p.value}</div>
+              <div className="mt-1 text-xs text-white/75">{p.label}</div>
+            </motion.div>
+          ))}
+        </motion.div>
 
-        <Section title="🌅 رحلات اليوم" trips={todayTrips} emptyMsg="لا توجد رحلات اليوم" highlight />
-        <Section title="🌤️ رحلات الغد" trips={tomorrowTrips} emptyMsg="لا توجد رحلات الغد" />
-        <Section title="📅 رحلات لاحقة" trips={laterTrips} emptyMsg="لا توجد رحلات لاحقة" grouped />
+        <Section title="🌅 رحلات اليوم" trips={todayTrips} emptyMsg="لا توجد رحلات اليوم" highlight startIndex={3} />
+        <Section title="🌤️ رحلات الغد" trips={tomorrowTrips} emptyMsg="لا توجد رحلات الغد" startIndex={10} />
+        <Section title="📅 رحلات لاحقة" trips={laterTrips} emptyMsg="لا توجد رحلات لاحقة" grouped startIndex={17} />
       </div>
     </div>
   );
 }
 
-function Pill({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div className="rounded-2xl bg-white p-4 text-center shadow-sm">
-      <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full ${color} text-lg font-extrabold text-white`}>{value}</div>
-      <div className="text-xs font-semibold text-slate-500">{label}</div>
-    </div>
-  );
-}
-
-function Section({ title, trips, emptyMsg, highlight, grouped }: {
-  title: string; trips: Trip[]; emptyMsg: string; highlight?: boolean; grouped?: boolean;
+function Section({ title, trips, emptyMsg, highlight, grouped, startIndex }: {
+  title: string; trips: Trip[]; emptyMsg: string; highlight?: boolean; grouped?: boolean; startIndex: number;
 }) {
   if (!grouped) {
     return (
-      <div className="mb-8">
-        <h2 className={`mb-4 text-lg font-extrabold ${highlight ? "text-emerald-700" : "text-slate-700"}`}>{title}</h2>
+      <div className="mb-10">
+        <motion.h2
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: startIndex * 0.06 }}
+          className={`mb-4 text-lg font-extrabold ${highlight ? "text-emerald-700" : "text-slate-700"}`}
+        >
+          {title}
+        </motion.h2>
         {trips.length === 0 ? (
-          <p className="rounded-2xl bg-white p-5 text-center text-sm text-slate-400 shadow-sm">{emptyMsg}</p>
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: startIndex * 0.06 + 0.1 }}
+            className="rounded-2xl bg-white p-5 text-center text-sm text-slate-400 shadow-sm"
+          >
+            {emptyMsg}
+          </motion.p>
         ) : (
-          <div className="grid gap-4">
-            {trips.map((t) => <TripCard key={t.id} trip={t} />)}
-          </div>
+          <motion.div
+            className="grid gap-4"
+            initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.09 } } }}
+          >
+            {trips.map((t, i) => <TripCard key={t.id} trip={t} index={startIndex + i} />)}
+          </motion.div>
         )}
       </div>
     );
   }
 
-  // group by date
   const byDate = trips.reduce<Record<string, Trip[]>>((acc, t) => {
     (acc[t.date] ??= []).push(t);
     return acc;
   }, {});
 
   return (
-    <div className="mb-8">
-      <h2 className="mb-4 text-lg font-extrabold text-slate-700">{title}</h2>
+    <div className="mb-10">
+      <motion.h2
+        initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: startIndex * 0.06 }}
+        className="mb-4 text-lg font-extrabold text-slate-700"
+      >
+        {title}
+      </motion.h2>
       {trips.length === 0 ? (
-        <p className="rounded-2xl bg-white p-5 text-center text-sm text-slate-400 shadow-sm">{emptyMsg}</p>
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: startIndex * 0.06 + 0.1 }}
+          className="rounded-2xl bg-white p-5 text-center text-sm text-slate-400 shadow-sm">{emptyMsg}</motion.p>
       ) : (
-        Object.entries(byDate).map(([date, ts]) => (
+        Object.entries(byDate).map(([date, ts], gi) => (
           <div key={date} className="mb-6">
-            <h3 className="mb-3 text-sm font-bold text-slate-500">{formatDate(date)}</h3>
-            <div className="grid gap-4">{ts.map((t) => <TripCard key={t.id} trip={t} />)}</div>
+            <motion.h3
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ delay: (startIndex + gi * 3) * 0.06 }}
+              className="mb-3 text-sm font-bold text-slate-400"
+            >
+              {formatDate(date)}
+            </motion.h3>
+            <motion.div className="grid gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.09 } } }}>
+              {ts.map((t, i) => <TripCard key={t.id} trip={t} index={startIndex + gi * 3 + i} />)}
+            </motion.div>
           </div>
         ))
       )}
@@ -176,10 +260,16 @@ function Section({ title, trips, emptyMsg, highlight, grouped }: {
   );
 }
 
-function TripCard({ trip: t }: { trip: Trip }) {
+function TripCard({ trip: t, index }: { trip: Trip; index: number }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`rounded-2xl bg-white p-5 shadow-sm ${t.status === "confirmed" ? "border-r-4 border-emerald-400" : "border-r-4 border-amber-400"}`}>
+    <motion.div
+      variants={fadeUp}
+      custom={index}
+      whileHover={{ y: -3, boxShadow: "0 12px 40px rgba(0,0,0,.10)" }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className={`rounded-2xl bg-white p-5 shadow-sm ${t.status === "confirmed" ? "border-r-4 border-emerald-400" : "border-r-4 border-amber-400"}`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
           <p className="font-extrabold text-slate-800">{t.packageTitle}</p>
@@ -189,29 +279,37 @@ function TripCard({ trip: t }: { trip: Trip }) {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <Info icon="🕐" label="وقت الانطلاق" value={t.departTime || "—"} />
-        <Info icon="👥" label="عدد الأشخاص" value={String(t.persons)} />
-        <Info icon="👤" label="اسم العميل" value={t.name} />
-        <Info icon="📞" label="الجوال" value={t.phone} ltr />
+        <InfoCell icon="🕐" label="وقت الانطلاق" value={t.departTime || "—"} />
+        <InfoCell icon="👥" label="عدد الأشخاص" value={String(t.persons)} />
+        <InfoCell icon="👤" label="اسم العميل" value={t.name} />
+        <InfoCell icon="📞" label="الجوال" value={t.phone} ltr />
       </div>
 
       {t.addons.length > 0 && (
-        <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm">
           <span className="text-slate-400">إضافات: </span>
           <span className="text-slate-700">{t.addons.join("، ")}</span>
-        </p>
+        </motion.p>
       )}
 
       {t.notes && (
-        <button onClick={() => setOpen(!open)} className="mt-2 w-full rounded-xl bg-amber-50 px-3 py-2 text-right text-sm text-amber-700 hover:bg-amber-100">
-          📝 {open ? t.notes : "ملاحظات (اضغط للعرض)"}
+        <button
+          onClick={() => setOpen(!open)}
+          className="mt-2 w-full rounded-xl bg-amber-50 px-3 py-2 text-right text-sm text-amber-700 transition-colors hover:bg-amber-100"
+        >
+          📝{" "}
+          <AnimatePresence mode="wait">
+            <motion.span key={open ? "open" : "closed"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              {open ? t.notes : "ملاحظات — اضغط للعرض"}
+            </motion.span>
+          </AnimatePresence>
         </button>
       )}
-    </div>
+    </motion.div>
   );
 }
 
-function Info({ icon, label, value, ltr }: { icon: string; label: string; value: string; ltr?: boolean }) {
+function InfoCell({ icon, label, value, ltr }: { icon: string; label: string; value: string; ltr?: boolean }) {
   return (
     <div className="rounded-xl bg-slate-50 px-3 py-2">
       <div className="text-xs text-slate-400">{icon} {label}</div>
