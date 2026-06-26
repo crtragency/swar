@@ -40,7 +40,6 @@ export default function DashboardBookingForm() {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
-  const [payType, setPayType] = useState<"full" | "deposit">("full");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -80,8 +79,7 @@ export default function DashboardBookingForm() {
   const subtotal = baseOriginal + addonsTotal + extraCost + dayTypeExtra;
   const seasonDiscount = Math.round((subtotal * DISCOUNT_PCT) / 100);
   const total = subtotal - seasonDiscount;
-  const deposit = Math.ceil(total / 2);
-  const amountDue = payMethod === "bank" && payType === "deposit" ? deposit : total;
+  const amountDue = total;
 
   // Duration of the currently selected option
   const selectedDuration = useMemo(() => {
@@ -141,7 +139,7 @@ export default function DashboardBookingForm() {
           packageId: pkg.id, packageTitle: pkg.title, option: selectedOption,
           persons, addons: addonSummary, date, departTime, durationHours: effectiveDuration,
           name: name.trim(), phone: phone.trim(), notes: notes.trim(),
-          payMethod, payType: payMethod === "bank" ? payType : "full", deposit: payMethod === "bank" && payType === "deposit" ? deposit : 0,
+          payMethod, payType: "full", deposit: 0,
           total, amountDue, promo: "",
         }),
       });
@@ -157,7 +155,7 @@ export default function DashboardBookingForm() {
 
   function reset() {
     setDoneId(null); setName(""); setPhone(""); setNotes(""); setDate("");
-    setQty({}); setToggles({}); setPayType("full");
+    setQty({}); setToggles({});
   }
 
   if (doneId) {
@@ -172,7 +170,6 @@ export default function DashboardBookingForm() {
           <p>📅 {date} · {timeLabel(departTime)}</p>
           <p>👥 {persons} أشخاص</p>
           <p className="font-bold">💰 الإجمالي: {total.toLocaleString()} ريال</p>
-          {payMethod === "bank" && payType === "deposit" && <p className="text-amber-700">المقدّم المطلوب: {deposit.toLocaleString()} ريال</p>}
           <p>💳 {payMethod === "online" ? "دفع إلكتروني عبر الموقع" : payMethod === "pos" ? "نقطة بيع (POS)" : "تحويل بنكي"}</p>
         </div>
         {payMethod === "bank" && (
@@ -320,27 +317,10 @@ export default function DashboardBookingForm() {
         </div>
       </div>
 
-      {/* payment type — bank only */}
-      {payMethod === "bank" && (
-      <div className="mt-3">
-        <span className="db-label block mb-2">نوع الدفع</span>
-        <div className="grid grid-cols-2 gap-3">
-          {(["full", "deposit"] as const).map((pt) => (
-            <button key={pt} type="button" onClick={() => setPayType(pt)}
-              className={`rounded-xl border-2 p-3 text-center text-sm transition-colors ${payType === pt ? "border-teal-500 bg-teal-50" : "border-slate-200 bg-slate-50"}`}>
-              <div className="font-bold text-slate-800">{pt === "full" ? "المبلغ كاملاً" : "مقدّم 50%"}</div>
-              <div className="mt-0.5 text-xs text-slate-500">{pt === "full" ? `${total.toLocaleString()} ريال` : `${deposit.toLocaleString()} ريال الآن`}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-      )}
-
       {/* total */}
       <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-800 px-5 py-4 text-white">
         <div>
-          <span className="text-xs text-white/60">{payMethod === "bank" && payType === "deposit" ? "المطلوب الآن (50%)" : "الإجمالي بعد الخصم"}</span>
-          {payMethod === "bank" && payType === "deposit" && <span className="block text-xs text-white/40">من إجمالي {total.toLocaleString()} ريال</span>}
+          <span className="text-xs text-white/60">الإجمالي بعد الخصم</span>
         </div>
         <span className="text-2xl font-extrabold text-amber-400">{amountDue.toLocaleString()} <span className="text-sm font-normal text-white/60">ريال</span></span>
       </div>
