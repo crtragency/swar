@@ -61,6 +61,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [doneId, setDoneId] = useState<string | null>(null);
+  // Availability: blocked time ranges per date
+  const [availRanges, setAvailRanges] = useState<Record<string, { startH: number; endH: number; label: string }[]>>({});
 
   useEffect(() => {
     if (pkg) {
@@ -69,6 +71,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       setDepartTime(pkg.id === "dolphin" ? DOLPHIN_TIME : "09:00");
       setName(""); setPhone(""); setNotes(""); setPromoCode(""); setPromoPct(0); setPromoMsg(null);
       setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
+      fetch("/api/availability").then((r) => r.json()).then((d) => setAvailRanges(d.ranges ?? {})).catch(() => {});
     }
   }, [pkg]);
 
@@ -112,6 +115,38 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const deposit = Math.ceil(total / 2);
   const amountDue = payMethod === "bank" && payType === "deposit" ? deposit : total;
 
+  // Duration of the currently selected option (hours)
+  const selectedDuration = useMemo(() => {
+    if (!pkg) return 4;
+    if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.durationHours ?? pkg.durationHours;
+    if (pkg.rows?.length) return pkg.rows[rowIdx]?.durationHours ?? pkg.durationHours;
+    return pkg.durationHours;
+  }, [pkg, rowIdx, tierIdx]);
+
+  // Extra hours from swim addon
+  const extraHours = pkg?.id === "swim" ? (qty["extra_hour"] || 0) : 0;
+  const effectiveDuration = selectedDuration + extraHours;
+
+  // Range-based conflict check: does [newStart, newStart+dur+1) overlap any blocked range?
+  function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
+  const BUFFER = 1;
+  const dateRanges = date ? (availRanges[date] ?? []) : [];
+  const conflictRange = useMemo(() => {
+    if (!date || !departTime) return null;
+    const newStart = toH(departTime);
+    const newEnd = newStart + effectiveDuration + BUFFER;
+    return dateRanges.find((r) => newStart < r.endH && r.startH < newEnd) ?? null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, departTime, effectiveDuration, dateRanges]);
+
+  // Is a given time slot blocked by any existing range?
+  function isTimeBlocked(t: string) {
+    const tH = toH(t);
+    // The new trip at time t lasts effectiveDuration hours; check overlap
+    const tEnd = tH + effectiveDuration + BUFFER;
+    return dateRanges.some((r) => tH < r.endH && r.startH < tEnd);
+  }
+
   const selectedOption = useMemo(() => {
     if (!pkg) return "";
     if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.name ?? "";
@@ -147,6 +182,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
     if (!name.trim()) return setError("يرجى إدخال الاسم الكامل");
     if (!/^05\d{8}$/.test(phone.trim())) return setError("رقم الجوال غير صحيح — يبدأ بـ 05 ويتكوّن من 10 أرقام");
     if (!date) return setError("يرجى اختيار تاريخ الرحلة");
+    if (conflictRange) return setError(`هذا الوقت يتعارض مع رحلة أخرى (${conflictRange.label} + ساعة تنظيف). يُرجى اختيار وقت آخر.`);
     setSubmitting(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -154,7 +190,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           packageId: pkg.id, packageTitle: pkg.title, option: selectedOption,
-          persons, addons: addonSummary, date, departTime,
+          persons, addons: addonSummary, date, departTime, durationHours: effectiveDuration,
           name: name.trim(), phone: phone.trim(), notes: notes.trim(),
           payMethod, payType: payMethod === "bank" ? payType : "full",
           deposit: payMethod === "bank" && payType === "deposit" ? deposit : 0,
@@ -282,11 +318,20 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
 
                 {/* details */}
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <Field label="تاريخ الرحلة"><input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="sw-in" /></Field>
+                  <Field label="تاريخ الرحلة">
+                    <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="sw-in" />
+                    {dateRanges.length > 0 && (
+                      <p className="mt-1 text-xs text-navy-900/50">محجوز: {dateRanges.map((r) => r.label).join("، ")}</p>
+                    )}
+                  </Field>
                   <Field label="وقت الانطلاق">
-                    <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className="sw-in" disabled={pkg.id === "dolphin"}>
-                      {getDepartTimes(pkg.id).map((t) => (<option key={t} value={t}>{timeLabel(t)}</option>))}
+                    <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className={`sw-in ${conflictRange ? "border-red-400 ring-1 ring-red-400" : ""}`} disabled={pkg.id === "dolphin"}>
+                      {getDepartTimes(pkg.id).map((t) => {
+                        const blocked = isTimeBlocked(t);
+                        return <option key={t} value={t} disabled={blocked}>{timeLabel(t)}{blocked ? " — محجوز" : ""}</option>;
+                      })}
                     </select>
+                    {conflictRange && <p className="mt-1 text-xs font-semibold text-red-600">🚫 يتعارض مع رحلة ({conflictRange.label} + ساعة تنظيف)</p>}
                   </Field>
                   <Field label="الاسم الكامل"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="أدخل اسمك" className="sw-in" /></Field>
                   <Field label="رقم الجوال"><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XXXXXXXX" className="sw-in" /></Field>
@@ -343,8 +388,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
 
                 {error && <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
 
-                <button onClick={submit} disabled={submitting} className="btn-ocean mt-4 w-full disabled:opacity-60">
-                  {submitting ? "جاري الإرسال..." : "تأكيد الحجز"}
+                <button onClick={submit} disabled={submitting || !!conflictRange} className="btn-ocean mt-4 w-full disabled:opacity-60">
+                  {submitting ? "جاري الإرسال..." : conflictRange ? "🚫 الوقت المختار متعارض — اختر وقتاً آخر" : "تأكيد الحجز"}
                 </button>
               </div>
             )}

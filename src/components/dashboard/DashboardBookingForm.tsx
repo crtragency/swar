@@ -43,6 +43,7 @@ export default function DashboardBookingForm() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
+  const [availRanges, setAvailRanges] = useState<Record<string, { startH: number; endH: number; label: string }[]>>({});
 
   const pkg = useMemo(() => PACKAGES.find((p) => p.id === pkgId) ?? PACKAGES[0], [pkgId]);
 
@@ -51,6 +52,7 @@ export default function DashboardBookingForm() {
     setQty({}); setToggles({}); setWeekend(false); setDate("");
     setDepartTime(pkg.id === "dolphin" ? "09:00" : "09:00");
     setError(""); setDoneId(null);
+    fetch("/api/availability").then((r) => r.json()).then((d) => setAvailRanges(d.ranges ?? {})).catch(() => {});
   }, [pkgId, pkg.maxBase, pkg.id]);
 
   useEffect(() => {
@@ -80,6 +82,34 @@ export default function DashboardBookingForm() {
   const deposit = Math.ceil(total / 2);
   const amountDue = payType === "deposit" ? deposit : total;
 
+  // Duration of the currently selected option
+  const selectedDuration = useMemo(() => {
+    if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.durationHours ?? pkg.durationHours;
+    if (pkg.rows?.length) return pkg.rows[rowIdx]?.durationHours ?? pkg.durationHours;
+    return pkg.durationHours;
+  }, [pkg, rowIdx, tierIdx]);
+  const extraHours = pkg.id === "swim" ? (qty["extra_hour"] || 0) : 0;
+  const effectiveDuration = selectedDuration + extraHours;
+
+  function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
+  const BUFFER = 1;
+  const dateRanges = date ? (availRanges[date] ?? []) : [];
+
+  function isTimeBlocked(t: string) {
+    const tH = toH(t);
+    const tEnd = tH + effectiveDuration + BUFFER;
+    return dateRanges.some((r) => tH < r.endH && r.startH < tEnd);
+  }
+
+  // Staff can override but we show conflict warning
+  const conflictRange = useMemo(() => {
+    if (!date || !departTime) return null;
+    const newStart = toH(departTime);
+    const newEnd = newStart + effectiveDuration + BUFFER;
+    return dateRanges.find((r) => newStart < r.endH && r.startH < newEnd) ?? null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, departTime, effectiveDuration, dateRanges]);
+
   const selectedOption = useMemo(() => {
     if (pkg.tiers?.length) return pkg.tiers[tierIdx]?.name ?? "";
     if (pkg.rows?.length) return pkg.rows[rowIdx]?.label ?? "";
@@ -108,7 +138,7 @@ export default function DashboardBookingForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           packageId: pkg.id, packageTitle: pkg.title, option: selectedOption,
-          persons, addons: addonSummary, date, departTime,
+          persons, addons: addonSummary, date, departTime, durationHours: effectiveDuration,
           name: name.trim(), phone: phone.trim(), notes: notes.trim(),
           payMethod: "bank", payType, deposit: payType === "deposit" ? deposit : 0,
           total, amountDue, promo: "",
@@ -228,12 +258,17 @@ export default function DashboardBookingForm() {
         <label className="block">
           <span className="db-label">تاريخ الرحلة</span>
           <input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDate(e.target.value)} className="db-in" />
+          {dateRanges.length > 0 && <p className="mt-1 text-xs text-slate-400">محجوز: {dateRanges.map((r) => r.label).join("، ")}</p>}
         </label>
         <label className="block">
           <span className="db-label">وقت الانطلاق</span>
-          <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className="db-in" disabled={pkg.id === "dolphin"}>
-            {getDepartTimes(pkg.id).map((t) => <option key={t} value={t}>{timeLabel(t)}</option>)}
+          <select value={departTime} onChange={(e) => setDepartTime(e.target.value)} className={`db-in ${conflictRange ? "border-amber-400" : ""}`} disabled={pkg.id === "dolphin"}>
+            {getDepartTimes(pkg.id).map((t) => {
+              const blocked = isTimeBlocked(t);
+              return <option key={t} value={t}>{timeLabel(t)}{blocked ? " — محجوز" : ""}</option>;
+            })}
           </select>
+          {conflictRange && <p className="mt-1 text-xs font-bold text-amber-600">⚠️ تعارض مع ({conflictRange.label} + ساعة تنظيف) — يمكنك المتابعة كمدير</p>}
         </label>
       </div>
 

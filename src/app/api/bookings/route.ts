@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { addBooking, getBookings, updateBooking, type Booking } from "@/lib/store";
+import { deriveDuration } from "@/lib/packages";
 
 export const dynamic = "force-dynamic";
 
@@ -126,6 +127,52 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "الحقول الأساسية مطلوبة" }, { status: 422 });
   }
 
+  const departTime = String(body.departTime || "").trim();
+
+  // ── Time-range conflict check ───────────────────────────────────────────────
+  // Trips must not overlap including a 1-hour cleaning buffer after each trip.
+  // Staff (captain/owner) can override via dashboard.
+  const isStaff = !!getRole(req);
+  const incomingPackageId = String(body.packageId || "");
+  const incomingOption = String(body.option || "");
+  const incomingDur = Number(body.durationHours) || deriveDuration(incomingPackageId, incomingOption);
+  const BUFFER = 1;
+
+  function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
+
+  if (!isStaff && departTime) {
+    try {
+      const existing = await getBookings();
+      const newStart = toH(departTime);
+      const newEnd = newStart + incomingDur + BUFFER;
+
+      const conflict = existing.find((b) => {
+        if (b.date !== date || b.status === "cancelled" || !b.departTime) return false;
+        const bStart = toH(b.departTime);
+        const bDur = deriveDuration(b.packageId, b.option);
+        const bEnd = bStart + bDur + BUFFER;
+        // overlap: [newStart, newEnd) ∩ [bStart, bEnd) ≠ ∅
+        return newStart < bEnd && bStart < newEnd;
+      });
+
+      if (conflict) {
+        const cDur = deriveDuration(conflict.packageId, conflict.option);
+        const cEndH = toH(conflict.departTime) + cDur;
+        const cEndHHMM = `${String(Math.floor(cEndH)).padStart(2, "0")}:00`;
+        return NextResponse.json(
+          {
+            error: `يوجد تعارض مع رحلة أخرى في هذا اليوم. القارب غير متاح حتى ${cEndHHMM} (+ ساعة تنظيف). يُرجى اختيار وقت آخر.`,
+            conflict: true,
+          },
+          { status: 409 },
+        );
+      }
+    } catch {
+      // best-effort — allow through if store read fails
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   const booking: Booking = {
     id: newId(),
     createdAt: new Date().toISOString(),
@@ -135,7 +182,7 @@ export async function POST(req: Request) {
     persons: Number(body.persons) || 1,
     addons: Array.isArray(body.addons) ? body.addons.map(String) : [],
     date,
-    departTime: String(body.departTime || ""),
+    departTime,
     name,
     phone,
     notes: String(body.notes || ""),
