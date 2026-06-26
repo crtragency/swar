@@ -404,7 +404,7 @@ function PackagesTab({ headers, pw }: { headers: () => Record<string, string>; p
   const add = () =>
     setList((l) => [
       ...l,
-      { id: "pkg-" + Date.now().toString(36), emoji: "🛥️", title: "باقة جديدة", subtitle: "وصف الباقة", oldPrice: 1000, price: 800, unit: "ريال / رحلة", capacity: "لـ 5 أشخاص", accent: "turquoise", baseDuration: "4 ساعات", maxBase: 5, extraPerPerson: 100, maxPersons: 11, yacht: "يتسع لـ11 شخص · غرفة نوم · مطبخ · دورة مياه" },
+      { id: "pkg-" + Date.now().toString(36), emoji: "🛥️", title: "باقة جديدة", subtitle: "وصف الباقة", oldPrice: 1000, price: 800, unit: "ريال / رحلة", capacity: "لـ 5 أشخاص", accent: "turquoise", baseDuration: "4 ساعات", maxBase: 5, extraPerPerson: 100, maxPersons: 11, durationHours: 4, yacht: "يتسع لـ11 شخص · غرفة نوم · مطبخ · دورة مياه" },
     ]);
 
   async function save() {
