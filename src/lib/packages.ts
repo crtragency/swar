@@ -125,7 +125,7 @@ export const PACKAGES: Pkg[] = [
     maxBase: 5,
     extraPerPerson: 105,
     maxPersons: 11,
-    dayType: 210,
+    dayType: 99,
     durationHours: 1,
     yacht: YACHT_FEATURES,
     rows: [
