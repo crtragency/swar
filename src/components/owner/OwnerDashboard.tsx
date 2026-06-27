@@ -36,6 +36,12 @@ const fadeUp = {
   }),
 };
 
+type EditState = {
+  id: string; status: Booking["status"]; name: string; phone: string;
+  date: string; departTime: string; persons: number; total: number; notes: string;
+  payMethod: Booking["payMethod"];
+};
+
 export default function OwnerDashboard() {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
@@ -43,6 +49,9 @@ export default function OwnerDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"overview" | "bookings" | "new">("overview");
+  const [editing, setEditing] = useState<EditState | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   async function load(pass = password) {
     setLoading(true);
@@ -81,6 +90,37 @@ export default function OwnerDashboard() {
     const pkgList = Object.entries(byPkg).sort((a, b) => b[1] - a[1]);
     return { total: bookings.length, confirmed: confirmed.length, pending: pending.length, cancelled: cancelled.length, totalRevenue, thisMonthRevenue, lastMonthRevenue, todayRevenue, bank, online, pos, pendingRevenue, pkgList };
   }, [bookings]);
+
+  async function saveEdit() {
+    if (!editing) return;
+    setSaving(true); setEditError("");
+    try {
+      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل الحفظ");
+      setBookings((prev) => prev.map((b) => b.id === editing.id ? { ...b, ...editing } : b));
+      setEditing(null);
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "خطأ");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteB(id: string) {
+    if (!confirm("هل أنت متأكد من الحذف النهائي؟")) return;
+    try {
+      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("فشل الحذف");
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "خطأ في الحذف");
+    }
+  }
 
   if (!authed) {
     return (
@@ -332,6 +372,12 @@ export default function OwnerDashboard() {
                       </div>
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
+                      <div className="mt-3 flex gap-2">
+                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, notes: b.notes, payMethod: b.payMethod })}
+                          className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">✏️ تعديل</button>
+                        <button onClick={() => deleteB(b.id)}
+                          className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100">🗑️ حذف</button>
+                      </div>
                     </motion.div>
                   ))}
                 </motion.div>
@@ -346,6 +392,77 @@ export default function OwnerDashboard() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editing && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+            onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}>
+            <motion.div initial={{ scale: 0.92, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" dir="rtl">
+              <h3 className="mb-4 text-lg font-extrabold text-slate-800">✏️ تعديل الحجز</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="ow-label">الحالة</label>
+                  <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as Booking["status"] })} className="ow-in">
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="confirmed">مؤكد</option>
+                    <option value="cancelled">ملغي</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="ow-label">اسم العميل</label>
+                    <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="ow-in" />
+                  </div>
+                  <div>
+                    <label className="ow-label">الجوال</label>
+                    <input value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} className="ow-in" dir="ltr" />
+                  </div>
+                  <div>
+                    <label className="ow-label">التاريخ</label>
+                    <input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="ow-in" />
+                  </div>
+                  <div>
+                    <label className="ow-label">وقت الانطلاق</label>
+                    <input value={editing.departTime} onChange={(e) => setEditing({ ...editing, departTime: e.target.value })} className="ow-in" dir="ltr" placeholder="09:00" />
+                  </div>
+                  <div>
+                    <label className="ow-label">عدد الأشخاص</label>
+                    <input type="number" min={1} max={20} value={editing.persons} onChange={(e) => setEditing({ ...editing, persons: +e.target.value })} className="ow-in" />
+                  </div>
+                  <div>
+                    <label className="ow-label">الإجمالي (ريال)</label>
+                    <input type="number" value={editing.total} onChange={(e) => setEditing({ ...editing, total: +e.target.value })} className="ow-in" />
+                  </div>
+                </div>
+                <div>
+                  <label className="ow-label">طريقة الدفع</label>
+                  <select value={editing.payMethod} onChange={(e) => setEditing({ ...editing, payMethod: e.target.value as Booking["payMethod"] })} className="ow-in">
+                    <option value="bank">تحويل بنكي</option>
+                    <option value="online">دفع عبر الموقع</option>
+                    <option value="pos">نقطة بيع (POS)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="ow-label">ملاحظات</label>
+                  <textarea rows={2} value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} className="ow-in resize-none" />
+                </div>
+              </div>
+              {editError && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600">{editError}</p>}
+              <div className="mt-5 flex gap-3">
+                <button onClick={saveEdit} disabled={saving} className="flex-1 rounded-xl bg-slate-800 py-3 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+                  {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
+                </button>
+                <button onClick={() => setEditing(null)} className="rounded-xl border border-slate-200 px-5 py-3 font-bold text-slate-600 hover:bg-slate-50">إلغاء</button>
+              </div>
+              <style>{`.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none}.ow-in:focus{border-color:#0d9488}`}</style>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
