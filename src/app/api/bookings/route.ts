@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addBooking, getBookings, updateBooking, type Booking } from "@/lib/store";
+import { addBooking, getBookings, updateBooking, deleteBooking, type Booking } from "@/lib/store";
 import { deriveDuration } from "@/lib/packages";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ function newId() {
   return "BK-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
-const NOTIFICATION_EMAILS = ["oemad8637@gmail.com"];
+const NOTIFICATION_EMAILS = ["sewarmarine@gmail.com", "sewarmarine0@gmail.com"];
 
 async function sendBookingNotification(b: Booking) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -249,7 +249,8 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  if (!isAdmin(req)) {
+  const role = getRole(req);
+  if (role !== "admin" && role !== "owner") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   let body: Record<string, unknown>;
@@ -284,6 +285,21 @@ export async function PATCH(req: Request) {
   }
   try {
     await updateBooking(id, patch);
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  const role = getRole(req);
+  if (role !== "admin" && role !== "owner") {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "missing id" }, { status: 422 });
+  try {
+    await deleteBooking(id);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "error" }, { status: 500 });

@@ -168,6 +168,26 @@ export async function updateStatus(id: string, status: Booking["status"]): Promi
   return updateBooking(id, { status });
 }
 
+export async function deleteBooking(id: string): Promise<void> {
+  if (SB_URL && SB_KEY) {
+    const res = await fetch(`${SB_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { ...sbHeaders(), Prefer: "return=minimal" },
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Supabase delete ${res.status}`);
+    return;
+  }
+  if (KV_URL && KV_TOKEN) {
+    const list = await getBookings();
+    const filtered = list.filter((b) => b.id !== id);
+    await kv(["DEL", KEY]);
+    for (const b of [...filtered].reverse()) await kv(["RPUSH", KEY, JSON.stringify(b)]);
+    return;
+  }
+  g.__sewarBookings = g.__sewarBookings!.filter((b) => b.id !== id);
+}
+
 function toRowPatch(p: Partial<Booking>): Record<string, unknown> {
   const m: Record<string, unknown> = {};
   if (p.packageTitle !== undefined) m.package_title = p.packageTitle;
