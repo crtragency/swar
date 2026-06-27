@@ -212,8 +212,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "تعذّر حفظ الحجز" }, { status: 500 });
   }
 
-  // fire-and-forget email — never blocks the booking response
-  void sendBookingNotification(booking);
+  // await email so Vercel doesn't kill the function before it completes
+  await sendBookingNotification(booking);
 
   return NextResponse.json({ ok: true, id: booking.id });
 }
