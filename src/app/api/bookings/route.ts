@@ -101,17 +101,24 @@ async function sendBookingNotification(b: Booking) {
   }
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "سوار البحرية <noreply@sewarmarine.com>",
+        from: "Sewar Marine <noreply@sewarmarine.com>",
         to: NOTIFICATION_EMAILS,
-        subject: `⚓ حجز جديد — ${b.packageTitle} · ${b.name}`,
+        subject: `New Booking Request - Sewar Marine | ${b.packageTitle} · ${b.name}`,
         html,
       }),
     });
-  } catch {
+    if (!res.ok) {
+      const err = await res.text().catch(() => res.status.toString());
+      console.error("[Resend] Failed to send booking notification:", err);
+    } else {
+      console.log("[Resend] Booking notification sent for", b.id, "→", NOTIFICATION_EMAILS.join(", "));
+    }
+  } catch (err) {
+    console.error("[Resend] Exception sending booking notification:", err);
     // non-blocking — booking is already saved
   }
 }
