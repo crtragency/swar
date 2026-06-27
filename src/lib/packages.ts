@@ -104,9 +104,11 @@ export const PACKAGES: Pkg[] = [
       { label: "🕕 6 ساعات — حتى 5 أشخاص", oldPrice: 1470, price: 1103, durationHours: 6 },
       { label: "🕗 8 ساعات — حتى 5 أشخاص", oldPrice: 1680, price: 1260, durationHours: 8 },
       { label: "🕙 10 ساعات — حتى 5 أشخاص", oldPrice: 1995, price: 1496, durationHours: 10 },
+      { label: "🌅 12 ساعة — حتى 5 أشخاص", oldPrice: 2310, price: 1733, durationHours: 12 },
     ],
     addons: [
       { id: "gear_rent", label: "🎣 عدة صيد + طُعم (استئجار من عندنا)", price: 263 },
+      { id: "extra_hour", label: "⏱️ ساعة إضافية", price: 210, stepper: true },
     ],
     includes: ["❄️ مياه شرب وثلج"],
     note: "نوفر مياه الشرب والثلج فقط ضمن جميع الباقات. عدة الصيد والطُعم إضافة اختيارية — أحضر عدتك الخاصة مجاناً، أو استأجرها منا بمقابل +263 ريال.",
