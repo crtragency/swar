@@ -29,7 +29,7 @@ function newId() {
   return "BK-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
-const NOTIFICATION_EMAILS = ["oemad8637@gmail.com"];
+const NOTIFICATION_EMAILS = ["sewarmarine@gmail.com", "sewarmarine0@gmail.com"];
 
 async function sendBookingNotification(b: Booking) {
   const apiKey = process.env.RESEND_API_KEY;
