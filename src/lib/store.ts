@@ -250,3 +250,73 @@ export async function setContent(key: string, value: unknown): Promise<void> {
   }
   gc.__sewarContent![key] = value;
 }
+
+/* ─────────────────────────── Expenses ─────────────────────────────────── */
+export type Expense = {
+  id: string;
+  createdAt: string;
+  date: string;
+  category: string;
+  description: string;
+  amount: number;
+};
+
+const EXPENSE_KEY = "sewar:expenses";
+const ge = globalThis as unknown as { __sewarExpenses?: Expense[] };
+if (!ge.__sewarExpenses) ge.__sewarExpenses = [];
+
+export async function getExpenses(): Promise<Expense[]> {
+  if (SB_URL && SB_KEY) {
+    const res = await fetch(`${SB_URL}/rest/v1/expenses?select=*&order=date.desc&limit=500`, {
+      headers: sbHeaders(), cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Supabase expenses select ${res.status}`);
+    const rows = (await res.json()) as Record<string, unknown>[];
+    return rows.map((r) => ({
+      id: String(r.id), createdAt: String(r.created_at), date: String(r.date),
+      category: String(r.category ?? ""), description: String(r.description ?? ""),
+      amount: Number(r.amount ?? 0),
+    }));
+  }
+  if (KV_URL && KV_TOKEN) {
+    const { result } = await kv(["GET", EXPENSE_KEY]);
+    return result ? (JSON.parse(result as string) as Expense[]) : [];
+  }
+  return ge.__sewarExpenses!;
+}
+
+export async function addExpense(e: Expense): Promise<void> {
+  if (SB_URL && SB_KEY) {
+    const res = await fetch(`${SB_URL}/rest/v1/expenses`, {
+      method: "POST",
+      headers: { ...sbHeaders(), Prefer: "return=minimal" },
+      body: JSON.stringify({ id: e.id, created_at: e.createdAt, date: e.date, category: e.category, description: e.description, amount: e.amount }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Supabase expense insert ${res.status}: ${await res.text()}`);
+    return;
+  }
+  if (KV_URL && KV_TOKEN) {
+    const list = await getExpenses();
+    list.unshift(e);
+    await kv(["SET", EXPENSE_KEY, JSON.stringify(list)]);
+    return;
+  }
+  ge.__sewarExpenses!.unshift(e);
+}
+
+export async function deleteExpense(id: string): Promise<void> {
+  if (SB_URL && SB_KEY) {
+    const res = await fetch(`${SB_URL}/rest/v1/expenses?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE", headers: { ...sbHeaders(), Prefer: "return=minimal" }, cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Supabase expense delete ${res.status}`);
+    return;
+  }
+  if (KV_URL && KV_TOKEN) {
+    const list = (await getExpenses()).filter((x) => x.id !== id);
+    await kv(["SET", EXPENSE_KEY, JSON.stringify(list)]);
+    return;
+  }
+  ge.__sewarExpenses = ge.__sewarExpenses!.filter((x) => x.id !== id);
+}

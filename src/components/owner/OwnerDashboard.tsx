@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Booking } from "@/lib/store";
-import DashboardBookingForm from "@/components/dashboard/DashboardBookingForm";
 
 function thisMonth() {
   const d = new Date();
@@ -14,48 +13,321 @@ function lastMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 function today() { return new Date().toISOString().slice(0, 10); }
-
-const STATUS_LABEL: Record<Booking["status"], string> = {
-  pending: "قيد الانتظار",
-  confirmed: "مؤكد",
-  cancelled: "ملغي",
-};
-const STATUS_CLASS: Record<Booking["status"], string> = {
-  pending: "bg-amber-100 text-amber-700",
-  confirmed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-red-100 text-red-700",
-};
-
 function fmt(n: number) { return n.toLocaleString("ar-SA"); }
+function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
+
+const STATUS_LABEL: Record<Booking["status"], string> = { pending: "قيد الانتظار", confirmed: "مؤكد", cancelled: "ملغي" };
+const STATUS_CLASS: Record<Booking["status"], string> = { pending: "bg-amber-100 text-amber-700", confirmed: "bg-emerald-100 text-emerald-700", cancelled: "bg-red-100 text-red-700" };
+
+const EXPENSE_CATS = ["وقود", "صيانة", "رواتب", "تسويق", "تموينات", "رسوم", "أخرى"];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  show: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
-  }),
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] } }),
 };
 
-type EditState = {
-  id: string; status: Booking["status"]; name: string; phone: string;
-  date: string; departTime: string; persons: number; total: number; notes: string;
-  payMethod: Booking["payMethod"];
-};
+type ExpenseItem = { id: string; createdAt: string; date: string; category: string; description: string; amount: number };
+type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; notes: string; payMethod: Booking["payMethod"] };
 
+// ─── Quick Booking Form ────────────────────────────────────────────────────
+const TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
+function timeLabel(t: string) { const h = parseInt(t, 10); const am = h < 12; return `${h % 12 === 0 ? 12 : h % 12}:00 ${am ? "ص" : "م"}`; }
+
+function QuickBookingForm({ password, onDone }: { password: string; onDone: () => void }) {
+  const [pkgTitle, setPkgTitle] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("13:00");
+  const [price, setPrice] = useState("");
+  const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
+  const [persons, setPersons] = useState(2);
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<Booking["status"]>("confirmed");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  const durationHours = Math.max(0.5, toH(endTime) - toH(startTime));
+
+  async function submit() {
+    setError("");
+    if (!pkgTitle.trim()) return setError("يرجى إدخال اسم الباقة / النشاط");
+    if (!name.trim()) return setError("يرجى إدخال اسم العميل");
+    if (!date) return setError("يرجى اختيار تاريخ الرحلة");
+    if (!price || Number(price) <= 0) return setError("يرجى إدخال السعر");
+    if (toH(endTime) <= toH(startTime)) return setError("وقت الانتهاء يجب أن يكون بعد وقت البدء");
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageId: "custom", packageTitle: pkgTitle.trim(), option: "",
+          persons, addons: [], date, departTime: startTime,
+          durationHours,
+          name: name.trim(), phone: phone.trim(), notes: notes.trim(),
+          payMethod, payType: "full", deposit: 0,
+          total: Number(price), amountDue: Number(price), promo: "",
+          status,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل الحجز");
+      setDone(true);
+      setTimeout(onDone, 1500);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "حدث خطأ");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (done) return (
+    <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">✓</div>
+      <p className="font-extrabold text-slate-800">تم تسجيل الرحلة وحجب الوقت</p>
+    </div>
+  );
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-white p-6 shadow-sm" dir="rtl">
+      <h3 className="mb-5 text-lg font-extrabold text-slate-800">🚤 حجز سريع — بسعر مخصص</h3>
+
+      <label className="ow-block"><span className="ow-label">اسم الباقة / النشاط</span>
+        <input value={pkgTitle} onChange={(e) => setPkgTitle(e.target.value)} placeholder="مثال: رحلة خاصة VIP" className="ow-in" />
+      </label>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <label className="ow-block"><span className="ow-label">اسم العميل</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم الكامل" className="ow-in" />
+        </label>
+        <label className="ow-block"><span className="ow-label">رقم الجوال</span>
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05XXXXXXXX" className="ow-in" dir="ltr" />
+        </label>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <label className="ow-block"><span className="ow-label">تاريخ الرحلة</span>
+          <input type="date" value={date} min={today()} onChange={(e) => setDate(e.target.value)} className="ow-in" />
+        </label>
+        <label className="ow-block"><span className="ow-label">وقت البدء</span>
+          <select value={startTime} onChange={(e) => setStartTime(e.target.value)} className="ow-in">
+            {TIMES.map((t) => <option key={t} value={t}>{timeLabel(t)}</option>)}
+          </select>
+        </label>
+        <label className="ow-block"><span className="ow-label">وقت الانتهاء</span>
+          <select value={endTime} onChange={(e) => setEndTime(e.target.value)} className="ow-in">
+            {TIMES.map((t) => <option key={t} value={t}>{timeLabel(t)}</option>)}
+          </select>
+        </label>
+      </div>
+
+      {durationHours > 0 && (
+        <p className="mt-1.5 text-xs text-teal-600 font-semibold">
+          ⏱️ مدة الرحلة: {durationHours} ساعة — سيُحجب الوقت من {timeLabel(startTime)} حتى {timeLabel(endTime)} + ساعة تنظيف
+        </p>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <label className="ow-block"><span className="ow-label">السعر (ريال)</span>
+          <input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="ow-in" />
+        </label>
+        <label className="ow-block"><span className="ow-label">عدد الأشخاص</span>
+          <input type="number" min={1} max={20} value={persons} onChange={(e) => setPersons(+e.target.value)} className="ow-in" />
+        </label>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <label className="ow-block"><span className="ow-label">طريقة الدفع</span>
+          <select value={payMethod} onChange={(e) => setPayMethod(e.target.value as "bank" | "online" | "pos")} className="ow-in">
+            <option value="bank">💳 تحويل بنكي</option>
+            <option value="online">🌐 عبر الموقع</option>
+            <option value="pos">🖥️ نقطة بيع</option>
+          </select>
+        </label>
+        <label className="ow-block"><span className="ow-label">حالة الحجز</span>
+          <select value={status} onChange={(e) => setStatus(e.target.value as Booking["status"])} className="ow-in">
+            <option value="confirmed">✅ مؤكد</option>
+            <option value="pending">⏳ قيد الانتظار</option>
+          </select>
+        </label>
+      </div>
+
+      <label className="ow-block mt-3"><span className="ow-label">ملاحظات</span>
+        <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي طلبات خاصة..." className="ow-in resize-none" />
+      </label>
+
+      <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-800 px-5 py-4 text-white">
+        <span className="text-xs text-white/60">إجمالي الرحلة</span>
+        <span className="text-2xl font-extrabold text-amber-400">{price ? Number(price).toLocaleString() : "—"} <span className="text-sm font-normal text-white/60">ريال</span></span>
+      </div>
+
+      {error && <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
+      <button onClick={submit} disabled={submitting} className="mt-4 w-full rounded-xl bg-slate-800 py-3.5 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+        {submitting ? "جاري التسجيل..." : "تسجيل الرحلة وحجب الوقت"}
+      </button>
+
+      <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none;transition:border-color .15s}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}`}</style>
+    </motion.div>
+  );
+}
+
+// ─── Expenses Panel ────────────────────────────────────────────────────────
+function ExpensesPanel({ password, bookings }: { password: string; bookings: Booking[] }) {
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [month, setMonth] = useState(thisMonth());
+  const [form, setForm] = useState({ date: today(), category: "أخرى", description: "", amount: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadExpenses() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}`, { cache: "no-store" });
+      const data = await res.json();
+      setExpenses(data.expenses ?? []);
+    } catch { /* silent */ } finally { setLoading(false); }
+  }
+
+  useEffect(() => { loadExpenses(); }, []);
+
+  async function addExp() {
+    setError("");
+    if (!form.amount || Number(form.amount) <= 0) return setError("يرجى إدخال المبلغ");
+    if (!form.date) return setError("يرجى إدخال التاريخ");
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, amount: Number(form.amount) }),
+      });
+      if (!res.ok) throw new Error("فشل الحفظ");
+      const data = await res.json();
+      setExpenses((prev) => [{ ...form, amount: Number(form.amount), id: data.id, createdAt: new Date().toISOString() }, ...prev]);
+      setForm({ date: today(), category: "أخرى", description: "", amount: "" });
+    } catch (e) { setError(e instanceof Error ? e.message : "خطأ"); } finally { setSaving(false); }
+  }
+
+  async function delExp(id: string) {
+    if (!confirm("حذف هذا المصروف؟")) return;
+    await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}&id=${id}`, { method: "DELETE" });
+    setExpenses((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  const filtered = expenses.filter((e) => e.date.startsWith(month));
+  const totalExp = filtered.reduce((s, e) => s + e.amount, 0);
+  const totalRev = bookings.filter((b) => b.status === "confirmed" && b.date.startsWith(month)).reduce((s, b) => s + b.total, 0);
+  const profit = totalRev - totalExp;
+
+  const months: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(); d.setMonth(d.getMonth() - i);
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+
+  return (
+    <motion.div key="expenses" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
+      {/* Month selector */}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {months.map((m) => (
+          <button key={m} onClick={() => setMonth(m)}
+            className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-bold transition-colors ${month === m ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-100 shadow-sm"}`}>
+            {new Date(m + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+          </button>
+        ))}
+      </div>
+
+      {/* P&L Summary */}
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-lg">
+          <div className="text-xs text-white/70">الإيرادات (مؤكدة)</div>
+          <div className="mt-1 text-xl font-extrabold">{fmt(totalRev)} ريال</div>
+        </div>
+        <div className="rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 p-4 text-white shadow-lg">
+          <div className="text-xs text-white/70">إجمالي المصاريف</div>
+          <div className="mt-1 text-xl font-extrabold">{fmt(totalExp)} ريال</div>
+        </div>
+        <div className={`rounded-2xl p-4 text-white shadow-lg ${profit >= 0 ? "bg-gradient-to-br from-blue-600 to-indigo-700" : "bg-gradient-to-br from-orange-500 to-red-600"}`}>
+          <div className="text-xs text-white/70">صافي الربح</div>
+          <div className="mt-1 text-xl font-extrabold">{profit >= 0 ? "+" : ""}{fmt(profit)} ريال</div>
+        </div>
+      </div>
+
+      {/* Add Expense Form */}
+      <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm" dir="rtl">
+        <h4 className="mb-3 font-extrabold text-slate-800">➕ إضافة مصروف</h4>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <label className="ow-block"><span className="ow-label">التاريخ</span>
+            <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="ow-in" />
+          </label>
+          <label className="ow-block"><span className="ow-label">التصنيف</span>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="ow-in">
+              {EXPENSE_CATS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <label className="ow-block"><span className="ow-label">البيان</span>
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف المصروف" className="ow-in" />
+          </label>
+          <label className="ow-block"><span className="ow-label">المبلغ (ريال)</span>
+            <input type="number" min={0} value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0" className="ow-in" />
+          </label>
+        </div>
+        {error && <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>}
+        <button onClick={addExp} disabled={saving} className="mt-3 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
+          {saving ? "جاري الحفظ..." : "حفظ المصروف"}
+        </button>
+        <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}`}</style>
+      </div>
+
+      {/* Expenses List */}
+      {loading ? (
+        <p className="text-center text-slate-400">جاري التحميل...</p>
+      ) : filtered.length === 0 ? (
+        <p className="rounded-2xl bg-white p-6 text-center text-slate-400 shadow-sm">لا توجد مصاريف لهذا الشهر</p>
+      ) : (
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm" dir="rtl">
+          {filtered.map((e, i) => (
+            <div key={e.id} className={`flex items-center gap-3 px-5 py-3 ${i < filtered.length - 1 ? "border-b border-slate-100" : ""}`}>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">{e.category}</span>
+                  {e.description && <span className="truncate text-sm text-slate-700">{e.description}</span>}
+                </div>
+                <div className="mt-0.5 text-xs text-slate-400">{e.date}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-extrabold text-red-600">−{fmt(e.amount)} ريال</div>
+              </div>
+              <button onClick={() => delExp(e.id)} className="rounded-lg p-1.5 text-slate-300 hover:bg-red-50 hover:text-red-500 transition-colors">🗑️</button>
+            </div>
+          ))}
+          <div className="flex items-center justify-between border-t-2 border-slate-200 px-5 py-3">
+            <span className="font-bold text-slate-600">الإجمالي</span>
+            <span className="text-lg font-extrabold text-red-600">{fmt(totalExp)} ريال</span>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Main Dashboard ────────────────────────────────────────────────────────
 export default function OwnerDashboard() {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"overview" | "bookings" | "new">("overview");
+  const [tab, setTab] = useState<"overview" | "bookings" | "new" | "expenses">("overview");
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState("");
 
   async function load(pass = password) {
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(pass)}`, { cache: "no-store" });
       if (res.status === 401) throw new Error("كلمة المرور غير صحيحة");
@@ -65,15 +337,11 @@ export default function OwnerDashboard() {
       setAuthed(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطأ");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   const stats = useMemo(() => {
-    const cm = thisMonth();
-    const lm = lastMonth();
-    const td = today();
+    const cm = thisMonth(); const lm = lastMonth(); const td = today();
     const confirmed = bookings.filter((b) => b.status === "confirmed");
     const pending = bookings.filter((b) => b.status === "pending");
     const cancelled = bookings.filter((b) => b.status === "cancelled");
@@ -96,19 +364,14 @@ export default function OwnerDashboard() {
     setSaving(true); setEditError("");
     try {
       const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editing),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل الحفظ");
       setBookings((prev) => prev.map((b) => b.id === editing.id ? { ...b, ...editing } : b));
       setEditing(null);
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : "خطأ");
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { setEditError(e instanceof Error ? e.message : "خطأ"); } finally { setSaving(false); }
   }
 
   async function deleteB(id: string) {
@@ -117,81 +380,29 @@ export default function OwnerDashboard() {
       const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!res.ok) throw new Error("فشل الحذف");
       setBookings((prev) => prev.filter((b) => b.id !== id));
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "خطأ في الحذف");
-    }
+    } catch (e) { alert(e instanceof Error ? e.message : "خطأ في الحذف"); }
   }
 
   if (!authed) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-5" style={{ background: "linear-gradient(160deg,#020d18 0%,#051e30 45%,#082840 100%)" }}>
-        {/* animated ocean glow layers */}
         <motion.div className="pointer-events-none absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
-          {/* soft teal glow */}
-          <motion.div
-            className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(13,148,136,0.18) 0%, transparent 70%)" }}
-            animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          />
-          {/* gold accent top-right */}
-          <motion.div
-            className="absolute inset-0"
-            style={{ background: "radial-gradient(ellipse 50% 40% at 85% 15%, rgba(202,153,60,0.10) 0%, transparent 60%)" }}
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          />
-          {/* floating light dots */}
+          <motion.div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(13,148,136,0.18) 0%, transparent 70%)" }} animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
+          <motion.div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 50% 40% at 85% 15%, rgba(202,153,60,0.10) 0%, transparent 60%)" }} animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
           {[...Array(7)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-teal-300/20"
-              style={{ width: 3 + (i % 3), height: 3 + (i % 3), left: `${10 + i * 12}%`, top: `${15 + (i % 4) * 18}%` }}
-              animate={{ y: [-16, 16, -16], opacity: [0.15, 0.5, 0.15] }}
-              transition={{ duration: 5 + i * 0.8, repeat: Infinity, ease: "easeInOut", delay: i * 0.6 }}
-            />
+            <motion.div key={i} className="absolute rounded-full bg-teal-300/20" style={{ width: 3 + (i % 3), height: 3 + (i % 3), left: `${10 + i * 12}%`, top: `${15 + (i % 4) * 18}%` }} animate={{ y: [-16, 16, -16], opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 5 + i * 0.8, repeat: Infinity, ease: "easeInOut", delay: i * 0.6 }} />
           ))}
-          {/* horizontal shimmer line */}
-          <motion.div
-            className="absolute left-0 right-0 h-px"
-            style={{ top: "55%", background: "linear-gradient(90deg, transparent, rgba(13,148,136,0.25), transparent)" }}
-            animate={{ scaleX: [0.6, 1.2, 0.6], opacity: [0.3, 0.7, 0.3] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          />
+          <motion.div className="absolute left-0 right-0 h-px" style={{ top: "55%", background: "linear-gradient(90deg, transparent, rgba(13,148,136,0.25), transparent)" }} animate={{ scaleX: [0.6, 1.2, 0.6], opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
         </motion.div>
-
-        <motion.form
-          onSubmit={(e) => { e.preventDefault(); load(); }}
-          initial={{ opacity: 0, y: 40, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="relative w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_32px_80px_rgba(0,0,0,.6),0_0_0_1px_rgba(13,148,136,0.15)] backdrop-blur"
-        >
-          <div className="mb-5 flex justify-center">
-            <img src="/icon.webp" alt="سوار البحرية" className="h-16 w-auto object-contain" />
-          </div>
+        <motion.form onSubmit={(e) => { e.preventDefault(); load(); }} initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_32px_80px_rgba(0,0,0,.6),0_0_0_1px_rgba(13,148,136,0.15)] backdrop-blur">
+          <div className="mb-5 flex justify-center"><img src="/icon.webp" alt="سوار البحرية" className="h-16 w-auto object-contain" /></div>
           <h1 className="text-center text-2xl font-extrabold text-[#1a0a2e]">لوحة المالك</h1>
           <p className="mt-1 text-center text-sm text-[#1a0a2e]/50">سوار البحرية — الإيرادات والحجوزات</p>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="كلمة المرور"
-            className="own-in mt-6"
-            autoComplete="current-password"
-          />
-          {error && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm font-semibold text-red-600">
-              {error}
-            </motion.p>
-          )}
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة المرور" className="own-in mt-6" autoComplete="current-password" />
+          {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm font-semibold text-red-600">{error}</motion.p>}
           <button type="submit" disabled={loading} className="mt-5 w-full rounded-xl bg-[#1a0a2e] py-3 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }} className="inline-block">👑</motion.span>
-                جاري الدخول...
-              </span>
-            ) : "دخول"}
+            {loading ? <span className="flex items-center justify-center gap-2"><motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }} className="inline-block">👑</motion.span>جاري الدخول...</span> : "دخول"}
           </button>
           <style>{`.own-in{width:100%;padding:12px 14px;background:#f5f0ff;border:1px solid #c4b5fd;border-radius:12px;outline:none;font-family:inherit;direction:ltr;text-align:center}.own-in:focus{border-color:#7c3aed;background:#ede9fe}`}</style>
         </motion.form>
@@ -199,15 +410,17 @@ export default function OwnerDashboard() {
     );
   }
 
+  const TABS = [
+    { key: "overview", label: "نظرة عامة" },
+    { key: "bookings", label: `الحجوزات (${bookings.length})` },
+    { key: "new", label: "🚤 حجز سريع" },
+    { key: "expenses", label: "📊 المصاريف" },
+  ] as const;
+
   return (
     <div className="min-h-screen bg-slate-50" dir="rtl">
-      {/* header */}
-      <motion.header
-        initial={{ y: -60, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="sticky top-0 z-10 text-white shadow-[0_4px_32px_rgba(0,0,0,.5)]" style={{ background: "linear-gradient(135deg,#020d18,#051e30)" }}
-      >
+      <motion.header initial={{ y: -60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="sticky top-0 z-10 text-white shadow-[0_4px_32px_rgba(0,0,0,.5)]" style={{ background: "linear-gradient(135deg,#020d18,#051e30)" }}>
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
           <div className="flex items-center gap-3">
             <img src="/icon.webp" alt="سوار البحرية" className="h-10 w-auto object-contain" />
@@ -223,18 +436,12 @@ export default function OwnerDashboard() {
             <button onClick={() => { setAuthed(false); setPassword(""); setBookings([]); }} className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold transition-colors hover:bg-white/20">خروج</button>
           </div>
         </div>
-        {/* tabs */}
-        <div className="mx-auto flex max-w-5xl gap-1 px-5 pb-3">
-          {(["overview", "bookings", "new"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`relative rounded-t-lg px-5 py-1.5 text-sm font-bold transition-colors ${tab === t ? "text-[#1a0a2e]" : "text-white/50 hover:text-white"}`}
-            >
-              {tab === t && (
-                <motion.span layoutId="owner-tab-bg" className="absolute inset-0 rounded-t-lg bg-white" style={{ zIndex: -1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-              )}
-              {t === "overview" ? "نظرة عامة" : t === "bookings" ? `جميع الحجوزات (${bookings.length})` : "➕ حجز جديد"}
+        <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-5 pb-3">
+          {TABS.map((t) => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`relative whitespace-nowrap rounded-t-lg px-5 py-1.5 text-sm font-bold transition-colors ${tab === t.key ? "text-[#1a0a2e]" : "text-white/50 hover:text-white"}`}>
+              {tab === t.key && <motion.span layoutId="owner-tab-bg" className="absolute inset-0 rounded-t-lg bg-white" style={{ zIndex: -1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
+              {t.label}
             </button>
           ))}
         </div>
@@ -242,9 +449,9 @@ export default function OwnerDashboard() {
 
       <div className="mx-auto max-w-5xl px-5 py-8">
         <AnimatePresence mode="wait">
+
           {tab === "overview" && (
-            <motion.div key="overview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-              {/* revenue cards */}
+            <motion.div key="overview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
               <Label>الإيرادات (مؤكدة فقط)</Label>
               <motion.div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
                 {[
@@ -262,7 +469,6 @@ export default function OwnerDashboard() {
                 ))}
               </motion.div>
 
-              {/* booking counts */}
               <Label>إحصاءات الحجوزات</Label>
               <motion.div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
                 {[
@@ -280,9 +486,8 @@ export default function OwnerDashboard() {
                 ))}
               </motion.div>
 
-              {/* payment methods */}
               <Label>طرق الدفع (مؤكدة)</Label>
-              <motion.div className="mb-8 grid grid-cols-2 gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
+              <motion.div className="mb-8 grid grid-cols-3 gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
                 {[
                   { icon: "💳", label: "تحويل بنكي", value: stats.bank },
                   { icon: "🌐", label: "دفع عبر الموقع", value: stats.online },
@@ -296,33 +501,19 @@ export default function OwnerDashboard() {
                 ))}
               </motion.div>
 
-              {/* revenue by package */}
               {stats.pkgList.length > 0 && (
                 <>
                   <Label>الإيرادات حسب الباقة</Label>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-                    className="overflow-hidden rounded-2xl bg-white shadow-sm"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="overflow-hidden rounded-2xl bg-white shadow-sm">
                     {stats.pkgList.map(([pkg, rev], i) => {
                       const pct = stats.totalRevenue ? Math.round((rev / stats.totalRevenue) * 100) : 0;
                       return (
-                        <motion.div
-                          key={pkg}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.35 + i * 0.07 }}
-                          className={`flex items-center gap-4 px-5 py-4 ${i < stats.pkgList.length - 1 ? "border-b border-slate-100" : ""}`}
-                        >
+                        <motion.div key={pkg} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 + i * 0.07 }}
+                          className={`flex items-center gap-4 px-5 py-4 ${i < stats.pkgList.length - 1 ? "border-b border-slate-100" : ""}`}>
                           <div className="flex-1 min-w-0">
                             <div className="truncate font-semibold text-slate-800">{pkg}</div>
                             <div className="mt-1.5 h-2 w-full rounded-full bg-slate-100">
-                              <motion.div
-                                className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-violet-400"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${pct}%` }}
-                                transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-                              />
+                              <motion.div className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-violet-400" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease: [0.22, 1, 0.36, 1] }} />
                             </div>
                           </div>
                           <div className="text-right shrink-0">
@@ -339,20 +530,14 @@ export default function OwnerDashboard() {
           )}
 
           {tab === "bookings" && (
-            <motion.div key="bookings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+            <motion.div key="bookings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
               {bookings.length === 0 ? (
                 <p className="rounded-2xl bg-white p-8 text-center text-slate-400 shadow-sm">لا توجد حجوزات</p>
               ) : (
                 <motion.div className="grid gap-4 lg:grid-cols-2" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }}>
                   {bookings.map((b, i) => (
-                    <motion.div
-                      key={b.id}
-                      variants={fadeUp}
-                      custom={i}
-                      whileHover={{ y: -3, boxShadow: "0 12px 40px rgba(0,0,0,.09)" }}
-                      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                      className="rounded-2xl bg-white p-5 shadow-sm"
-                    >
+                    <motion.div key={b.id} variants={fadeUp} custom={i} whileHover={{ y: -3, boxShadow: "0 12px 40px rgba(0,0,0,.09)" }} transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                      className="rounded-2xl bg-white p-5 shadow-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="font-extrabold text-slate-800">{b.packageTitle}</p>
@@ -368,7 +553,6 @@ export default function OwnerDashboard() {
                         <BInfo label="الأشخاص" value={String(b.persons)} />
                         <BInfo label="الإجمالي" value={`${fmt(b.total)} ريال`} />
                         <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : "تحويل بنكي"} />
-                        {b.payType === "deposit" && <BInfo label="المقدّم" value={`${fmt(b.deposit)} ريال`} />}
                       </div>
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
@@ -386,10 +570,15 @@ export default function OwnerDashboard() {
           )}
 
           {tab === "new" && (
-            <motion.div key="new" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-              <DashboardBookingForm />
+            <motion.div key="new" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
+              <QuickBookingForm password={password} onDone={() => { load(); setTab("bookings"); }} />
             </motion.div>
           )}
+
+          {tab === "expenses" && (
+            <ExpensesPanel key="expenses" password={password} bookings={bookings} />
+          )}
+
         </AnimatePresence>
       </div>
 
@@ -413,30 +602,12 @@ export default function OwnerDashboard() {
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="ow-label">اسم العميل</label>
-                    <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="ow-in" />
-                  </div>
-                  <div>
-                    <label className="ow-label">الجوال</label>
-                    <input value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} className="ow-in" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="ow-label">التاريخ</label>
-                    <input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="ow-in" />
-                  </div>
-                  <div>
-                    <label className="ow-label">وقت الانطلاق</label>
-                    <input value={editing.departTime} onChange={(e) => setEditing({ ...editing, departTime: e.target.value })} className="ow-in" dir="ltr" placeholder="09:00" />
-                  </div>
-                  <div>
-                    <label className="ow-label">عدد الأشخاص</label>
-                    <input type="number" min={1} max={20} value={editing.persons} onChange={(e) => setEditing({ ...editing, persons: +e.target.value })} className="ow-in" />
-                  </div>
-                  <div>
-                    <label className="ow-label">الإجمالي (ريال)</label>
-                    <input type="number" value={editing.total} onChange={(e) => setEditing({ ...editing, total: +e.target.value })} className="ow-in" />
-                  </div>
+                  <div><label className="ow-label">اسم العميل</label><input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="ow-in" /></div>
+                  <div><label className="ow-label">الجوال</label><input value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} className="ow-in" dir="ltr" /></div>
+                  <div><label className="ow-label">التاريخ</label><input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="ow-in" /></div>
+                  <div><label className="ow-label">وقت الانطلاق</label><input value={editing.departTime} onChange={(e) => setEditing({ ...editing, departTime: e.target.value })} className="ow-in" dir="ltr" placeholder="09:00" /></div>
+                  <div><label className="ow-label">عدد الأشخاص</label><input type="number" min={1} max={20} value={editing.persons} onChange={(e) => setEditing({ ...editing, persons: +e.target.value })} className="ow-in" /></div>
+                  <div><label className="ow-label">الإجمالي (ريال)</label><input type="number" value={editing.total} onChange={(e) => setEditing({ ...editing, total: +e.target.value })} className="ow-in" /></div>
                 </div>
                 <div>
                   <label className="ow-label">طريقة الدفع</label>
@@ -446,10 +617,7 @@ export default function OwnerDashboard() {
                     <option value="pos">نقطة بيع (POS)</option>
                   </select>
                 </div>
-                <div>
-                  <label className="ow-label">ملاحظات</label>
-                  <textarea rows={2} value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} className="ow-in resize-none" />
-                </div>
+                <div><label className="ow-label">ملاحظات</label><textarea rows={2} value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} className="ow-in resize-none" /></div>
               </div>
               {editError && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600">{editError}</p>}
               <div className="mt-5 flex gap-3">
@@ -470,7 +638,6 @@ export default function OwnerDashboard() {
 function Label({ children }: { children: React.ReactNode }) {
   return <p className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">{children}</p>;
 }
-
 function BInfo({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
   return (
     <div className="rounded-xl bg-slate-50 px-3 py-2">
