@@ -96,11 +96,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-navy-100">
         <div className="container-px flex flex-col items-center justify-between gap-3 py-6 text-sm text-navy-900/55 sm:flex-row">
-          <p>© {new Date().getFullYear()} {brand} · {brandEn}. {t("footer.rights")}</p>
-          <div className="flex gap-6">
-            <Link href="#" className="hover:text-navy-900">{t("footer.privacy")}</Link>
-            <Link href="#" className="hover:text-navy-900">{t("footer.terms")}</Link>
-          </div>
+          <p>© 2026 {brand} · {brandEn}. {t("footer.rights")}</p>
         </div>
       </div>
     </footer>
