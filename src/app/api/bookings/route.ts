@@ -223,22 +223,10 @@ export async function GET(req: Request) {
   if (!role) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     const all = await getBookings();
-    const today = new Date().toISOString().slice(0, 10);
 
-    if (role === "captain") {
-      // Captain sees only upcoming confirmed/pending trips (today + future), limited fields
-      const upcoming = all
-        .filter((b) => b.status !== "cancelled" && b.date >= today)
-        .sort((a, b) => a.date.localeCompare(b.date) || a.departTime.localeCompare(b.departTime))
-        .map(({ id, packageTitle, option, persons, addons, date, departTime, name, phone, notes, status }) => ({
-          id, packageTitle, option, persons, addons, date, departTime, name, phone, notes, status,
-        }));
-      return NextResponse.json({ bookings: upcoming, role: "captain" });
-    }
-
-    if (role === "owner") {
-      // Owner sees everything for revenue analysis
-      return NextResponse.json({ bookings: all, role: "owner" });
+    // Captain has the same full access as the owner: all bookings for revenue analysis
+    if (role === "captain" || role === "owner") {
+      return NextResponse.json({ bookings: all, role });
     }
 
     // admin
@@ -250,7 +238,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const role = getRole(req);
-  if (role !== "admin" && role !== "owner") {
+  if (role !== "admin" && role !== "owner" && role !== "captain") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   let body: Record<string, unknown>;
@@ -293,7 +281,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   const role = getRole(req);
-  if (role !== "admin" && role !== "owner") {
+  if (role !== "admin" && role !== "owner" && role !== "captain") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const id = new URL(req.url).searchParams.get("id");

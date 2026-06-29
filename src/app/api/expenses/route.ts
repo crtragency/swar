@@ -5,12 +5,17 @@ export const dynamic = "force-dynamic";
 
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || "owner2026";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "sewar2026";
+const CAPTAIN_PASSWORD = process.env.CAPTAIN_PASSWORD || "captain2026";
 
 function isAuthed(req: Request) {
   const params = new URL(req.url).searchParams;
   const user = req.headers.get("x-admin-user") || params.get("user");
   const pass = req.headers.get("x-admin-password") || params.get("password");
-  return (user === "owner" && pass === OWNER_PASSWORD) || (user === "admin" && pass === ADMIN_PASSWORD);
+  return (
+    (user === "owner" && pass === OWNER_PASSWORD) ||
+    (user === "captain" && pass === CAPTAIN_PASSWORD) ||
+    (user === "admin" && pass === ADMIN_PASSWORD)
+  );
 }
 
 function newId() {
