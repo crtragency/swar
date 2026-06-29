@@ -596,8 +596,10 @@ export default function OwnerDashboard({
                       <div className="mt-3 flex gap-2">
                         <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, notes: b.notes, payMethod: b.payMethod })}
                           className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">✏️ تعديل</button>
-                        <button onClick={() => deleteB(b.id)}
-                          className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100">🗑️ حذف</button>
+                        {user !== "captain" && (
+                          <button onClick={() => deleteB(b.id)}
+                            className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100">🗑️ حذف</button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -635,7 +637,8 @@ export default function OwnerDashboard({
                   <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as Booking["status"] })} className="ow-in">
                     <option value="pending">قيد الانتظار</option>
                     <option value="confirmed">مؤكد</option>
-                    <option value="cancelled">ملغي</option>
+                    {/* الإلغاء متاح للمالك فقط */}
+                    {(user !== "captain" || editing.status === "cancelled") && <option value="cancelled">ملغي</option>}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
