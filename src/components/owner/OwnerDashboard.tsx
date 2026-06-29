@@ -179,6 +179,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(thisMonth());
+  const [monthOpen, setMonthOpen] = useState(false);
   const [form, setForm] = useState({ date: today(), category: "أخرى", description: "", amount: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -230,14 +231,41 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
 
   return (
     <motion.div key="expenses" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
-      {/* Month selector */}
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {months.map((m) => (
-          <button key={m} onClick={() => setMonth(m)}
-            className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-bold transition-colors ${month === m ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-100 shadow-sm"}`}>
-            {new Date(m + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+      {/* Month selector (dropdown) */}
+      <div className="mb-4" dir="rtl">
+        <div className="relative inline-block">
+          <button
+            type="button"
+            onClick={() => setMonthOpen((o) => !o)}
+            className="flex min-w-[180px] items-center justify-between gap-3 rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
+          >
+            <span className="whitespace-nowrap">
+              {new Date(month + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+            </span>
+            <svg
+              className={`h-4 w-4 shrink-0 transition-transform ${monthOpen ? "rotate-180" : ""}`}
+              viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+            >
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+            </svg>
           </button>
-        ))}
+          {monthOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMonthOpen(false)} />
+              <div className="absolute right-0 z-20 mt-2 w-full min-w-[180px] overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+                {months.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setMonth(m); setMonthOpen(false); }}
+                    className={`block w-full whitespace-nowrap px-4 py-2 text-right text-sm font-bold transition-colors ${month === m ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                  >
+                    {new Date(m + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* P&L Summary */}
