@@ -40,4 +40,4 @@ export const BOOK_CTA = "احجز الآن";
 
 // Google Business listing (for the "read all reviews on Google" link).
 export const GOOGLE_REVIEWS_URL =
-  "https://www.google.com/maps/place/%D8%B1%D8%AD%D9%84%D8%A7%D8%AA+%D8%B3%D9%88%D8%A7%D8%B1+%D8%A7%D9%84%D8%A8%D8%AD%D8%B1%D9%8A%D8%A9+Sewar+Marine/@22.2786192,39.0879339,17z/data=!4m8!3m7!1s0x15c143af681ee96d:0xeb53eed4ef4c1fd!8m2!3d22.2786192!4d39.0879339!9m1!1b1";
+  "https://www.google.com/maps/place/%D8%B1%D8%AD%D9%84%D8%A7%D8%AA+%D8%B3%D9%88%D8%A7%D8%B1+%D8%A7%D9%84%D8%A8%D8%AD%D8%B1%D9%8A%D8%A9%D8%8C+%D8%AF%D8%B1%D8%A9+%D8%A7%D9%84%D8%B9%D8%B1%D9%88%D8%B3+23851/data=!4m2!3m1!1s0x15c143af681ee96d:0xeb53eed4ef4c1fd?utm_source=mstt_1&entry=gps";
