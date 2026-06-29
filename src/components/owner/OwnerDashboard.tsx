@@ -26,6 +26,7 @@ const fadeUp = {
   show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] } }),
 };
 
+type DashUser = "owner" | "captain";
 type ExpenseItem = { id: string; createdAt: string; date: string; category: string; description: string; amount: number };
 type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; notes: string; payMethod: Booking["payMethod"] };
 
@@ -33,7 +34,7 @@ type EditState = { id: string; status: Booking["status"]; name: string; phone: s
 const TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 function timeLabel(t: string) { const h = parseInt(t, 10); const am = h < 12; return `${h % 12 === 0 ? 12 : h % 12}:00 ${am ? "ص" : "م"}`; }
 
-function QuickBookingForm({ password, onDone }: { password: string; onDone: () => void }) {
+function QuickBookingForm({ password, onDone, user = "owner" }: { password: string; onDone: () => void; user?: DashUser }) {
   const [pkgTitle, setPkgTitle] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -60,7 +61,7 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
     if (toH(endTime) <= toH(startTime)) return setError("وقت الانتهاء يجب أن يكون بعد وقت البدء");
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,7 +176,7 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
 }
 
 // ─── Expenses Panel ────────────────────────────────────────────────────────
-function ExpensesPanel({ password, bookings }: { password: string; bookings: Booking[] }) {
+function ExpensesPanel({ password, bookings, user = "owner" }: { password: string; bookings: Booking[]; user?: DashUser }) {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(thisMonth());
@@ -187,7 +188,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
   async function loadExpenses() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}`, { cache: "no-store" });
+      const res = await fetch(`/api/expenses?user=${user}&password=${encodeURIComponent(password)}`, { cache: "no-store" });
       const data = await res.json();
       setExpenses(data.expenses ?? []);
     } catch { /* silent */ } finally { setLoading(false); }
@@ -201,7 +202,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
     if (!form.date) return setError("يرجى إدخال التاريخ");
     setSaving(true);
     try {
-      const res = await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}`, {
+      const res = await fetch(`/api/expenses?user=${user}&password=${encodeURIComponent(password)}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, amount: Number(form.amount) }),
       });
@@ -214,7 +215,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
 
   async function delExp(id: string) {
     if (!confirm("حذف هذا المصروف؟")) return;
-    await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}&id=${id}`, { method: "DELETE" });
+    await fetch(`/api/expenses?user=${user}&password=${encodeURIComponent(password)}&id=${id}`, { method: "DELETE" });
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   }
 
@@ -343,7 +344,15 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
 }
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
-export default function OwnerDashboard() {
+export default function OwnerDashboard({
+  user = "owner",
+  title = "لوحة المالك",
+  subtitle = "سوار البحرية — الإيرادات والتقارير",
+}: {
+  user?: DashUser;
+  title?: string;
+  subtitle?: string;
+} = {}) {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -357,7 +366,7 @@ export default function OwnerDashboard() {
   async function load(pass = password) {
     setLoading(true); setError("");
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(pass)}`, { cache: "no-store" });
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(pass)}`, { cache: "no-store" });
       if (res.status === 401) throw new Error("كلمة المرور غير صحيحة");
       if (!res.ok) throw new Error("تعذّر تحميل البيانات");
       const data = await res.json();
@@ -391,7 +400,7 @@ export default function OwnerDashboard() {
     if (!editing) return;
     setSaving(true); setEditError("");
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editing),
       });
@@ -405,7 +414,7 @@ export default function OwnerDashboard() {
   async function deleteB(id: string) {
     if (!confirm("هل أنت متأكد من الحذف النهائي؟")) return;
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!res.ok) throw new Error("فشل الحذف");
       setBookings((prev) => prev.filter((b) => b.id !== id));
     } catch (e) { alert(e instanceof Error ? e.message : "خطأ في الحذف"); }
@@ -425,8 +434,8 @@ export default function OwnerDashboard() {
         <motion.form onSubmit={(e) => { e.preventDefault(); load(); }} initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="relative w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_32px_80px_rgba(0,0,0,.6),0_0_0_1px_rgba(13,148,136,0.15)] backdrop-blur">
           <div className="mb-5 flex justify-center"><img src="/icon.webp" alt="سوار البحرية" className="h-16 w-auto object-contain" /></div>
-          <h1 className="text-center text-2xl font-extrabold text-[#1a0a2e]">لوحة المالك</h1>
-          <p className="mt-1 text-center text-sm text-[#1a0a2e]/50">سوار البحرية — الإيرادات والحجوزات</p>
+          <h1 className="text-center text-2xl font-extrabold text-[#1a0a2e]">{title}</h1>
+          <p className="mt-1 text-center text-sm text-[#1a0a2e]/50">{subtitle}</p>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة المرور" className="own-in mt-6" autoComplete="current-password" />
           {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm font-semibold text-red-600">{error}</motion.p>}
           <button type="submit" disabled={loading} className="mt-5 w-full rounded-xl bg-[#1a0a2e] py-3 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
@@ -453,8 +462,8 @@ export default function OwnerDashboard() {
           <div className="flex items-center gap-3">
             <img src="/icon.webp" alt="سوار البحرية" className="h-10 w-auto object-contain" />
             <div>
-              <h1 className="text-base font-extrabold leading-none">لوحة المالك</h1>
-              <p className="mt-0.5 text-xs text-white/40">سوار البحرية — الإيرادات والتقارير</p>
+              <h1 className="text-base font-extrabold leading-none">{title}</h1>
+              <p className="mt-0.5 text-xs text-white/40">{subtitle}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -599,12 +608,12 @@ export default function OwnerDashboard() {
 
           {tab === "new" && (
             <motion.div key="new" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
-              <QuickBookingForm password={password} onDone={() => { load(); setTab("bookings"); }} />
+              <QuickBookingForm password={password} user={user} onDone={() => { load(); setTab("bookings"); }} />
             </motion.div>
           )}
 
           {tab === "expenses" && (
-            <ExpensesPanel key="expenses" password={password} bookings={bookings} />
+            <ExpensesPanel key="expenses" password={password} bookings={bookings} user={user} />
           )}
 
         </AnimatePresence>
