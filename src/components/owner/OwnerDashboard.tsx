@@ -225,7 +225,7 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
   const profit = totalRev - totalExp;
 
   const months: string[] = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 12; i++) {
     const d = new Date(); d.setMonth(d.getMonth() - i);
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
@@ -253,7 +253,7 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
           {monthOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMonthOpen(false)} />
-              <div className="absolute right-0 z-20 mt-2 w-full min-w-[180px] overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+              <div className="absolute right-0 z-20 mt-2 max-h-64 w-full min-w-[180px] overflow-y-auto rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
                 {months.map((m) => (
                   <button
                     key={m}
