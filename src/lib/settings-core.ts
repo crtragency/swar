@@ -81,6 +81,8 @@ export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSetti
   return {
     ...DEFAULT_SETTINGS,
     ...partial,
+    // إيميل التواصل ثابت من الكود ولا يُتجاوز بأي قيمة قديمة محفوظة
+    email: DEFAULT_SETTINGS.email,
     socials: partial.socials && partial.socials.length ? partial.socials : DEFAULT_SETTINGS.socials,
     hero: { ...DEFAULT_HERO, ...(partial.hero ?? {}) },
     stats: partial.stats && partial.stats.length ? partial.stats : DEFAULT_SETTINGS.stats,
