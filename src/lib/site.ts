@@ -16,7 +16,7 @@ export const CONTACT = {
   location: "ثول · المملكة العربية السعودية · البحر الأحمر",
   phone: "+966 50 004 5946",
   phoneHref: "tel:+966500045946",
-  email: "info@sewar-marine.com",
+  email: "sewarmarine@gmail.com",
   whatsapp: "966500045946",
 };
 

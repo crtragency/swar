@@ -255,6 +255,10 @@ export async function PATCH(req: Request) {
     if (!["pending", "confirmed", "cancelled"].includes(String(body.status))) {
       return NextResponse.json({ error: "bad status" }, { status: 422 });
     }
+    // إلغاء الحجز متاح للمالك والأدمن فقط — الكابتن لا يستطيع تحويل الحالة إلى "ملغي"
+    if (role === "captain" && body.status === "cancelled") {
+      return NextResponse.json({ error: "إلغاء الحجز متاح للمالك فقط" }, { status: 403 });
+    }
     patch.status = body.status as Booking["status"];
   }
   if (body.name !== undefined) patch.name = String(body.name);
@@ -281,7 +285,8 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   const role = getRole(req);
-  if (role !== "admin" && role !== "owner" && role !== "captain") {
+  // الحذف/الإلغاء متاح للمالك والأدمن فقط — الكابتن لا يملك هذه الصلاحية
+  if (role !== "admin" && role !== "owner") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const id = new URL(req.url).searchParams.get("id");
