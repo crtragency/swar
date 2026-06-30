@@ -21,10 +21,14 @@ create table if not exists public.bookings (
   pay_type      text,
   deposit       int,
   amount_due    int,
+  paid          int default 0,
   promo         text,
   total         int,
   status        text default 'pending'
 );
+
+-- For databases created before the "paid" column existed:
+alter table public.bookings add column if not exists paid int default 0;
 
 create index if not exists bookings_created_at_idx on public.bookings (created_at desc);
 

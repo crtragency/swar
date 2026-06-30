@@ -28,7 +28,7 @@ const fadeUp = {
 
 type DashUser = "owner" | "captain";
 type ExpenseItem = { id: string; createdAt: string; date: string; category: string; description: string; amount: number };
-type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; notes: string; payMethod: Booking["payMethod"] };
+type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; paid: number; notes: string; payMethod: Booking["payMethod"] };
 
 // ─── Quick Booking Form ────────────────────────────────────────────────────
 const TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
@@ -42,6 +42,7 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("13:00");
   const [price, setPrice] = useState("");
+  const [paid, setPaid] = useState("");
   const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
   const [persons, setPersons] = useState(2);
   const [notes, setNotes] = useState("");
@@ -70,7 +71,8 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
           durationHours,
           name: name.trim(), phone: phone.trim(), notes: notes.trim(),
           payMethod, payType: "full", deposit: 0,
-          total: Number(price), amountDue: Number(price), promo: "",
+          total: Number(price), amountDue: Number(price),
+          paid: Number(paid) || 0, promo: "",
           status,
         }),
       });
@@ -131,14 +133,25 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
         </p>
       )}
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <label className="ow-block"><span className="ow-label">السعر (ريال)</span>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <label className="ow-block"><span className="ow-label">السعر الإجمالي (ريال)</span>
           <input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="ow-in" />
+        </label>
+        <label className="ow-block"><span className="ow-label">المبلغ المدفوع (ريال)</span>
+          <input type="number" min={0} value={paid} onChange={(e) => setPaid(e.target.value)} placeholder="0" className="ow-in" />
         </label>
         <label className="ow-block"><span className="ow-label">عدد الأشخاص</span>
           <input type="number" min={1} max={20} value={persons} onChange={(e) => setPersons(+e.target.value)} className="ow-in" />
         </label>
       </div>
+
+      {price !== "" && (
+        <p className="mt-1.5 text-xs font-semibold text-slate-500">
+          💰 المتبقي: <span className={`font-extrabold ${Math.max(0, Number(price) - (Number(paid) || 0)) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+            {Math.max(0, Number(price) - (Number(paid) || 0)).toLocaleString("ar-SA")} ريال
+          </span>
+        </p>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <label className="ow-block"><span className="ow-label">طريقة الدفع</span>
@@ -589,12 +602,14 @@ export default function OwnerDashboard({
                         <BInfo label="الانطلاق" value={b.departTime || "—"} ltr />
                         <BInfo label="الأشخاص" value={String(b.persons)} />
                         <BInfo label="الإجمالي" value={`${fmt(b.total)} ريال`} />
+                        <BInfo label="المدفوع" value={`${fmt(b.paid)} ريال`} />
+                        <BInfo label="المتبقي" value={`${fmt(Math.max(0, b.total - b.paid))} ريال`} />
                         <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : "تحويل بنكي"} />
                       </div>
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
                       <div className="mt-3 flex gap-2">
-                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, notes: b.notes, payMethod: b.payMethod })}
+                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, paid: b.paid, notes: b.notes, payMethod: b.payMethod })}
                           className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">✏️ تعديل</button>
                         {user !== "captain" && (
                           <button onClick={() => deleteB(b.id)}
@@ -648,7 +663,13 @@ export default function OwnerDashboard({
                   <div><label className="ow-label">وقت الانطلاق</label><input value={editing.departTime} onChange={(e) => setEditing({ ...editing, departTime: e.target.value })} className="ow-in" dir="ltr" placeholder="09:00" /></div>
                   <div><label className="ow-label">عدد الأشخاص</label><input type="number" min={1} max={20} value={editing.persons} onChange={(e) => setEditing({ ...editing, persons: +e.target.value })} className="ow-in" /></div>
                   <div><label className="ow-label">الإجمالي (ريال)</label><input type="number" value={editing.total} onChange={(e) => setEditing({ ...editing, total: +e.target.value })} className="ow-in" /></div>
+                  <div><label className="ow-label">المبلغ المدفوع (ريال)</label><input type="number" min={0} value={editing.paid} onChange={(e) => setEditing({ ...editing, paid: +e.target.value })} className="ow-in" /></div>
                 </div>
+                <p className="text-sm font-semibold text-slate-500">
+                  💰 المتبقي: <span className={`font-extrabold ${Math.max(0, editing.total - editing.paid) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                    {fmt(Math.max(0, editing.total - editing.paid))} ريال
+                  </span>
+                </p>
                 <div>
                   <label className="ow-label">طريقة الدفع</label>
                   <select value={editing.payMethod} onChange={(e) => setEditing({ ...editing, payMethod: e.target.value as Booking["payMethod"] })} className="ow-in">
