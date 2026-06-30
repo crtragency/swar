@@ -41,6 +41,10 @@ export const STRINGS: Record<string, { ar: string; en: string }> = {
   "gallery.title": { ar: "أجمل لحظاتنا في البحر", en: "Our finest moments at sea" },
   "gallery.desc": { ar: "لمحات من رحلاتنا البحرية الفاخرة، حيث تتحول كل لحظة إلى ذكرى لا تُنسى.", en: "Glimpses of our luxury sea trips, where every moment becomes an unforgettable memory." },
 
+  "partners.eyebrow": { ar: "شركاؤنا", en: "Our Partners" },
+  "partners.title": { ar: "شركاء النجاح", en: "Success Partners" },
+  "partners.desc": { ar: "نفخر بثقة شركائنا الذين يشاركوننا رحلة التميّز على البحر الأحمر.", en: "We are proud of the trust of our partners who share our journey of excellence on the Red Sea." },
+
   "stats.years": { ar: "سنة خبرة", en: "Years of experience" },
   "stats.satisfaction": { ar: "رضا العملاء", en: "Customer satisfaction" },
   "stats.trips": { ar: "رحلات مكتملة", en: "Completed trips" },

@@ -4,6 +4,7 @@ import GallerySection from "@/components/home/GallerySection";
 import StatsSection from "@/components/home/StatsSection";
 import BlogSection from "@/components/home/BlogSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import PartnersSection from "@/components/home/PartnersSection";
 import { getPackagesMerged } from "@/lib/content-server";
 
 export default async function HomePage() {
@@ -16,6 +17,7 @@ export default async function HomePage() {
       <StatsSection />
       <BlogSection />
       <TestimonialsSection />
+      <PartnersSection />
     </main>
   );
 }

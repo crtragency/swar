@@ -34,6 +34,7 @@ export type SiteSettings = {
   reviews: ReviewItem[];
   heroImages: string[]; // image URLs; empty = use the built-in photos
   galleryImages: string[]; // image URLs; empty = use the built-in photos
+  partners: string[]; // partner logo URLs; empty = hide the section
 };
 
 const DEFAULT_HERO: HeroContent = {
@@ -74,6 +75,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   reviews: DEFAULT_REVIEWS,
   heroImages: [],
   galleryImages: [],
+  partners: ["/partners/partner-1.jpg", "/partners/partner-2.jpg"],
 };
 
 export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSettings {
@@ -89,6 +91,7 @@ export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSetti
     reviews: partial.reviews && partial.reviews.length ? partial.reviews : DEFAULT_SETTINGS.reviews,
     heroImages: partial.heroImages ?? [],
     galleryImages: partial.galleryImages ?? [],
+    partners: partial.partners ?? DEFAULT_SETTINGS.partners,
   };
 }
 
