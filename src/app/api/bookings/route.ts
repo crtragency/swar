@@ -201,6 +201,7 @@ export async function POST(req: Request) {
     payType: body.payType === "deposit" ? "deposit" : "full",
     deposit: Number(body.deposit) || 0,
     amountDue: Number(body.amountDue) || Number(body.total) || 0,
+    paid: Number(body.paid) || 0,
     promo: String(body.promo || ""),
     total: Number(body.total) || 0,
     status: "pending",
@@ -270,6 +271,7 @@ export async function PATCH(req: Request) {
   if (body.payMethod !== undefined) patch.payMethod = (["bank","online","pos"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"];
   if (body.payType !== undefined) patch.payType = body.payType === "deposit" ? "deposit" : "full";
   if (body.total !== undefined) patch.total = Number(body.total) || 0;
+  if (body.paid !== undefined) patch.paid = Number(body.paid) || 0;
   if (body.notes !== undefined) patch.notes = String(body.notes);
 
   if (Object.keys(patch).length === 0) {
