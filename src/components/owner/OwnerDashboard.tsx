@@ -133,25 +133,26 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
         </p>
       )}
 
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <label className="ow-block"><span className="ow-label">السعر الإجمالي (ريال)</span>
           <input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="ow-in" />
         </label>
         <label className="ow-block"><span className="ow-label">المبلغ المدفوع (ريال)</span>
           <input type="number" min={0} value={paid} onChange={(e) => setPaid(e.target.value)} placeholder="0" className="ow-in" />
         </label>
+        <label className="ow-block"><span className="ow-label">المبلغ المتبقي (ريال)</span>
+          <input
+            type="text"
+            readOnly
+            tabIndex={-1}
+            value={`${Math.max(0, (Number(price) || 0) - (Number(paid) || 0)).toLocaleString("ar-SA")} ريال`}
+            className={`ow-in cursor-default font-extrabold ${Math.max(0, (Number(price) || 0) - (Number(paid) || 0)) > 0 ? "ow-remaining-due" : "ow-remaining-paid"}`}
+          />
+        </label>
         <label className="ow-block"><span className="ow-label">عدد الأشخاص</span>
           <input type="number" min={1} max={20} value={persons} onChange={(e) => setPersons(+e.target.value)} className="ow-in" />
         </label>
       </div>
-
-      {price !== "" && (
-        <p className="mt-1.5 text-xs font-semibold text-slate-500">
-          💰 المتبقي: <span className={`font-extrabold ${Math.max(0, Number(price) - (Number(paid) || 0)) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
-            {Math.max(0, Number(price) - (Number(paid) || 0)).toLocaleString("ar-SA")} ريال
-          </span>
-        </p>
-      )}
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <label className="ow-block"><span className="ow-label">طريقة الدفع</span>
@@ -183,7 +184,7 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
         {submitting ? "جاري التسجيل..." : "تسجيل الرحلة وحجب الوقت"}
       </button>
 
-      <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none;transition:border-color .15s}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}`}</style>
+      <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none;transition:border-color .15s}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}.ow-remaining-due{background:#fffbeb;border-color:#fde68a;color:#b45309}.ow-remaining-paid{background:#ecfdf5;border-color:#a7f3d0;color:#047857}`}</style>
     </motion.div>
   );
 }
