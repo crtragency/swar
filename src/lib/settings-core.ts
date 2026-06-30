@@ -75,7 +75,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   reviews: DEFAULT_REVIEWS,
   heroImages: [],
   galleryImages: [],
-  partners: ["/partners/partner-1.jpg", "/partners/partner-2.jpg"],
+  partners: [
+    "/partners/partner-1.jpg",
+    "/partners/partner-2.jpg",
+    "/partners/partner-3.png",
+    "/partners/partner-4.png",
+  ],
 };
 
 export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSettings {
