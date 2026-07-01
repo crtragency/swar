@@ -375,6 +375,7 @@ export default function OwnerDashboard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"overview" | "bookings" | "schedule" | "new" | "expenses">("overview");
+  const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "cancelled">("all");
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState("");
@@ -587,11 +588,23 @@ export default function OwnerDashboard({
 
           {tab === "bookings" && (
             <motion.div key="bookings" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
-              {bookings.length === 0 ? (
+              {/* status filter */}
+              <div className="mb-4 flex gap-2 flex-wrap">
+                {([["all", "الكل"], ["confirmed", "مؤكد"], ["pending", "قيد الانتظار"], ["cancelled", "ملغي"]] as const).map(([val, label]) => {
+                  const count = val === "all" ? bookings.length : bookings.filter((b) => b.status === val).length;
+                  return (
+                    <button key={val} onClick={() => setStatusFilter(val)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-bold transition-all ${statusFilter === val ? "bg-slate-800 text-white" : "bg-white text-slate-500 shadow-sm hover:bg-slate-50"}`}>
+                      {label} <span className="opacity-60">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {bookings.filter((b) => statusFilter === "all" || b.status === statusFilter).length === 0 ? (
                 <p className="rounded-2xl bg-white p-8 text-center text-slate-400 shadow-sm">لا توجد حجوزات</p>
               ) : (
                 <motion.div className="grid gap-4 lg:grid-cols-2" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.07 } } }}>
-                  {bookings.map((b, i) => (
+                  {bookings.filter((b) => statusFilter === "all" || b.status === statusFilter).map((b, i) => (
                     <motion.div key={b.id} variants={fadeUp} custom={i} whileHover={{ y: -3, boxShadow: "0 12px 40px rgba(0,0,0,.09)" }} transition={{ type: "spring", stiffness: 300, damping: 24 }}
                       className="rounded-2xl bg-white p-5 shadow-sm">
                       <div className="flex items-start justify-between gap-2">

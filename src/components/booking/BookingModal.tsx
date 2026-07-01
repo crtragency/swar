@@ -113,7 +113,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const promoDiscount = promoPct ? Math.round((afterSeason * promoPct) / 100) : 0;
   const total = afterSeason - promoDiscount;
   const deposit = Math.ceil(total / 2);
-  const amountDue = payMethod === "bank" && payType === "deposit" ? deposit : total;
+  const amountDue = payType === "deposit" ? deposit : total;
 
   // Duration of the currently selected option (hours)
   const selectedDuration = useMemo(() => {
@@ -375,34 +375,37 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                   {promoDiscount > 0 && <Line label={`كود خصم (${promoPct}%)`} value={`− ${promoDiscount.toLocaleString()} ريال`} green />}
                 </div>
 
-                {/* payment method selector */}
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  {([
-                    ["bank",   "💳", "تحويل بنكي",  "حوّل على الآيبان"],
-                    ["online", "🌐", "دفع إلكتروني", "بطاقة / مدى / STC"],
-                  ] as const).map(([val, icon, t, sub]) => (
-                    <button key={val} type="button" onClick={() => setPayMethod(val)} className={`rounded-2xl border-2 p-3 text-center transition-all ${payMethod === val ? "border-turquoise-500 bg-turquoise-500/5" : "border-navy-50 bg-navy-50/40"}`}>
-                      <div className="text-xl mb-0.5">{icon}</div>
-                      <div className="text-xs font-bold text-navy-900">{t}</div>
-                      <div className="mt-0.5 text-[10px] text-navy-900/55">{sub}</div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* deposit option (bank only) */}
-                {payMethod === "bank" && (
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    {([["full", "المبلغ كاملاً", `${total.toLocaleString()} ريال`], ["deposit", "دفعة مقدمة 50%", `${deposit.toLocaleString()} ريال الآن`]] as const).map(([val, t, sub]) => (
+                {/* step 1: deposit or full */}
+                <div className="mt-5">
+                  <p className="text-xs font-bold text-navy-900/50 mb-2">1️⃣ كم تريد أن تدفع الآن؟</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {([["full", "المبلغ كاملاً", `${total.toLocaleString()} ريال`], ["deposit", "عربون 50%", `${deposit.toLocaleString()} ريال الآن`]] as const).map(([val, t, sub]) => (
                       <button key={val} type="button" onClick={() => setPayType(val)} className={`rounded-2xl border-2 p-3 text-center transition-all ${payType === val ? "border-gold-400 bg-gold-400/5" : "border-navy-50 bg-navy-50/40"}`}>
                         <div className="text-sm font-bold text-navy-900">{t}</div>
                         <div className="mt-1 text-xs text-navy-900/55">{sub}</div>
                       </button>
                     ))}
                   </div>
-                )}
+                </div>
+
+                {/* step 2: payment method */}
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-navy-900/50 mb-2">2️⃣ اختر طريقة الدفع</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {([
+                      ["bank",   "💳", "تحويل بنكي",  "حوّل على الآيبان"],
+                      ["online", "🌐", "دفع إلكتروني", "بطاقة / مدى / STC"],
+                    ] as const).map(([val, icon, t, sub]) => (
+                      <button key={val} type="button" onClick={() => setPayMethod(val)} className={`rounded-2xl border-2 p-3 text-center transition-all ${payMethod === val ? "border-turquoise-500 bg-turquoise-500/5" : "border-navy-50 bg-navy-50/40"}`}>
+                        <div className="text-xl mb-0.5">{icon}</div>
+                        <div className="text-xs font-bold text-navy-900">{t}</div>
+                        <div className="mt-0.5 text-[10px] text-navy-900/55">{sub}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {payMethod === "bank" && <BankBox copied={copied} setCopied={setCopied} />}
-
                 {payMethod === "online" && (
                   <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm text-blue-700 font-semibold">
                     🌐 ستُحوَّل لصفحة الدفع الآمنة (بطاقة / مدى / STC Pay)
@@ -412,8 +415,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 {/* total */}
                 <div className="mt-5 flex items-center justify-between rounded-2xl bg-navy-900 px-5 py-4 text-white">
                   <div>
-                    <span className="block text-sm text-white/70">{payMethod === "bank" && payType === "deposit" ? "المطلوب الآن (50%)" : "الإجمالي"}</span>
-                    {payMethod === "bank" && payType === "deposit" && <span className="text-xs text-white/45">من إجمالي {total.toLocaleString()} ريال</span>}
+                    <span className="block text-sm text-white/70">{payType === "deposit" ? "المطلوب الآن (50%)" : "الإجمالي"}</span>
+                    {payType === "deposit" && <span className="text-xs text-white/45">من إجمالي {total.toLocaleString()} ريال</span>}
                   </div>
                   <span className="text-2xl font-extrabold text-gold-400">{amountDue.toLocaleString()} <span className="text-sm font-normal text-white/70">ريال</span></span>
                 </div>
