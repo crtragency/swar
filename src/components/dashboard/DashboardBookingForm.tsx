@@ -326,6 +326,8 @@ export default function DashboardBookingForm() {
         <span className="text-2xl font-extrabold text-amber-400">{amountDue.toLocaleString()} <span className="text-sm font-normal text-white/60">ريال</span></span>
       </div>
 
+      <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700">⚠️ المبلغ المدفوع (العربون أو كامل المبلغ) غير مسترد في حال الإلغاء</p>
+
       {error && <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
 
       <button onClick={submit} disabled={submitting} className="mt-4 w-full rounded-xl bg-slate-800 py-3.5 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">

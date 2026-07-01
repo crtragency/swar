@@ -247,7 +247,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                   <p className="font-bold text-navy-900">المبلغ المطلوب: {amountDue.toLocaleString()} ريال {payType === "deposit" && payMethod === "bank" ? `(من إجمالي ${total.toLocaleString()})` : ""}</p>
                 </div>
                 {payMethod === "bank" && <BankBox copied={copied} setCopied={setCopied} />}
-                <p className="mt-4 text-sm text-navy-900/55">سيتواصل معك فريقنا قريباً لتأكيد الحجز 🌊</p>
+                <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700">⚠️ المبلغ المدفوع (العربون أو كامل المبلغ) غير مسترد في حال الإلغاء</p>
+                <p className="mt-3 text-sm text-navy-900/55">سيتواصل معك فريقنا قريباً لتأكيد الحجز 🌊</p>
                 <button onClick={onClose} className="btn-ocean mt-6 w-full">تم</button>
               </div>
             ) : (
