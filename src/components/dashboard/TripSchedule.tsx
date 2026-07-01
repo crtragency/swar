@@ -33,8 +33,8 @@ function daysUntil(iso: string): number {
 }
 
 function formatDateAr(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString("ar-SA", {
-    weekday: "long", month: "long", day: "numeric",
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 }
 
