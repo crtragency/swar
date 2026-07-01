@@ -204,6 +204,24 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       if (payMethod === "bank" && BANK.payUrl) {
         window.open(BANK.payUrl, "_blank", "noopener");
       }
+      // online payment → create Moyasar payment and redirect
+      if (payMethod === "online") {
+        const payRes = await fetch("/api/payment/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: data.id,
+            amount: amountDue,
+            description: `حجز سوار البحرية — ${pkg.title}`,
+            name: name.trim(),
+          }),
+        });
+        const payData = await payRes.json();
+        if (payData.paymentUrl) {
+          window.location.href = payData.paymentUrl;
+          return;
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "حدث خطأ، حاول مرة أخرى");
     } finally {
@@ -356,11 +374,16 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 </div>
 
                 {/* payment method selector */}
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  {([["bank", "💳 تحويل بنكي", "حوّل المبلغ على الآيبان"], ["cash", "💵 كاش", "الدفع عند الوصول"]] as const).map(([val, t, sub]) => (
+                <div className="mt-5 grid grid-cols-3 gap-2">
+                  {([
+                    ["bank",   "💳", "تحويل بنكي",  "حوّل على الآيبان"],
+                    ["online", "🌐", "دفع إلكتروني", "بطاقة / مدى / STC"],
+                    ["cash",   "💵", "كاش",          "الدفع عند الوصول"],
+                  ] as const).map(([val, icon, t, sub]) => (
                     <button key={val} type="button" onClick={() => setPayMethod(val)} className={`rounded-2xl border-2 p-3 text-center transition-all ${payMethod === val ? "border-turquoise-500 bg-turquoise-500/5" : "border-navy-50 bg-navy-50/40"}`}>
-                      <div className="text-sm font-bold text-navy-900">{t}</div>
-                      <div className="mt-1 text-xs text-navy-900/55">{sub}</div>
+                      <div className="text-xl mb-0.5">{icon}</div>
+                      <div className="text-xs font-bold text-navy-900">{t}</div>
+                      <div className="mt-0.5 text-[10px] text-navy-900/55">{sub}</div>
                     </button>
                   ))}
                 </div>
@@ -383,6 +406,11 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                     ✅ سيتم الدفع نقداً عند الوصول
                   </div>
                 )}
+                {payMethod === "online" && (
+                  <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm text-blue-700 font-semibold">
+                    🌐 ستُحوَّل لصفحة الدفع الآمنة (بطاقة / مدى / STC Pay)
+                  </div>
+                )}
 
                 {/* total */}
                 <div className="mt-5 flex items-center justify-between rounded-2xl bg-navy-900 px-5 py-4 text-white">
@@ -399,7 +427,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 {error && <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
 
                 <button onClick={submit} disabled={submitting || !!conflictRange} className="btn-ocean mt-4 w-full disabled:opacity-60">
-                  {submitting ? "جاري الإرسال..." : conflictRange ? "🚫 الوقت المختار متعارض — اختر وقتاً آخر" : "تأكيد الحجز"}
+                  {submitting ? (payMethod === "online" ? "جاري الانتقال للدفع..." : "جاري الإرسال...") : conflictRange ? "🚫 الوقت المختار متعارض — اختر وقتاً آخر" : payMethod === "online" ? "🌐 تأكيد والانتقال للدفع" : "تأكيد الحجز"}
                 </button>
               </div>
             )}
