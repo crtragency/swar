@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Booking } from "@/lib/store";
+import TripSchedule, { fmt12h } from "@/components/dashboard/TripSchedule";
 
 function thisMonth() {
   const d = new Date();
@@ -372,7 +373,7 @@ export default function OwnerDashboard({
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"overview" | "bookings" | "new" | "expenses">("overview");
+  const [tab, setTab] = useState<"overview" | "bookings" | "schedule" | "new" | "expenses">("overview");
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState("");
@@ -464,6 +465,7 @@ export default function OwnerDashboard({
   const TABS = [
     { key: "overview", label: "نظرة عامة" },
     { key: "bookings", label: `الحجوزات (${bookings.length})` },
+    { key: "schedule", label: "📅 الجدول" },
     { key: "new", label: "🚤 حجز سريع" },
     { key: "expenses", label: "📊 المصاريف" },
   ] as const;
@@ -600,7 +602,7 @@ export default function OwnerDashboard({
                         <BInfo label="العميل" value={b.name} />
                         <BInfo label="الجوال" value={b.phone} ltr />
                         <BInfo label="التاريخ" value={b.date} ltr />
-                        <BInfo label="الانطلاق" value={b.departTime || "—"} ltr />
+                        <BInfo label="الانطلاق" value={fmt12h(b.departTime) || "—"} />
                         <BInfo label="الأشخاص" value={String(b.persons)} />
                         <BInfo label="الإجمالي" value={`${fmt(b.total)} ريال`} />
                         <BInfo label="المدفوع" value={`${fmt(b.paid)} ريال`} />
@@ -621,6 +623,16 @@ export default function OwnerDashboard({
                   ))}
                 </motion.div>
               )}
+            </motion.div>
+          )}
+
+          {tab === "schedule" && (
+            <motion.div key="schedule" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
+              <TripSchedule trips={bookings.map((b) => ({
+                id: b.id, date: b.date, departTime: b.departTime,
+                packageTitle: b.packageTitle, name: b.name, phone: b.phone,
+                persons: b.persons, status: b.status,
+              }))} />
             </motion.div>
           )}
 
