@@ -39,7 +39,7 @@ export default function DashboardBookingForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
+  const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos" | "cash">("bank");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -170,7 +170,7 @@ export default function DashboardBookingForm() {
           <p>📅 {date} · {timeLabel(departTime)}</p>
           <p>👥 {persons} أشخاص</p>
           <p className="font-bold">💰 الإجمالي: {total.toLocaleString()} ريال</p>
-          <p>💳 {payMethod === "online" ? "دفع إلكتروني عبر الموقع" : payMethod === "pos" ? "نقطة بيع (POS)" : "تحويل بنكي"}</p>
+          <p>💳 {payMethod === "online" ? "دفع إلكتروني عبر الموقع" : payMethod === "pos" ? "نقطة بيع (POS)" : payMethod === "cash" ? "نقدي" : "تحويل بنكي"}</p>
         </div>
         {payMethod === "bank" && (
         <div className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600">
@@ -305,6 +305,7 @@ export default function DashboardBookingForm() {
         <div className="grid grid-cols-3 gap-2">
           {([
             { val: "bank", icon: "💳", label: "تحويل بنكي" },
+            { val: "cash", icon: "💵", label: "نقدي" },
             { val: "online", icon: "🌐", label: "عبر الموقع" },
             { val: "pos", icon: "🖥️", label: "نقطة بيع" },
           ] as const).map((m) => (
