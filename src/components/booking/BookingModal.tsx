@@ -199,12 +199,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "تعذّر إتمام الحجز");
-      setDoneId(data.id);
-      // bank transfer → send the customer straight to the payment link
-      if (payMethod === "bank" && BANK.payUrl) {
-        window.open(BANK.payUrl, "_blank", "noopener");
-      }
-      // online payment → create Moyasar payment and redirect
+
+      // online payment → create Moyasar payment and redirect BEFORE showing success
       if (payMethod === "online") {
         const payRes = await fetch("/api/payment/create", {
           method: "POST",
@@ -219,8 +215,15 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
         const payData = await payRes.json();
         if (payData.paymentUrl) {
           window.location.href = payData.paymentUrl;
-          return;
+          return; // redirect → never reach setDoneId
         }
+        throw new Error(payData.error || "تعذّر إنشاء رابط الدفع — حاول مرة أخرى أو اختر تحويل بنكي");
+      }
+
+      // bank/cash → show success screen
+      setDoneId(data.id);
+      if (payMethod === "bank" && BANK.payUrl) {
+        window.open(BANK.payUrl, "_blank", "noopener");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "حدث خطأ، حاول مرة أخرى");

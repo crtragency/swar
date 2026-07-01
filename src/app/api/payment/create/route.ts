@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { updateBooking } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +38,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: data.message || "Moyasar error" }, { status: 500 });
   }
 
-  // Save Moyasar payment ID on the booking
-  await updateBooking(bookingId, { notes: `moyasar_id:${data.id}` } as never);
+  const paymentUrl = data.source?.transaction_url;
+  if (!paymentUrl) {
+    return NextResponse.json({ error: "No payment URL from Moyasar" }, { status: 500 });
+  }
 
-  return NextResponse.json({ paymentUrl: data.source?.transaction_url, paymentId: data.id });
+  return NextResponse.json({ paymentUrl, paymentId: data.id });
 }
