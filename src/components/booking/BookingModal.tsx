@@ -55,7 +55,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const [promoCode, setPromoCode] = useState("");
   const [promoPct, setPromoPct] = useState(0);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [payMethod, setPayMethod] = useState<"bank" | "cash">("bank");
+  const [payMethod, setPayMethod] = useState<"bank" | "cash" | "online">("bank");
   const [payType, setPayType] = useState<"full" | "deposit">("full");
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
