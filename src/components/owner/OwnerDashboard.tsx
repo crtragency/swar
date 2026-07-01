@@ -27,14 +27,15 @@ const fadeUp = {
   show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] } }),
 };
 
+type DashUser = "owner" | "captain";
 type ExpenseItem = { id: string; createdAt: string; date: string; category: string; description: string; amount: number };
-type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; notes: string; payMethod: Booking["payMethod"] };
+type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; paid: number; notes: string; payMethod: Booking["payMethod"] };
 
 // ─── Quick Booking Form ────────────────────────────────────────────────────
 const TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 function timeLabel(t: string) { const h = parseInt(t, 10); const am = h < 12; return `${h % 12 === 0 ? 12 : h % 12}:00 ${am ? "ص" : "م"}`; }
 
-function QuickBookingForm({ password, onDone }: { password: string; onDone: () => void }) {
+function QuickBookingForm({ password, onDone, user = "owner" }: { password: string; onDone: () => void; user?: DashUser }) {
   const [pkgTitle, setPkgTitle] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -42,6 +43,7 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("13:00");
   const [price, setPrice] = useState("");
+  const [paid, setPaid] = useState("");
   const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
   const [persons, setPersons] = useState(2);
   const [notes, setNotes] = useState("");
@@ -61,7 +63,7 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
     if (toH(endTime) <= toH(startTime)) return setError("وقت الانتهاء يجب أن يكون بعد وقت البدء");
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -70,7 +72,8 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
           durationHours,
           name: name.trim(), phone: phone.trim(), notes: notes.trim(),
           payMethod, payType: "full", deposit: 0,
-          total: Number(price), amountDue: Number(price), promo: "",
+          total: Number(price), amountDue: Number(price),
+          paid: Number(paid) || 0, promo: "",
           status,
         }),
       });
@@ -131,9 +134,21 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
         </p>
       )}
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <label className="ow-block"><span className="ow-label">السعر (ريال)</span>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <label className="ow-block"><span className="ow-label">السعر الإجمالي (ريال)</span>
           <input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="ow-in" />
+        </label>
+        <label className="ow-block"><span className="ow-label">المبلغ المدفوع (ريال)</span>
+          <input type="number" min={0} value={paid} onChange={(e) => setPaid(e.target.value)} placeholder="0" className="ow-in" />
+        </label>
+        <label className="ow-block"><span className="ow-label">المبلغ المتبقي (ريال)</span>
+          <input
+            type="text"
+            readOnly
+            tabIndex={-1}
+            value={`${Math.max(0, (Number(price) || 0) - (Number(paid) || 0)).toLocaleString("ar-SA")} ريال`}
+            className={`ow-in cursor-default font-extrabold ${Math.max(0, (Number(price) || 0) - (Number(paid) || 0)) > 0 ? "ow-remaining-due" : "ow-remaining-paid"}`}
+          />
         </label>
         <label className="ow-block"><span className="ow-label">عدد الأشخاص</span>
           <input type="number" min={1} max={20} value={persons} onChange={(e) => setPersons(+e.target.value)} className="ow-in" />
@@ -170,16 +185,17 @@ function QuickBookingForm({ password, onDone }: { password: string; onDone: () =
         {submitting ? "جاري التسجيل..." : "تسجيل الرحلة وحجب الوقت"}
       </button>
 
-      <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none;transition:border-color .15s}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}`}</style>
+      <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none;transition:border-color .15s}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}.ow-remaining-due{background:#fffbeb;border-color:#fde68a;color:#b45309}.ow-remaining-paid{background:#ecfdf5;border-color:#a7f3d0;color:#047857}`}</style>
     </motion.div>
   );
 }
 
 // ─── Expenses Panel ────────────────────────────────────────────────────────
-function ExpensesPanel({ password, bookings }: { password: string; bookings: Booking[] }) {
+function ExpensesPanel({ password, bookings, user = "owner" }: { password: string; bookings: Booking[]; user?: DashUser }) {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(thisMonth());
+  const [monthOpen, setMonthOpen] = useState(false);
   const [form, setForm] = useState({ date: today(), category: "أخرى", description: "", amount: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -187,7 +203,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
   async function loadExpenses() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}`, { cache: "no-store" });
+      const res = await fetch(`/api/expenses?user=${user}&password=${encodeURIComponent(password)}`, { cache: "no-store" });
       const data = await res.json();
       setExpenses(data.expenses ?? []);
     } catch { /* silent */ } finally { setLoading(false); }
@@ -201,7 +217,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
     if (!form.date) return setError("يرجى إدخال التاريخ");
     setSaving(true);
     try {
-      const res = await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}`, {
+      const res = await fetch(`/api/expenses?user=${user}&password=${encodeURIComponent(password)}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, amount: Number(form.amount) }),
       });
@@ -214,7 +230,7 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
 
   async function delExp(id: string) {
     if (!confirm("حذف هذا المصروف؟")) return;
-    await fetch(`/api/expenses?user=owner&password=${encodeURIComponent(password)}&id=${id}`, { method: "DELETE" });
+    await fetch(`/api/expenses?user=${user}&password=${encodeURIComponent(password)}&id=${id}`, { method: "DELETE" });
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   }
 
@@ -224,21 +240,48 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
   const profit = totalRev - totalExp;
 
   const months: string[] = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 12; i++) {
     const d = new Date(); d.setMonth(d.getMonth() - i);
     months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
 
   return (
     <motion.div key="expenses" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
-      {/* Month selector */}
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {months.map((m) => (
-          <button key={m} onClick={() => setMonth(m)}
-            className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-bold transition-colors ${month === m ? "bg-slate-800 text-white" : "bg-white text-slate-600 hover:bg-slate-100 shadow-sm"}`}>
-            {new Date(m + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+      {/* Month selector (dropdown) */}
+      <div className="mb-4" dir="rtl">
+        <div className="relative inline-block">
+          <button
+            type="button"
+            onClick={() => setMonthOpen((o) => !o)}
+            className="flex min-w-[180px] items-center justify-between gap-3 rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
+          >
+            <span className="whitespace-nowrap">
+              {new Date(month + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+            </span>
+            <svg
+              className={`h-4 w-4 shrink-0 transition-transform ${monthOpen ? "rotate-180" : ""}`}
+              viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
+            >
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+            </svg>
           </button>
-        ))}
+          {monthOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMonthOpen(false)} />
+              <div className="absolute right-0 z-20 mt-2 max-h-64 w-full min-w-[180px] overflow-y-auto rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+                {months.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setMonth(m); setMonthOpen(false); }}
+                    className={`block w-full whitespace-nowrap px-4 py-2 text-right text-sm font-bold transition-colors ${month === m ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                  >
+                    {new Date(m + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* P&L Summary */}
@@ -316,7 +359,15 @@ function ExpensesPanel({ password, bookings }: { password: string; bookings: Boo
 }
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
-export default function OwnerDashboard() {
+export default function OwnerDashboard({
+  user = "owner",
+  title = "لوحة المالك",
+  subtitle = "سوار البحرية — الإيرادات والتقارير",
+}: {
+  user?: DashUser;
+  title?: string;
+  subtitle?: string;
+} = {}) {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -330,7 +381,7 @@ export default function OwnerDashboard() {
   async function load(pass = password) {
     setLoading(true); setError("");
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(pass)}`, { cache: "no-store" });
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(pass)}`, { cache: "no-store" });
       if (res.status === 401) throw new Error("كلمة المرور غير صحيحة");
       if (!res.ok) throw new Error("تعذّر تحميل البيانات");
       const data = await res.json();
@@ -364,7 +415,7 @@ export default function OwnerDashboard() {
     if (!editing) return;
     setSaving(true); setEditError("");
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}`, {
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editing),
       });
@@ -378,7 +429,7 @@ export default function OwnerDashboard() {
   async function deleteB(id: string) {
     if (!confirm("هل أنت متأكد من الحذف النهائي؟")) return;
     try {
-      const res = await fetch(`/api/bookings?user=owner&password=${encodeURIComponent(password)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!res.ok) throw new Error("فشل الحذف");
       setBookings((prev) => prev.filter((b) => b.id !== id));
     } catch (e) { alert(e instanceof Error ? e.message : "خطأ في الحذف"); }
@@ -398,8 +449,8 @@ export default function OwnerDashboard() {
         <motion.form onSubmit={(e) => { e.preventDefault(); load(); }} initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="relative w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_32px_80px_rgba(0,0,0,.6),0_0_0_1px_rgba(13,148,136,0.15)] backdrop-blur">
           <div className="mb-5 flex justify-center"><img src="/icon.webp" alt="سوار البحرية" className="h-16 w-auto object-contain" /></div>
-          <h1 className="text-center text-2xl font-extrabold text-[#1a0a2e]">لوحة المالك</h1>
-          <p className="mt-1 text-center text-sm text-[#1a0a2e]/50">سوار البحرية — الإيرادات والحجوزات</p>
+          <h1 className="text-center text-2xl font-extrabold text-[#1a0a2e]">{title}</h1>
+          <p className="mt-1 text-center text-sm text-[#1a0a2e]/50">{subtitle}</p>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة المرور" className="own-in mt-6" autoComplete="current-password" />
           {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-sm font-semibold text-red-600">{error}</motion.p>}
           <button type="submit" disabled={loading} className="mt-5 w-full rounded-xl bg-[#1a0a2e] py-3 font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
@@ -427,8 +478,8 @@ export default function OwnerDashboard() {
           <div className="flex items-center gap-3">
             <img src="/icon.webp" alt="سوار البحرية" className="h-10 w-auto object-contain" />
             <div>
-              <h1 className="text-base font-extrabold leading-none">لوحة المالك</h1>
-              <p className="mt-0.5 text-xs text-white/40">سوار البحرية — الإيرادات والتقارير</p>
+              <h1 className="text-base font-extrabold leading-none">{title}</h1>
+              <p className="mt-0.5 text-xs text-white/40">{subtitle}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -554,15 +605,19 @@ export default function OwnerDashboard() {
                         <BInfo label="الانطلاق" value={fmt12h(b.departTime) || "—"} />
                         <BInfo label="الأشخاص" value={String(b.persons)} />
                         <BInfo label="الإجمالي" value={`${fmt(b.total)} ريال`} />
+                        <BInfo label="المدفوع" value={`${fmt(b.paid)} ريال`} />
+                        <BInfo label="المتبقي" value={`${fmt(Math.max(0, b.total - b.paid))} ريال`} />
                         <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : "تحويل بنكي"} />
                       </div>
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
                       <div className="mt-3 flex gap-2">
-                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, notes: b.notes, payMethod: b.payMethod })}
+                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, paid: b.paid, notes: b.notes, payMethod: b.payMethod })}
                           className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">✏️ تعديل</button>
-                        <button onClick={() => deleteB(b.id)}
-                          className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100">🗑️ حذف</button>
+                        {user !== "captain" && (
+                          <button onClick={() => deleteB(b.id)}
+                            className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-100">🗑️ حذف</button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -583,12 +638,12 @@ export default function OwnerDashboard() {
 
           {tab === "new" && (
             <motion.div key="new" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
-              <QuickBookingForm password={password} onDone={() => { load(); setTab("bookings"); }} />
+              <QuickBookingForm password={password} user={user} onDone={() => { load(); setTab("bookings"); }} />
             </motion.div>
           )}
 
           {tab === "expenses" && (
-            <ExpensesPanel key="expenses" password={password} bookings={bookings} />
+            <ExpensesPanel key="expenses" password={password} bookings={bookings} user={user} />
           )}
 
         </AnimatePresence>
@@ -610,7 +665,8 @@ export default function OwnerDashboard() {
                   <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as Booking["status"] })} className="ow-in">
                     <option value="pending">قيد الانتظار</option>
                     <option value="confirmed">مؤكد</option>
-                    <option value="cancelled">ملغي</option>
+                    {/* الإلغاء متاح للمالك فقط */}
+                    {(user !== "captain" || editing.status === "cancelled") && <option value="cancelled">ملغي</option>}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -620,7 +676,13 @@ export default function OwnerDashboard() {
                   <div><label className="ow-label">وقت الانطلاق</label><input value={editing.departTime} onChange={(e) => setEditing({ ...editing, departTime: e.target.value })} className="ow-in" dir="ltr" placeholder="09:00" /></div>
                   <div><label className="ow-label">عدد الأشخاص</label><input type="number" min={1} max={20} value={editing.persons} onChange={(e) => setEditing({ ...editing, persons: +e.target.value })} className="ow-in" /></div>
                   <div><label className="ow-label">الإجمالي (ريال)</label><input type="number" value={editing.total} onChange={(e) => setEditing({ ...editing, total: +e.target.value })} className="ow-in" /></div>
+                  <div><label className="ow-label">المبلغ المدفوع (ريال)</label><input type="number" min={0} value={editing.paid} onChange={(e) => setEditing({ ...editing, paid: +e.target.value })} className="ow-in" /></div>
                 </div>
+                <p className="text-sm font-semibold text-slate-500">
+                  💰 المتبقي: <span className={`font-extrabold ${Math.max(0, editing.total - editing.paid) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+                    {fmt(Math.max(0, editing.total - editing.paid))} ريال
+                  </span>
+                </p>
                 <div>
                   <label className="ow-label">طريقة الدفع</label>
                   <select value={editing.payMethod} onChange={(e) => setEditing({ ...editing, payMethod: e.target.value as Booking["payMethod"] })} className="ow-in">

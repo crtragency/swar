@@ -34,6 +34,7 @@ export type SiteSettings = {
   reviews: ReviewItem[];
   heroImages: string[]; // image URLs; empty = use the built-in photos
   galleryImages: string[]; // image URLs; empty = use the built-in photos
+  partners: string[]; // partner logo URLs; empty = hide the section
 };
 
 const DEFAULT_HERO: HeroContent = {
@@ -74,6 +75,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   reviews: DEFAULT_REVIEWS,
   heroImages: [],
   galleryImages: [],
+  partners: [
+    "/partners/partner-1.jpg",
+    "/partners/partner-2.jpg",
+    "/partners/partner-3.png",
+    "/partners/partner-4.png",
+  ],
 };
 
 export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSettings {
@@ -81,12 +88,15 @@ export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSetti
   return {
     ...DEFAULT_SETTINGS,
     ...partial,
+    // إيميل التواصل ثابت من الكود ولا يُتجاوز بأي قيمة قديمة محفوظة
+    email: DEFAULT_SETTINGS.email,
     socials: partial.socials && partial.socials.length ? partial.socials : DEFAULT_SETTINGS.socials,
     hero: { ...DEFAULT_HERO, ...(partial.hero ?? {}) },
     stats: partial.stats && partial.stats.length ? partial.stats : DEFAULT_SETTINGS.stats,
     reviews: partial.reviews && partial.reviews.length ? partial.reviews : DEFAULT_SETTINGS.reviews,
     heroImages: partial.heroImages ?? [],
     galleryImages: partial.galleryImages ?? [],
+    partners: partial.partners ?? DEFAULT_SETTINGS.partners,
   };
 }
 

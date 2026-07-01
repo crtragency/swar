@@ -668,6 +668,13 @@ function SettingsTab({ headers, pw }: { headers: () => Record<string, string>; p
           <h3 className="text-lg font-extrabold">🏞️ صور المعرض</h3>
           <ImageListEditor images={s.galleryImages} onChange={(v) => set({ galleryImages: v })} pw={pw} />
         </div>
+
+        {/* partners logos */}
+        <div className="lg:col-span-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+          <h3 className="text-lg font-extrabold">🤝 شركاء النجاح</h3>
+          <p className="mt-1 text-sm text-white/50">شعارات الشركاء التي تظهر في قسم «شركاء النجاح» بالصفحة الرئيسية. اترك القائمة فارغة لإخفاء القسم.</p>
+          <ImageListEditor images={s.partners} onChange={(v) => set({ partners: v })} pw={pw} />
+        </div>
       </div>
       <style>{`.dv-in{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 12px;color:#fff;outline:none}.dv-in:focus{border-color:#21c0c0}`}</style>
     </div>

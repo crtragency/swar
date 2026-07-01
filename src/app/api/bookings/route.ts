@@ -201,6 +201,7 @@ export async function POST(req: Request) {
     payType: body.payType === "deposit" ? "deposit" : "full",
     deposit: Number(body.deposit) || 0,
     amountDue: Number(body.amountDue) || Number(body.total) || 0,
+    paid: Number(body.paid) || 0,
     promo: String(body.promo || ""),
     total: Number(body.total) || 0,
     status: "pending",
@@ -223,22 +224,10 @@ export async function GET(req: Request) {
   if (!role) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
     const all = await getBookings();
-    const today = new Date().toISOString().slice(0, 10);
 
-    if (role === "captain") {
-      // Captain sees only upcoming confirmed/pending trips (today + future), limited fields
-      const upcoming = all
-        .filter((b) => b.status !== "cancelled" && b.date >= today)
-        .sort((a, b) => a.date.localeCompare(b.date) || a.departTime.localeCompare(b.departTime))
-        .map(({ id, packageTitle, option, persons, addons, date, departTime, name, phone, notes, status }) => ({
-          id, packageTitle, option, persons, addons, date, departTime, name, phone, notes, status,
-        }));
-      return NextResponse.json({ bookings: upcoming, role: "captain" });
-    }
-
-    if (role === "owner") {
-      // Owner sees everything for revenue analysis
-      return NextResponse.json({ bookings: all, role: "owner" });
+    // Captain has the same full access as the owner: all bookings for revenue analysis
+    if (role === "captain" || role === "owner") {
+      return NextResponse.json({ bookings: all, role });
     }
 
     // admin
@@ -250,7 +239,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const role = getRole(req);
-  if (role !== "admin" && role !== "owner") {
+  if (role !== "admin" && role !== "owner" && role !== "captain") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   let body: Record<string, unknown>;
@@ -267,6 +256,10 @@ export async function PATCH(req: Request) {
     if (!["pending", "confirmed", "cancelled"].includes(String(body.status))) {
       return NextResponse.json({ error: "bad status" }, { status: 422 });
     }
+    // إلغاء الحجز متاح للمالك والأدمن فقط — الكابتن لا يستطيع تحويل الحالة إلى "ملغي"
+    if (role === "captain" && body.status === "cancelled") {
+      return NextResponse.json({ error: "إلغاء الحجز متاح للمالك فقط" }, { status: 403 });
+    }
     patch.status = body.status as Booking["status"];
   }
   if (body.name !== undefined) patch.name = String(body.name);
@@ -278,6 +271,7 @@ export async function PATCH(req: Request) {
   if (body.payMethod !== undefined) patch.payMethod = (["bank","online","pos"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"];
   if (body.payType !== undefined) patch.payType = body.payType === "deposit" ? "deposit" : "full";
   if (body.total !== undefined) patch.total = Number(body.total) || 0;
+  if (body.paid !== undefined) patch.paid = Number(body.paid) || 0;
   if (body.notes !== undefined) patch.notes = String(body.notes);
 
   if (Object.keys(patch).length === 0) {
@@ -293,6 +287,7 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   const role = getRole(req);
+  // الحذف/الإلغاء متاح للمالك والأدمن فقط — الكابتن لا يملك هذه الصلاحية
   if (role !== "admin" && role !== "owner") {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

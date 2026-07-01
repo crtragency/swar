@@ -20,6 +20,7 @@ export type Booking = {
   payType: "full" | "deposit";
   deposit: number;
   amountDue: number;
+  paid: number;
   promo: string;
   total: number;
   status: "pending" | "confirmed" | "cancelled";
@@ -56,6 +57,7 @@ function toRow(b: Booking) {
     pay_type: b.payType,
     deposit: b.deposit,
     amount_due: b.amountDue,
+    paid: b.paid,
     promo: b.promo,
     total: b.total,
     status: b.status,
@@ -79,6 +81,7 @@ function fromRow(r: Record<string, unknown>): Booking {
     payType: (r.pay_type as Booking["payType"]) ?? "full",
     deposit: Number(r.deposit ?? 0),
     amountDue: Number(r.amount_due ?? 0),
+    paid: Number(r.paid ?? 0),
     promo: String(r.promo ?? ""),
     total: Number(r.total ?? 0),
     status: (r.status as Booking["status"]) ?? "pending",
@@ -203,6 +206,7 @@ function toRowPatch(p: Partial<Booking>): Record<string, unknown> {
   if (p.payType !== undefined) m.pay_type = p.payType;
   if (p.deposit !== undefined) m.deposit = p.deposit;
   if (p.amountDue !== undefined) m.amount_due = p.amountDue;
+  if (p.paid !== undefined) m.paid = p.paid;
   if (p.promo !== undefined) m.promo = p.promo;
   if (p.total !== undefined) m.total = p.total;
   if (p.status !== undefined) m.status = p.status;
