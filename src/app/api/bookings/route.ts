@@ -197,7 +197,7 @@ export async function POST(req: Request) {
     name,
     phone,
     notes: String(body.notes || ""),
-    payMethod: (["bank","online","pos"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"],
+    payMethod: (["bank","online","pos","cash"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"],
     payType: body.payType === "deposit" ? "deposit" : "full",
     deposit: Number(body.deposit) || 0,
     amountDue: Number(body.amountDue) || Number(body.total) || 0,
@@ -268,7 +268,7 @@ export async function PATCH(req: Request) {
   if (body.departTime !== undefined) patch.departTime = String(body.departTime);
   if (body.persons !== undefined) patch.persons = Number(body.persons) || 1;
   if (body.option !== undefined) patch.option = String(body.option);
-  if (body.payMethod !== undefined) patch.payMethod = (["bank","online","pos"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"];
+  if (body.payMethod !== undefined) patch.payMethod = (["bank","online","pos","cash"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"];
   if (body.payType !== undefined) patch.payType = body.payType === "deposit" ? "deposit" : "full";
   if (body.total !== undefined) patch.total = Number(body.total) || 0;
   if (body.paid !== undefined) patch.paid = Number(body.paid) || 0;

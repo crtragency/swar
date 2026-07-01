@@ -44,7 +44,7 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
   const [endTime, setEndTime] = useState("13:00");
   const [price, setPrice] = useState("");
   const [paid, setPaid] = useState("");
-  const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos">("bank");
+  const [payMethod, setPayMethod] = useState<"bank" | "online" | "pos" | "cash">("bank");
   const [persons, setPersons] = useState(2);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<Booking["status"]>("confirmed");
@@ -157,8 +157,9 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
 
       <div className="mt-3 grid grid-cols-2 gap-3">
         <label className="ow-block"><span className="ow-label">طريقة الدفع</span>
-          <select value={payMethod} onChange={(e) => setPayMethod(e.target.value as "bank" | "online" | "pos")} className="ow-in">
+          <select value={payMethod} onChange={(e) => setPayMethod(e.target.value as "bank" | "online" | "pos" | "cash")} className="ow-in">
             <option value="bank">💳 تحويل بنكي</option>
+            <option value="cash">💵 نقدي</option>
             <option value="online">🌐 عبر الموقع</option>
             <option value="pos">🖥️ نقطة بيع</option>
           </select>
@@ -402,13 +403,14 @@ export default function OwnerDashboard({
     const lastMonthRevenue = confirmed.filter((b) => b.date.startsWith(lm)).reduce((s, b) => s + b.total, 0);
     const todayRevenue = confirmed.filter((b) => b.date === td).reduce((s, b) => s + b.total, 0);
     const bank = confirmed.filter((b) => b.payMethod === "bank").reduce((s, b) => s + b.total, 0);
+    const cash = confirmed.filter((b) => b.payMethod === "cash").reduce((s, b) => s + b.total, 0);
     const online = confirmed.filter((b) => b.payMethod === "online").reduce((s, b) => s + b.total, 0);
     const pos = confirmed.filter((b) => b.payMethod === "pos").reduce((s, b) => s + b.total, 0);
     const pendingRevenue = pending.reduce((s, b) => s + b.total, 0);
     const byPkg: Record<string, number> = {};
     confirmed.forEach((b) => { byPkg[b.packageTitle] = (byPkg[b.packageTitle] ?? 0) + b.total; });
     const pkgList = Object.entries(byPkg).sort((a, b) => b[1] - a[1]);
-    return { total: bookings.length, confirmed: confirmed.length, pending: pending.length, cancelled: cancelled.length, totalRevenue, thisMonthRevenue, lastMonthRevenue, todayRevenue, bank, online, pos, pendingRevenue, pkgList };
+    return { total: bookings.length, confirmed: confirmed.length, pending: pending.length, cancelled: cancelled.length, totalRevenue, thisMonthRevenue, lastMonthRevenue, todayRevenue, bank, cash, online, pos, pendingRevenue, pkgList };
   }, [bookings]);
 
   async function saveEdit() {
@@ -540,9 +542,10 @@ export default function OwnerDashboard({
               </motion.div>
 
               <Label>طرق الدفع (مؤكدة)</Label>
-              <motion.div className="mb-8 grid grid-cols-3 gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
+              <motion.div className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-4" initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
                 {[
                   { icon: "💳", label: "تحويل بنكي", value: stats.bank },
+                  { icon: "💵", label: "نقدي", value: stats.cash },
                   { icon: "🌐", label: "دفع عبر الموقع", value: stats.online },
                   { icon: "🖥️", label: "نقطة بيع (POS)", value: stats.pos },
                 ].map((p, i) => (
@@ -607,7 +610,7 @@ export default function OwnerDashboard({
                         <BInfo label="الإجمالي" value={`${fmt(b.total)} ريال`} />
                         <BInfo label="المدفوع" value={`${fmt(b.paid)} ريال`} />
                         <BInfo label="المتبقي" value={`${fmt(Math.max(0, b.total - b.paid))} ريال`} />
-                        <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : "تحويل بنكي"} />
+                        <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : b.payMethod === "cash" ? "نقدي" : "تحويل بنكي"} />
                       </div>
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
@@ -687,6 +690,7 @@ export default function OwnerDashboard({
                   <label className="ow-label">طريقة الدفع</label>
                   <select value={editing.payMethod} onChange={(e) => setEditing({ ...editing, payMethod: e.target.value as Booking["payMethod"] })} className="ow-in">
                     <option value="bank">تحويل بنكي</option>
+                    <option value="cash">نقدي</option>
                     <option value="online">دفع عبر الموقع</option>
                     <option value="pos">نقطة بيع (POS)</option>
                   </select>

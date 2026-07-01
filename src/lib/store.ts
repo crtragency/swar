@@ -16,7 +16,7 @@ export type Booking = {
   name: string;
   phone: string;
   notes: string;
-  payMethod: "bank" | "online" | "pos";
+  payMethod: "bank" | "online" | "pos" | "cash";
   payType: "full" | "deposit";
   deposit: number;
   amountDue: number;
@@ -77,7 +77,7 @@ function fromRow(r: Record<string, unknown>): Booking {
     name: String(r.name ?? ""),
     phone: String(r.phone ?? ""),
     notes: String(r.notes ?? ""),
-    payMethod: (["bank","online","pos"].includes(r.pay_method as string) ? r.pay_method : "bank") as Booking["payMethod"],
+    payMethod: (["bank","online","pos","cash"].includes(r.pay_method as string) ? r.pay_method : "bank") as Booking["payMethod"],
     payType: (r.pay_type as Booking["payType"]) ?? "full",
     deposit: Number(r.deposit ?? 0),
     amountDue: Number(r.amount_due ?? 0),
