@@ -131,6 +131,7 @@ export const PACKAGES: Pkg[] = [
     durationHours: 1,
     yacht: YACHT_FEATURES,
     rows: [
+      { label: "🕧 نصف ساعة — حتى 5 أشخاص", oldPrice: 265, price: 199, durationHours: 0.5 },
       { label: "🕐 ساعة كاملة — حتى 5 أشخاص", oldPrice: 399, price: 299, durationHours: 1 },
       { label: "🕑 ساعتان — حتى 5 أشخاص", oldPrice: 799, price: 599, durationHours: 2 },
     ],
