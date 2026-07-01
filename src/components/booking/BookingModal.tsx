@@ -376,11 +376,10 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 </div>
 
                 {/* payment method selector */}
-                <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="mt-5 grid grid-cols-2 gap-3">
                   {([
                     ["bank",   "💳", "تحويل بنكي",  "حوّل على الآيبان"],
                     ["online", "🌐", "دفع إلكتروني", "بطاقة / مدى / STC"],
-                    ["cash",   "💵", "كاش",          "الدفع عند الوصول"],
                   ] as const).map(([val, icon, t, sub]) => (
                     <button key={val} type="button" onClick={() => setPayMethod(val)} className={`rounded-2xl border-2 p-3 text-center transition-all ${payMethod === val ? "border-turquoise-500 bg-turquoise-500/5" : "border-navy-50 bg-navy-50/40"}`}>
                       <div className="text-xl mb-0.5">{icon}</div>
@@ -403,11 +402,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 )}
 
                 {payMethod === "bank" && <BankBox copied={copied} setCopied={setCopied} />}
-                {payMethod === "cash" && (
-                  <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-700 font-semibold">
-                    ✅ سيتم الدفع نقداً عند الوصول
-                  </div>
-                )}
+
                 {payMethod === "online" && (
                   <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm text-blue-700 font-semibold">
                     🌐 ستُحوَّل لصفحة الدفع الآمنة (بطاقة / مدى / STC Pay)
