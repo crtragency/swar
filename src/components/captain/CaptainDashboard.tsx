@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PACKAGES, DISCOUNT } from "@/lib/packages";
 import DashboardBookingForm from "@/components/dashboard/DashboardBookingForm";
+import TripSchedule, { fmt12h } from "@/components/dashboard/TripSchedule";
 
 type Trip = {
   id: string;
@@ -52,7 +53,7 @@ export default function CaptainDashboard() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"trips" | "prices" | "new">("trips");
+  const [tab, setTab] = useState<"trips" | "schedule" | "prices" | "new">("trips");
 
   async function load(pass = password) {
     setLoading(true);
@@ -167,11 +168,11 @@ export default function CaptainDashboard() {
         </div>
         {/* tabs */}
         <div className="mx-auto flex max-w-4xl gap-1 px-5 pb-3">
-          {(["trips", "prices", "new"] as const).map((t) => (
+          {(["trips", "schedule", "prices", "new"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`relative rounded-t-lg px-5 py-1.5 text-sm font-bold transition-colors ${tab === t ? "text-[#050e1f]" : "text-white/50 hover:text-white"}`}>
               {tab === t && <motion.span layoutId="cap-tab" className="absolute inset-0 rounded-t-lg bg-white" style={{ zIndex: -1 }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
-              {t === "trips" ? "⚓ الرحلات" : t === "prices" ? "💰 الأسعار" : "➕ حجز جديد"}
+              {t === "trips" ? "⚓ الرحلات" : t === "schedule" ? "📅 الجدول" : t === "prices" ? "💰 الأسعار" : "➕ حجز جديد"}
             </button>
           ))}
         </div>
@@ -197,6 +198,16 @@ export default function CaptainDashboard() {
               <Section title="🌅 رحلات اليوم" trips={todayTrips} emptyMsg="لا توجد رحلات اليوم" highlight startIndex={3} />
               <Section title="🌤️ رحلات الغد" trips={tomorrowTrips} emptyMsg="لا توجد رحلات الغد" startIndex={10} />
               <Section title="📅 رحلات لاحقة" trips={laterTrips} emptyMsg="لا توجد رحلات لاحقة" grouped startIndex={17} />
+            </motion.div>
+          )}
+
+          {tab === "schedule" && (
+            <motion.div key="schedule" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+              <TripSchedule trips={trips.map((t) => ({
+                id: t.id, date: t.date, departTime: t.departTime,
+                packageTitle: t.packageTitle, name: t.name, phone: t.phone,
+                persons: t.persons, status: t.status,
+              }))} />
             </motion.div>
           )}
 
@@ -380,7 +391,7 @@ function TripCard({ trip: t, index }: { trip: Trip; index: number }) {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <InfoCell icon="🕐" label="وقت الانطلاق" value={t.departTime || "—"} />
+        <InfoCell icon="🕐" label="وقت الانطلاق" value={fmt12h(t.departTime) || "—"} />
         <InfoCell icon="👥" label="عدد الأشخاص" value={String(t.persons)} />
         <InfoCell icon="👤" label="اسم العميل" value={t.name} />
         <InfoCell icon="📞" label="الجوال" value={t.phone} ltr />
