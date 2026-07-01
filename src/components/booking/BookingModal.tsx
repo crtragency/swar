@@ -200,15 +200,23 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "تعذّر إتمام الحجز");
 
-      // online payment → redirect to our checkout page (loads moyasar.js form)
+      // online payment → create Moyasar invoice and redirect to hosted payment page
       if (payMethod === "online") {
-        const qs = new URLSearchParams({
-          bookingId: data.id,
-          amount: String(amountDue),
-          title: pkg.title,
+        const payRes = await fetch("/api/payment/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: data.id,
+            amount: amountDue,
+            description: `حجز سوار البحرية — ${pkg.title}`,
+          }),
         });
-        window.location.href = `/payment/checkout?${qs}`;
-        return;
+        const payData = await payRes.json();
+        if (payData.paymentUrl) {
+          window.location.href = payData.paymentUrl;
+          return;
+        }
+        throw new Error(payData.error || "تعذّر إنشاء رابط الدفع");
       }
 
       // bank/cash → show success screen
