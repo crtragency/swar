@@ -55,7 +55,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const [promoCode, setPromoCode] = useState("");
   const [promoPct, setPromoPct] = useState(0);
   const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const payMethod = "bank" as const;
+  const [payMethod, setPayMethod] = useState<"bank" | "cash">("bank");
   const [payType, setPayType] = useState<"full" | "deposit">("full");
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -70,7 +70,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       setQty({}); setToggles({}); setWeekend(false); setDate("");
       setDepartTime(pkg.id === "dolphin" ? DOLPHIN_TIME : "09:00");
       setName(""); setPhone(""); setNotes(""); setPromoCode(""); setPromoPct(0); setPromoMsg(null);
-      setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
+      setPayMethod("bank"); setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
       fetch("/api/availability").then((r) => r.json()).then((d) => setAvailRanges(d.ranges ?? {})).catch(() => {});
     }
   }, [pkg]);
@@ -243,7 +243,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 <div className="mt-5 rounded-2xl bg-navy-50/70 p-5 text-start text-sm leading-loose text-navy-900/75">
                   <p>👥 عدد الأشخاص: {persons}</p>
                   <p>⏱️ الباقة: {selectedOption}</p>
-                  <p>💳 طريقة الدفع: تحويل بنكي{payType === "deposit" ? " — دفعة مقدمة 50%" : ""}</p>
+                  <p>💳 طريقة الدفع: {payMethod === "cash" ? "كاش عند الوصول" : `تحويل بنكي${payType === "deposit" ? " — دفعة مقدمة 50%" : ""}`}</p>
                   <p className="font-bold text-navy-900">المبلغ المطلوب: {amountDue.toLocaleString()} ريال {payType === "deposit" && payMethod === "bank" ? `(من إجمالي ${total.toLocaleString()})` : ""}</p>
                 </div>
                 {payMethod === "bank" && <BankBox copied={copied} setCopied={setCopied} />}
@@ -354,10 +354,14 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                   {promoDiscount > 0 && <Line label={`كود خصم (${promoPct}%)`} value={`− ${promoDiscount.toLocaleString()} ريال`} green />}
                 </div>
 
-                {/* payment method — bank transfer only */}
-                <div className="mt-5 rounded-2xl border-2 border-turquoise-500 bg-turquoise-500/5 p-4 text-center">
-                  <div className="text-sm font-bold text-navy-900">💳 تحويل بنكي</div>
-                  <div className="mt-1 text-xs text-navy-900/55">حوّل المبلغ على الآيبان</div>
+                {/* payment method selector */}
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  {([["bank", "💳 تحويل بنكي", "حوّل المبلغ على الآيبان"], ["cash", "💵 كاش", "الدفع عند الوصول"]] as const).map(([val, t, sub]) => (
+                    <button key={val} type="button" onClick={() => setPayMethod(val)} className={`rounded-2xl border-2 p-3 text-center transition-all ${payMethod === val ? "border-turquoise-500 bg-turquoise-500/5" : "border-navy-50 bg-navy-50/40"}`}>
+                      <div className="text-sm font-bold text-navy-900">{t}</div>
+                      <div className="mt-1 text-xs text-navy-900/55">{sub}</div>
+                    </button>
+                  ))}
                 </div>
 
                 {/* deposit option (bank only) */}
@@ -373,6 +377,11 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 )}
 
                 {payMethod === "bank" && <BankBox copied={copied} setCopied={setCopied} />}
+                {payMethod === "cash" && (
+                  <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-700 font-semibold">
+                    ✅ سيتم الدفع نقداً عند الوصول
+                  </div>
+                )}
 
                 {/* total */}
                 <div className="mt-5 flex items-center justify-between rounded-2xl bg-navy-900 px-5 py-4 text-white">
