@@ -35,7 +35,7 @@ function isWeekend(dateStr: string) {
   return d === 4 || d === 5 || d === 6;
 }
 
-const PROMO_CODES: Record<string, number> = { SEWAR10: 10 };
+const PROMO_CODES: Record<string, number> = { S10: 10 };
 const CANCEL_POLICY =
   "في حال إلغاء الرحلة من قِبَل العميل لأي سبب، لا يُرد المبلغ المحوَّل ولا يُستبدل. في حال وجود مشكلة من طرفنا، يُرد المبلغ كاملاً.";
 
