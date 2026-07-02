@@ -10,6 +10,7 @@ import { getSiteSettings } from "@/lib/content-server";
 import { phoneHref, waLinkFrom } from "@/lib/settings-core";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/contact" },
   title: "التواصل",
   description: "تواصل مع سوار البحرية لحجز رحلتك البحرية الفاخرة في ثول — واتساب، هاتف، وبريد إلكتروني.",
 };

@@ -109,7 +109,7 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
               }`}
             >
               {/* image */}
-              <div className="relative h-52 overflow-hidden">
+              <div className="card-shine relative h-52 overflow-hidden">
                 <Image
                   src={HOME_IMAGES.pricing[i % HOME_IMAGES.pricing.length]}
                   alt={pkgText(locale, pkg, "title")}

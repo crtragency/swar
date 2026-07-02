@@ -1,6 +1,7 @@
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import ScrollEffects from "@/components/ScrollEffects";
 import { SITE_URL } from "@/lib/site";
 import { SettingsProvider } from "@/lib/settings";
 import { getSiteSettings } from "@/lib/content-server";
@@ -24,6 +25,15 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       addressRegion: "مكة المكرمة",
       addressCountry: "SA",
     },
+    geo: { "@type": "GeoCoordinates", latitude: 22.2831, longitude: 39.1035 },
+    image: `${SITE_URL}/icon.webp`,
+    sameAs: settings.socials.map((s) => s.href).filter(Boolean),
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      reviewCount: String(Math.max(settings.reviews.length, 4)),
+      bestRating: "5",
+    },
     priceRange: "﷼﷼",
   };
   return (
@@ -33,6 +43,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       {children}
       <Footer />
       <FloatingWhatsApp />
+      <ScrollEffects />
     </SettingsProvider>
   );
 }

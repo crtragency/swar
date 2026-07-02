@@ -35,9 +35,17 @@ export const metadata: Metadata = {
     description: "عِش معنا متعة بحرية لا تُنسى وخُض تجربة بحرية لا مثيل لها.",
     type: "website",
     locale: "ar_SA",
+    siteName: "سوار البحرية",
     images: [heroOg.src],
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: "summary_large_image",
+    title: "سوار | رحلات بحرية فاخرة في ثول والبحر الأحمر",
+    description: "عِش معنا متعة بحرية لا تُنسى وخُض تجربة بحرية لا مثيل لها.",
+    images: [heroOg.src],
+  },
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
   icons: {
     icon: [{ url: "/icon.webp", type: "image/webp" }],
     apple: [{ url: "/icon.webp" }],

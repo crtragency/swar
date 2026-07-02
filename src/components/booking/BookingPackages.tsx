@@ -102,7 +102,7 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
       }`}
     >
       {/* photo header */}
-      <div className="relative h-56 overflow-hidden">
+      <div className="card-shine relative h-56 overflow-hidden">
         <Image src={image} alt={pkgText(locale, pkg, "title")} fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/35 to-transparent" />
         {discountPct > 0 && (

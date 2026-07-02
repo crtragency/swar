@@ -9,6 +9,7 @@ import { tt } from "@/lib/i18n-core";
 import { getServerLocale } from "@/lib/locale-server";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/about" },
   title: "من نحن",
   description:
     "سوار البحرية — رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر. تعرف على قصتنا وقيمنا وأسطولنا البحري المجهز لأرقى التجارب.",
