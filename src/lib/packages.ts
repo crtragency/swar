@@ -76,7 +76,7 @@ export const PACKAGES: Pkg[] = [
       { id: "extra_hour", label: "⏱️ ساعة إضافية", price: 105, stepper: true, max: 4 },
       { id: "snacks", label: "🍉 سناك وفواكه", price: 263 },
       { id: "fishing", label: "🎣 صيد + عدة صيد + طُعم", price: 263 },
-      { id: "kayak", label: "🛶 كاياك", price: 158 },
+      { id: "kayak", label: "🛶 كاياك + سرير تشميس شخصين وعوامة تشميس تتسع لـ 6 أشخاص", price: 299 },
       { id: "photo", label: "📸 تصوير احترافي", price: 525 },
     ],
   },
