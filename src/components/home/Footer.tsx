@@ -21,7 +21,7 @@ export default function Footer() {
 
       <div className="container-px relative">
         <Reveal>
-          <div className="mb-16 flex flex-col items-center gap-6 rounded-[32px] bg-gradient-to-l from-ocean-600 to-turquoise-500 px-8 py-12 text-center shadow-luxe sm:flex-row sm:justify-between sm:text-start">
+          <div className="sea-panel mb-16 flex flex-col items-center gap-6 rounded-[32px] px-8 py-12 text-center text-white shadow-luxe ring-1 ring-gold-400/25 sm:flex-row sm:justify-between sm:text-start">
             <div>
               <h3 className="text-2xl font-extrabold sm:text-3xl">{t("footer.ctaTitle")}</h3>
               <p className="mt-2 text-white/85">{t("footer.ctaDesc")}</p>
