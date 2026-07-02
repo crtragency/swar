@@ -138,6 +138,9 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
 
               {/* body */}
               <div className="flex flex-1 flex-col p-6">
+                <p className="mb-3 rounded-xl border border-gold-400/40 bg-gold-400/10 px-3 py-2 text-center text-[11px] font-bold text-navy-900">
+                  🥤🥨 {pick(locale, "مشروبات وعصيرات وسناكات متاحة طوال الرحلة", "Drinks, juices & snacks throughout the trip")}
+                </p>
                 <p className="min-h-[44px] text-sm leading-relaxed text-navy-900/55">{pkgText(locale, pkg, "subtitle")}</p>
 
                 <div className="my-5 h-px bg-navy-900/5" />
