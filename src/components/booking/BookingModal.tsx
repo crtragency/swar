@@ -486,7 +486,7 @@ function BankBox({ copied, setCopied }: { copied: boolean; setCopied: (v: boolea
           href={BANK.payUrl}
           target="_blank"
           rel="noopener"
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-ocean-600 to-turquoise-500 py-3.5 font-bold text-white shadow-lg transition-transform hover:scale-[1.01]"
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-navy-950 via-navy-900 to-ocean-600 py-3.5 font-bold text-white shadow-lg ring-1 ring-turquoise-500/30 transition-transform hover:scale-[1.01]"
         >
           ادفع الآن عبر البنك
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>

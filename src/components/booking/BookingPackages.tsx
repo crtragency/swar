@@ -201,7 +201,7 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
         )}
 
         <button type="button" onClick={onBook} className="mt-auto pt-6">
-          <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-ocean-600 to-turquoise-500 py-4 font-bold text-white shadow-lg transition-transform hover:scale-[1.02]">
+          <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-navy-950 via-navy-900 to-ocean-600 py-4 font-bold text-white shadow-lg ring-1 ring-turquoise-500/30 transition-transform hover:scale-[1.02]">
             {t("booking.customizeBook")}
           </span>
         </button>

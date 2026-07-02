@@ -155,7 +155,7 @@ export default async function BlogArticle({ params }: { params: { slug: string }
             </section>
 
             {/* CTA */}
-            <div className="mt-12 flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-gradient-to-l from-ocean-600 to-turquoise-500 p-7 text-white">
+            <div className="sea-panel mt-12 flex flex-wrap items-center justify-between gap-4 rounded-[24px] p-7 text-white ring-1 ring-gold-400/25">
               <p className="text-lg font-bold">{tt(locale, "art.cta")}</p>
               <Link href="/booking" className="btn-gold text-sm">{tt(locale, "cta.book")}</Link>
             </div>
