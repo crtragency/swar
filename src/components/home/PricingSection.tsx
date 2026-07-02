@@ -79,14 +79,16 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
         </div>
 
         {/* discount line */}
-        <Reveal>
-          <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-gold-400/40 bg-gold-400/10 px-5 py-3">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-500 text-xs font-extrabold text-white">٪</span>
-            <span className="text-sm font-bold text-navy-900 sm:text-[15px]">
-              {pick(locale, "خصم", "Save")} <span className="text-gold-600">{discountPct}%</span> {t("pricing.discount")}
-            </span>
-          </div>
-        </Reveal>
+        {discountPct > 0 && (
+          <Reveal>
+            <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-gold-400/40 bg-gold-400/10 px-5 py-3">
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-500 text-xs font-extrabold text-white">٪</span>
+              <span className="text-sm font-bold text-navy-900 sm:text-[15px]">
+                {pick(locale, "خصم", "Save")} <span className="text-gold-600">{discountPct}%</span> {t("pricing.discount")}
+              </span>
+            </div>
+          </Reveal>
+        )}
 
         {/* cards */}
         <div
@@ -118,9 +120,11 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/25 to-transparent" />
 
                 {/* discount ribbon */}
-                <span className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-navy-900 shadow-md backdrop-blur">
-                  {t("pricing.save")} {discountPct}%
-                </span>
+                {discountPct > 0 && (
+                  <span className="absolute right-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-navy-900 shadow-md backdrop-blur">
+                    {t("pricing.save")} {discountPct}%
+                  </span>
+                )}
                 {pkg.featured && (
                   <span className="absolute left-4 top-4 rounded-full bg-gold-500 px-3 py-1 text-xs font-bold text-white shadow-md">
                     {pick(locale, "الأكثر طلباً", "Most popular")}
@@ -145,7 +149,7 @@ export default function PricingSection({ packages }: { packages?: Pkg[] }) {
                       <span className="font-cairo text-4xl font-black leading-none text-navy-900">{pkg.price.toLocaleString()}</span>
                       <span className="text-sm font-semibold text-navy-900/55">{pkgText(locale, pkg, "unit")}</span>
                     </div>
-                    <span className="text-xs text-navy-900/35 line-through">{pkg.oldPrice.toLocaleString()} {sar}</span>
+                    {pkg.oldPrice !== pkg.price && <span className="text-xs text-navy-900/35 line-through">{pkg.oldPrice.toLocaleString()} {sar}</span>}
                   </div>
                   <span className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-navy-50 px-3 py-1.5 text-xs font-semibold text-navy-800">
                     <span className="h-1.5 w-1.5 rounded-full bg-turquoise-500" />
