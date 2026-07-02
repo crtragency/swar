@@ -88,6 +88,10 @@ export function mergeSettings(partial?: Partial<SiteSettings> | null): SiteSetti
   return {
     ...DEFAULT_SETTINGS,
     ...partial,
+    // قيم الخصم دايمًا من الكود مش من قاعدة البيانات
+    discountPct: DEFAULT_SETTINGS.discountPct,
+    discountAr: DEFAULT_SETTINGS.discountAr,
+    discountEn: DEFAULT_SETTINGS.discountEn,
     // إيميل التواصل ثابت من الكود ولا يُتجاوز بأي قيمة قديمة محفوظة
     email: DEFAULT_SETTINGS.email,
     socials: partial.socials && partial.socials.length ? partial.socials : DEFAULT_SETTINGS.socials,
