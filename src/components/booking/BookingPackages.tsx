@@ -134,6 +134,9 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
 
       {/* body */}
       <div className="flex flex-1 flex-col p-6">
+        <p className="mb-3 rounded-2xl border border-gold-400/40 bg-gold-400/10 px-4 py-2.5 text-center text-xs font-bold text-navy-900">
+          🥤🥨 {pick(locale, "مشروبات غازية وعصيرات مشكلة وسناكات — متاحة طوال الرحلة", "Soft drinks, mixed juices & snacks — available throughout the trip")}
+        </p>
         <p className="rounded-2xl bg-navy-50/70 px-4 py-3 text-sm leading-relaxed text-navy-900/70">{pkg.yacht}</p>
 
         {pkg.rows && (
