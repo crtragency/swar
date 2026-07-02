@@ -9,7 +9,7 @@ import { getPackagesMerged } from "@/lib/content-server";
 export const metadata: Metadata = {
   title: "الحجوزات وأسعار الرحلات",
   description:
-    "احجز رحلتك البحرية الفاخرة في ثول مع سوار البحرية. باقات السباحة والصيد والدلافين والحفلات والرحلات الملكية VIP بخصم 25% على جميع الرحلات.",
+    "احجز رحلتك البحرية الفاخرة في ثول مع سوار البحرية. باقات السباحة والصيد والدلافين والحفلات والرحلات الملكية VIP.",
 };
 
 export default async function BookingPage() {
