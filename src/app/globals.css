@@ -81,3 +81,40 @@ body {
 .text-balance {
   text-wrap: balance;
 }
+
+/* soft shine sweep on hover — add .card-shine to any overflow-hidden card */
+.card-shine {
+  position: relative;
+}
+.card-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.9s ease;
+  pointer-events: none;
+}
+.card-shine:hover::after {
+  transform: translateX(120%);
+}
+
+/* gentle float for decorative emojis/badges */
+@keyframes sw-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: sw-float 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-float,
+  .card-shine::after {
+    animation: none;
+    transition: none;
+  }
+}

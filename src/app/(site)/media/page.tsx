@@ -6,6 +6,7 @@ import { tt } from "@/lib/i18n-core";
 import { getServerLocale } from "@/lib/locale-server";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/media" },
   title: "الوسائط",
   description: "معرض صور سوار البحرية — لحظات من رحلاتنا البحرية الفاخرة في ثول والبحر الأحمر.",
 };

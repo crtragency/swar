@@ -7,6 +7,7 @@ import { getServerLocale } from "@/lib/locale-server";
 import { getAllPosts } from "@/lib/content-server";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/blog" },
   title: "المدونة",
   description: "مقالات ونصائح ملهمة من عالم السياحة البحرية الفاخرة في ثول والبحر الأحمر مع سوار البحرية.",
 };
