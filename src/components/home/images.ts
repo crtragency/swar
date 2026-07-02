@@ -40,6 +40,7 @@ import im_img35_ from "../../../الهيرو التانيه.webp";
 import im_img36_ from "../../../لوجو سوار.webp";
 import im_hero_new1 from "../../../6c4833b5-af3d-45c8-9c2c-fe5f87c9d29d.png";
 import im_hero_new2 from "../../../362da964-da2d-47be-a1f3-b4328523d5b6.png";
+import im_WhatsApp_Image_2026_07_02_at_2_19_19_PM from "../../../WhatsApp Image 2026-07-02 at 2.19.19 PM.jpeg";
 
 export const LOGO = im_img36_;
 export const HERO_NEW1 = im_hero_new1;
@@ -89,4 +90,5 @@ export const ALL_PHOTOS = [
   im_img33_,
   im_img34_,
   im_img35_,
+  im_WhatsApp_Image_2026_07_02_at_2_19_19_PM,
 ];
