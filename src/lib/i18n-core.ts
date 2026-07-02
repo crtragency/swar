@@ -71,7 +71,7 @@ export const STRINGS: Record<string, { ar: string; en: string }> = {
   "reviews.customer": { ar: "عميل سوار البحرية", en: "Sewar Marine customer" },
 
   "footer.ctaTitle": { ar: "جاهز لتجربة بحرية لا تُنسى؟", en: "Ready for an unforgettable sea experience?" },
-  "footer.ctaDesc": { ar: "احجز رحلتك الآن واستمتع بخصم 25% على جميع الرحلات بمناسبة بداية موسم الصيف.", en: "Book now and enjoy 25% off all trips for the start of the summer season." },
+  "footer.ctaDesc": { ar: "احجز رحلتك الآن واستمتع بتجربة بحرية فاخرة لا تُنسى.", en: "Book now and enjoy an unforgettable luxury sea experience." },
   "footer.brandDesc": { ar: "رحلات بحرية فاخرة في ثول على ساحل البحر الأحمر. عِش معنا متعة بحرية لا تُنسى وخُض تجربة بحرية لا مثيل لها.", en: "Luxury sea trips in Thoul on the Red Sea coast. Live an unforgettable sea adventure with us." },
   "footer.quickLinks": { ar: "روابط سريعة", en: "Quick links" },
   "footer.contactUs": { ar: "تواصل معنا", en: "Contact us" },
@@ -139,7 +139,7 @@ export const STRINGS: Record<string, { ar: string; en: string }> = {
 
   "booking.eyebrow": { ar: "الحجوزات", en: "Booking" },
   "booking.title": { ar: "أسعار وباقات رحلات سوار البحرية", en: "Sewar Marine trip prices & packages" },
-  "booking.subtitle": { ar: "اختر باقتك المثالية واحجز تجربتك البحرية الفاخرة في ثول — خصم 25% على جميع الرحلات.", en: "Choose your perfect package and book your luxury sea experience in Thoul — 25% off all trips." },
+  "booking.subtitle": { ar: "اختر باقتك المثالية واحجز تجربتك البحرية الفاخرة في ثول.", en: "Choose your perfect package and book your luxury sea experience in Thoul." },
   "booking.bankTitle": { ar: "بيانات التحويل البنكي", en: "Bank transfer details" },
   "booking.bank": { ar: "البنك", en: "Bank" },
   "booking.accName": { ar: "اسم الحساب", en: "Account name" },

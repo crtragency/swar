@@ -37,7 +37,7 @@ export type Pkg = {
   accent: "turquoise" | "green" | "gold" | "pink" | "blue" | "purple";
   yacht: string;
   // calculator fields (prices below are the ORIGINAL pre-discount values; the
-  // modal applies the 25% season discount to the whole subtotal)
+  // modal calculates the final total from the values below)
   baseDuration: string; // e.g. "4 ساعات"
   maxBase: number; // persons covered by the base price
   extraPerPerson: number; // cost per extra person above maxBase
