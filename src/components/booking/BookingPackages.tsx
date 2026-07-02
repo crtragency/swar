@@ -28,12 +28,14 @@ export default function BookingPackages({ packages }: { packages?: Pkg[] }) {
   return (
     <section className="relative bg-navy-50/40 py-20 sm:py-28">
       <div className="container-px">
-        <Reveal>
-          <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-1 rounded-3xl border border-gold-400/40 bg-white px-6 py-5 text-center shadow-luxe">
-            <span className="text-lg font-extrabold text-navy-900 sm:text-xl">{pick(locale, discountAr, discountEn)}</span>
-            <span className="text-sm font-semibold text-navy-900/55">{t("booking.discountSub")}</span>
-          </div>
-        </Reveal>
+        {(discountAr || discountEn) && (
+          <Reveal>
+            <div className="mx-auto mb-14 flex max-w-2xl flex-col items-center gap-1 rounded-3xl border border-gold-400/40 bg-white px-6 py-5 text-center shadow-luxe">
+              <span className="text-lg font-extrabold text-navy-900 sm:text-xl">{pick(locale, discountAr, discountEn)}</span>
+              <span className="text-sm font-semibold text-navy-900/55">{t("booking.discountSub")}</span>
+            </div>
+          </Reveal>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-2">
           {PACKAGES.map((pkg, i) => {
@@ -103,9 +105,11 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
       <div className="relative h-56 overflow-hidden">
         <Image src={image} alt={pkgText(locale, pkg, "title")} fill sizes="(max-width:1024px) 100vw, 50vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/35 to-transparent" />
-        <span className="absolute right-5 top-5 rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">
-          {pick(locale, "خصم", "Save")} {discountPct}%
-        </span>
+        {discountPct > 0 && (
+          <span className="absolute right-5 top-5 rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">
+            {pick(locale, "خصم", "Save")} {discountPct}%
+          </span>
+        )}
         {pkg.featured && (
           <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-extrabold text-navy-950">
             {t("booking.mostPopular")}
@@ -121,7 +125,7 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
       <div className="flex items-end justify-between gap-2 border-b border-navy-50 px-6 py-4">
         <div className="flex items-end gap-2">
           <span className="text-xs text-navy-900/45">{t("pricing.from")}</span>
-          <span className="text-sm text-navy-900/40 line-through">{pkg.oldPrice.toLocaleString()}</span>
+          {pkg.oldPrice !== pkg.price && <span className="text-sm text-navy-900/40 line-through">{pkg.oldPrice.toLocaleString()}</span>}
           <span className="text-3xl font-extrabold text-navy-900">{pkg.price.toLocaleString()}</span>
           <span className="text-sm font-semibold text-navy-900/60">{pkgText(locale, pkg, "unit")}</span>
         </div>
@@ -138,7 +142,7 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
               <li key={r.label} className="flex items-center justify-between gap-3 rounded-xl bg-navy-50/50 px-4 py-3">
                 <span className="text-sm text-navy-900/70">{r.label}</span>
                 <span className="shrink-0 font-bold text-navy-900">
-                  {r.oldPrice && <span className="me-2 text-xs text-navy-900/40 line-through">{r.oldPrice.toLocaleString()}</span>}
+                  {r.oldPrice && r.oldPrice !== r.price && <span className="me-2 text-xs text-navy-900/40 line-through">{r.oldPrice.toLocaleString()}</span>}
                   <span className="text-turquoise-600">{r.price.toLocaleString()}</span>
                   <span className="ms-1 text-xs font-normal text-navy-900/50">ريال</span>
                 </span>
