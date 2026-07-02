@@ -157,7 +157,7 @@ function PackageCard({ pkg, image, onBook }: { pkg: Pkg; image: StaticImageData;
               <div key={t.name} className="rounded-2xl border border-navy-50 bg-navy-50/40 p-4 text-center">
                 <div className="text-base font-extrabold text-navy-900">{t.name}</div>
                 <div className="mt-1">
-                  <span className="text-xs text-navy-900/40 line-through">{t.oldPrice.toLocaleString()}</span>{" "}
+                  {t.oldPrice !== t.price && <><span className="text-xs text-navy-900/40 line-through">{t.oldPrice.toLocaleString()}</span>{" "}</>}
                   <span className="text-xl font-extrabold text-turquoise-600">{t.price.toLocaleString()}</span>
                   <span className="text-xs text-navy-900/50"> ريال</span>
                 </div>

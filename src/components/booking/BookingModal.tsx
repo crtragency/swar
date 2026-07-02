@@ -250,7 +250,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950 to-navy-950/30" />
               <button type="button" onClick={onClose} aria-label="إغلاق" className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-colors hover:bg-white/30">✕</button>
               <div className="absolute inset-x-0 bottom-0 p-5">
-                <span className="rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">خصم {discountPct}%</span>
+                {discountPct > 0 && <span className="rounded-full bg-gold-400 px-3 py-1 text-xs font-extrabold text-navy-950">خصم {discountPct}%</span>}
                 <h3 className="mt-2 text-2xl font-extrabold text-white drop-shadow">{pkg.title}</h3>
               </div>
             </div>
@@ -370,8 +370,8 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
 
                 {/* price breakdown */}
                 <div className="mt-5 space-y-2 rounded-2xl bg-navy-50/60 p-5 text-sm">
-                  <Line label="المجموع قبل الخصم" value={`${subtotal.toLocaleString()} ريال`} />
-                  <Line label={`خصم موسم الصيف (${discountPct}%)`} value={`− ${seasonDiscount.toLocaleString()} ريال`} green />
+                  <Line label="المجموع" value={`${subtotal.toLocaleString()} ريال`} />
+                  {seasonDiscount > 0 && <Line label={`خصم موسم الصيف (${discountPct}%)`} value={`− ${seasonDiscount.toLocaleString()} ريال`} green />}
                   {promoDiscount > 0 && <Line label={`كود خصم (${promoPct}%)`} value={`− ${promoDiscount.toLocaleString()} ريال`} green />}
                 </div>
 
