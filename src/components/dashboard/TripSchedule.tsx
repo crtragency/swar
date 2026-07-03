@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PACKAGES, deriveDuration } from "@/lib/packages";
 
 export type ScheduleTrip = {
   id: string;
@@ -13,6 +14,7 @@ export type ScheduleTrip = {
   persons?: number;
   status: "pending" | "confirmed" | "cancelled";
   // تفاصيل إضافية تظهر في نافذة التفاصيل
+  packageId?: string;
   option?: string;
   addons?: string[];
   notes?: string;
@@ -30,6 +32,15 @@ const PAY_METHOD_AR: Record<NonNullable<ScheduleTrip["payMethod"]>, string> = {
 };
 
 function fmtSar(n: number) { return `${n.toLocaleString("ar-SA")} ريال`; }
+
+function fmtHours(h: number) {
+  if (h === 0.5) return "نصف ساعة";
+  if (h === 1) return "ساعة واحدة";
+  if (h === 1.5) return "ساعة ونصف";
+  if (h === 2) return "ساعتان";
+  if (h <= 10) return `${h} ساعات`;
+  return `${h} ساعة`;
+}
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 export function fmt12h(t: string) {
@@ -189,30 +200,55 @@ export default function TripSchedule({ trips }: { trips: ScheduleTrip[] }) {
                 </div>
               </div>
               <div className="px-5 py-4 space-y-3 overflow-y-auto" dir="rtl">
-                {[
-                  { label: "العميل", value: selected.name },
-                  { label: "التاريخ", value: formatDateAr(selected.date) },
-                  { label: "وقت الانطلاق", value: fmt12h(selected.departTime) },
-                  ...(selected.phone ? [{ label: "الجوال", value: selected.phone, ltr: true }] : []),
-                  ...(selected.persons ? [{ label: "الأشخاص", value: `${selected.persons} أشخاص` }] : []),
-                ].map((r) => (
-                  <div key={r.label} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-2.5">
-                    <span className="text-xs font-bold text-slate-400">{r.label}</span>
-                    <span className="font-semibold text-slate-800 text-sm" dir={"ltr" in r && r.ltr ? "ltr" : undefined}>{r.value}</span>
-                  </div>
-                ))}
-
-                {/* الإضافات */}
-                {selected.addons && selected.addons.length > 0 && (
-                  <div className="rounded-xl bg-teal-50 px-4 py-3">
-                    <div className="text-xs font-bold text-teal-600 mb-2">➕ الإضافات</div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selected.addons.map((a, i) => (
-                        <span key={i} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm">{a}</span>
+                {(() => {
+                  const pkg = selected.packageId ? PACKAGES.find((p) => p.id === selected.packageId) : undefined;
+                  const duration = pkg ? deriveDuration(pkg.id, selected.option ?? "") : undefined;
+                  return (
+                    <>
+                      {[
+                        { label: "العميل", value: selected.name || "—" },
+                        { label: "الجوال", value: selected.phone || "—", ltr: !!selected.phone },
+                        { label: "التاريخ", value: formatDateAr(selected.date) },
+                        { label: "وقت الانطلاق", value: fmt12h(selected.departTime) },
+                        { label: "الأشخاص", value: selected.persons ? `${selected.persons} أشخاص` : "—" },
+                        { label: "نوع الرحلة", value: pkg ? `${pkg.emoji} ${selected.packageTitle}` : selected.packageTitle || "—" },
+                        { label: "الخيار / الفئة", value: selected.option || pkg?.baseDuration || "—" },
+                        ...(duration ? [{ label: "مدة الرحلة", value: `⏱️ ${fmtHours(duration)}` }] : []),
+                      ].map((r) => (
+                        <div key={r.label} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-2.5">
+                          <span className="text-xs font-bold text-slate-400 shrink-0">{r.label}</span>
+                          <span className="font-semibold text-slate-800 text-sm text-left" dir={"ltr" in r && r.ltr ? "ltr" : undefined}>{r.value}</span>
+                        </div>
                       ))}
-                    </div>
-                  </div>
-                )}
+
+                      {/* الإضافات — تظهر دائماً */}
+                      <div className="rounded-xl bg-teal-50 px-4 py-3">
+                        <div className="text-xs font-bold text-teal-600 mb-2">➕ الإضافات</div>
+                        {selected.addons && selected.addons.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {selected.addons.map((a, i) => (
+                              <span key={i} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm">{a}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-400">لا توجد إضافات على هذا الحجز</p>
+                        )}
+                      </div>
+
+                      {/* يشمل الباقة */}
+                      {pkg?.includes && pkg.includes.length > 0 && (
+                        <div className="rounded-xl bg-indigo-50 px-4 py-3">
+                          <div className="text-xs font-bold text-indigo-600 mb-2">🎁 يشمل الباقة</div>
+                          <ul className="space-y-1">
+                            {pkg.includes.map((inc, i) => (
+                              <li key={i} className="text-sm text-slate-700">{inc}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
 
                 {/* الدفع */}
                 {selected.total !== undefined && (
@@ -252,13 +288,15 @@ export default function TripSchedule({ trips }: { trips: ScheduleTrip[] }) {
                   </div>
                 )}
 
-                {/* ملاحظات */}
-                {selected.notes && (
-                  <div className="rounded-xl bg-amber-50 px-4 py-3">
-                    <div className="text-xs font-bold text-amber-600 mb-1">📝 ملاحظات</div>
+                {/* ملاحظات — تظهر دائماً */}
+                <div className="rounded-xl bg-amber-50 px-4 py-3">
+                  <div className="text-xs font-bold text-amber-600 mb-1">📝 ملاحظات</div>
+                  {selected.notes ? (
                     <p className="text-sm text-slate-700 whitespace-pre-wrap">{selected.notes}</p>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-slate-400">لا توجد ملاحظات</p>
+                  )}
+                </div>
 
                 {/* مرجع الحجز */}
                 <div className="flex items-center justify-between gap-3 px-1 text-xs text-slate-400">
