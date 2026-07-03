@@ -610,6 +610,7 @@ export default function OwnerDashboard({
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="font-extrabold text-slate-800">{b.packageTitle}</p>
+                          {b.option && <p className="text-xs font-semibold text-teal-600">{b.option}</p>}
                           <p className="font-mono text-xs text-slate-400">{b.id}</p>
                         </div>
                         <span className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_CLASS[b.status]}`}>{STATUS_LABEL[b.status]}</span>
@@ -625,6 +626,12 @@ export default function OwnerDashboard({
                         <BInfo label="المتبقي" value={`${fmt(Math.max(0, b.total - b.paid))} ريال`} />
                         <BInfo label="الدفع" value={b.payMethod === "online" ? "دفع إلكتروني" : b.payMethod === "pos" ? "نقطة بيع" : b.payMethod === "cash" ? "نقدي" : "تحويل بنكي"} />
                       </div>
+                      {b.addons.length > 0 && (
+                        <div className="mt-3 rounded-xl bg-teal-50 px-3 py-2">
+                          <span className="text-xs font-bold text-teal-600">➕ الإضافات: </span>
+                          <span className="text-sm text-slate-700">{b.addons.join("، ")}</span>
+                        </div>
+                      )}
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
                       <div className="mt-3 flex gap-2">
@@ -648,6 +655,10 @@ export default function OwnerDashboard({
                 id: b.id, date: b.date, departTime: b.departTime,
                 packageTitle: b.packageTitle, name: b.name, phone: b.phone,
                 persons: b.persons, status: b.status,
+                option: b.option, addons: b.addons, notes: b.notes,
+                total: b.total, paid: b.paid, payMethod: b.payMethod,
+                payType: b.payType, deposit: b.deposit, promo: b.promo,
+                createdAt: b.createdAt,
               }))} />
             </motion.div>
           )}
