@@ -655,7 +655,7 @@ export default function OwnerDashboard({
                 id: b.id, date: b.date, departTime: b.departTime,
                 packageTitle: b.packageTitle, name: b.name, phone: b.phone,
                 persons: b.persons, status: b.status,
-                option: b.option, addons: b.addons, notes: b.notes,
+                packageId: b.packageId, option: b.option, addons: b.addons, notes: b.notes,
                 total: b.total, paid: b.paid, payMethod: b.payMethod,
                 payType: b.payType, deposit: b.deposit, promo: b.promo,
                 createdAt: b.createdAt,
