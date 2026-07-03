@@ -12,7 +12,24 @@ export type ScheduleTrip = {
   phone?: string;
   persons?: number;
   status: "pending" | "confirmed" | "cancelled";
+  // تفاصيل إضافية تظهر في نافذة التفاصيل
+  option?: string;
+  addons?: string[];
+  notes?: string;
+  total?: number;
+  paid?: number;
+  payMethod?: "bank" | "online" | "pos" | "cash";
+  payType?: "full" | "deposit";
+  deposit?: number;
+  promo?: string;
+  createdAt?: string;
 };
+
+const PAY_METHOD_AR: Record<NonNullable<ScheduleTrip["payMethod"]>, string> = {
+  bank: "💳 تحويل بنكي", online: "🌐 دفع عبر الموقع", pos: "🖥️ نقطة بيع (POS)", cash: "💵 نقدي",
+};
+
+function fmtSar(n: number) { return `${n.toLocaleString("ar-SA")} ريال`; }
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 export function fmt12h(t: string) {
@@ -156,20 +173,22 @@ export default function TripSchedule({ trips }: { trips: ScheduleTrip[] }) {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.88, opacity: 0, y: 24 }}
               transition={{ type: "spring", stiffness: 320, damping: 28 }}
-              className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden"
+              className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
             >
-              <div className={`px-5 pt-5 pb-4 ${STATUS_COLORS[selected.status].bar} bg-opacity-90`} style={{ background: selected.status === "confirmed" ? "#10b981" : selected.status === "pending" ? "#f59e0b" : "#ef4444" }}>
+              <div className={`px-5 pt-5 pb-4 shrink-0 ${STATUS_COLORS[selected.status].bar} bg-opacity-90`} style={{ background: selected.status === "confirmed" ? "#10b981" : selected.status === "pending" ? "#f59e0b" : "#ef4444" }}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <CountdownChip days={daysUntil(selected.date)} />
+                      <span className="rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold text-white">{STATUS_AR[selected.status]}</span>
                     </div>
                     <p className="text-lg font-extrabold text-white">{selected.packageTitle}</p>
+                    {selected.option && <p className="text-sm text-white/80 mt-0.5">{selected.option}</p>}
                   </div>
                   <button onClick={() => setSelected(null)} className="text-white/70 hover:text-white text-xl leading-none mt-1">✕</button>
                 </div>
               </div>
-              <div className="px-5 py-4 space-y-3" dir="rtl">
+              <div className="px-5 py-4 space-y-3 overflow-y-auto" dir="rtl">
                 {[
                   { label: "العميل", value: selected.name },
                   { label: "التاريخ", value: formatDateAr(selected.date) },
@@ -182,8 +201,72 @@ export default function TripSchedule({ trips }: { trips: ScheduleTrip[] }) {
                     <span className="font-semibold text-slate-800 text-sm" dir={"ltr" in r && r.ltr ? "ltr" : undefined}>{r.value}</span>
                   </div>
                 ))}
+
+                {/* الإضافات */}
+                {selected.addons && selected.addons.length > 0 && (
+                  <div className="rounded-xl bg-teal-50 px-4 py-3">
+                    <div className="text-xs font-bold text-teal-600 mb-2">➕ الإضافات</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selected.addons.map((a, i) => (
+                        <span key={i} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm">{a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* الدفع */}
+                {selected.total !== undefined && (
+                  <div className="rounded-xl bg-slate-800 px-4 py-3 space-y-2 text-white">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold text-white/50">الإجمالي</span>
+                      <span className="font-extrabold text-amber-400">{fmtSar(selected.total)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold text-white/50">المدفوع</span>
+                      <span className="font-bold text-emerald-400">{fmtSar(selected.paid ?? 0)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold text-white/50">المتبقي</span>
+                      <span className={`font-bold ${Math.max(0, selected.total - (selected.paid ?? 0)) > 0 ? "text-orange-400" : "text-emerald-400"}`}>
+                        {fmtSar(Math.max(0, selected.total - (selected.paid ?? 0)))}
+                      </span>
+                    </div>
+                    {selected.payMethod && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold text-white/50">طريقة الدفع</span>
+                        <span className="text-sm font-semibold">{PAY_METHOD_AR[selected.payMethod]}</span>
+                      </div>
+                    )}
+                    {selected.payType && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold text-white/50">نوع الدفع</span>
+                        <span className="text-sm font-semibold">{selected.payType === "deposit" ? `عربون${selected.deposit ? ` (${fmtSar(selected.deposit)})` : ""}` : "دفع كامل"}</span>
+                      </div>
+                    )}
+                    {selected.promo && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold text-white/50">كود الخصم</span>
+                        <span className="text-sm font-semibold" dir="ltr">{selected.promo}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ملاحظات */}
+                {selected.notes && (
+                  <div className="rounded-xl bg-amber-50 px-4 py-3">
+                    <div className="text-xs font-bold text-amber-600 mb-1">📝 ملاحظات</div>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{selected.notes}</p>
+                  </div>
+                )}
+
+                {/* مرجع الحجز */}
+                <div className="flex items-center justify-between gap-3 px-1 text-xs text-slate-400">
+                  <span className="font-mono" dir="ltr">{selected.id}</span>
+                  {selected.createdAt && <span>{new Date(selected.createdAt).toLocaleString("ar-SA")}</span>}
+                </div>
               </div>
-              <div className="px-5 pb-5">
+              <div className="px-5 pb-5 pt-1 shrink-0">
                 <button onClick={() => setSelected(null)}
                   className="w-full rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-white hover:opacity-80 transition-opacity">
                   إغلاق
