@@ -16,6 +16,7 @@ export type ScheduleTrip = {
   // تفاصيل إضافية تظهر في نافذة التفاصيل
   packageId?: string;
   option?: string;
+  durationHours?: number;
   addons?: string[];
   notes?: string;
   total?: number;
@@ -202,7 +203,7 @@ export default function TripSchedule({ trips }: { trips: ScheduleTrip[] }) {
               <div className="px-5 py-4 space-y-3 overflow-y-auto" dir="rtl">
                 {(() => {
                   const pkg = selected.packageId ? PACKAGES.find((p) => p.id === selected.packageId) : undefined;
-                  const duration = pkg ? deriveDuration(pkg.id, selected.option ?? "") : undefined;
+                  const duration = selected.durationHours ?? (pkg ? deriveDuration(pkg.id, selected.option ?? "") : undefined);
                   return (
                     <>
                       {[

@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Booking } from "@/lib/store";
+import { bookingDuration } from "@/lib/packages";
 import TripSchedule, { fmt12h } from "@/components/dashboard/TripSchedule";
 
 function thisMonth() {
@@ -29,7 +30,7 @@ const fadeUp = {
 
 type DashUser = "owner" | "captain";
 type ExpenseItem = { id: string; createdAt: string; date: string; category: string; description: string; amount: number };
-type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; persons: number; total: number; paid: number; notes: string; payMethod: Booking["payMethod"] };
+type EditState = { id: string; status: Booking["status"]; name: string; phone: string; date: string; departTime: string; durationHours: number; persons: number; total: number; paid: number; notes: string; payMethod: Booking["payMethod"] };
 
 // ─── Quick Booking Form ────────────────────────────────────────────────────
 const TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
@@ -635,7 +636,7 @@ export default function OwnerDashboard({
                       {b.notes && <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">📝 {b.notes}</p>}
                       <p className="mt-3 text-xs text-slate-400">{new Date(b.createdAt).toLocaleString("ar-SA")}</p>
                       <div className="mt-3 flex gap-2">
-                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, persons: b.persons, total: b.total, paid: b.paid, notes: b.notes, payMethod: b.payMethod })}
+                        <button onClick={() => setEditing({ id: b.id, status: b.status, name: b.name, phone: b.phone, date: b.date, departTime: b.departTime, durationHours: bookingDuration(b), persons: b.persons, total: b.total, paid: b.paid, notes: b.notes, payMethod: b.payMethod })}
                           className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">✏️ تعديل</button>
                         {user !== "captain" && (
                           <button onClick={() => deleteB(b.id)}
@@ -655,7 +656,7 @@ export default function OwnerDashboard({
                 id: b.id, date: b.date, departTime: b.departTime,
                 packageTitle: b.packageTitle, name: b.name, phone: b.phone,
                 persons: b.persons, status: b.status,
-                packageId: b.packageId, option: b.option, addons: b.addons, notes: b.notes,
+                packageId: b.packageId, option: b.option, durationHours: b.durationHours, addons: b.addons, notes: b.notes,
                 total: b.total, paid: b.paid, payMethod: b.payMethod,
                 payType: b.payType, deposit: b.deposit, promo: b.promo,
                 createdAt: b.createdAt,
@@ -701,10 +702,22 @@ export default function OwnerDashboard({
                   <div><label className="ow-label">الجوال</label><input value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} className="ow-in" dir="ltr" /></div>
                   <div><label className="ow-label">التاريخ</label><input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className="ow-in" /></div>
                   <div><label className="ow-label">وقت الانطلاق</label><select value={editing.departTime} onChange={(e) => setEditing({ ...editing, departTime: e.target.value })} className="ow-in">{Array.from({ length: 24 }, (_, i) => { const v = `${String(i).padStart(2,"0")}:00`; const h12 = i % 12 === 0 ? 12 : i % 12; const p = i < 12 ? "ص" : "م"; return <option key={v} value={v}>{h12}:00 {p}</option>; })}</select></div>
+                  <div><label className="ow-label">مدة الرحلة (ساعات)</label><input type="number" min={0.5} max={24} step={0.5} value={editing.durationHours} onChange={(e) => setEditing({ ...editing, durationHours: Math.max(0.5, +e.target.value) })} className="ow-in" /></div>
                   <div><label className="ow-label">عدد الأشخاص</label><input type="number" min={1} max={20} value={editing.persons} onChange={(e) => setEditing({ ...editing, persons: +e.target.value })} className="ow-in" /></div>
                   <div><label className="ow-label">الإجمالي (ريال)</label><input type="number" value={editing.total} onChange={(e) => setEditing({ ...editing, total: +e.target.value })} className="ow-in" /></div>
                   <div><label className="ow-label">المبلغ المدفوع (ريال)</label><input type="number" min={0} value={editing.paid} onChange={(e) => setEditing({ ...editing, paid: +e.target.value })} className="ow-in" /></div>
                 </div>
+                {editing.departTime && editing.durationHours > 0 && (() => {
+                  const startH = toH(editing.departTime);
+                  const endH = startH + editing.durationHours;
+                  const blockedEndH = endH + 1; // + ساعة تنظيف
+                  const toHHMM = (h: number) => `${String(Math.floor(h) % 24).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+                  return (
+                    <p className="rounded-xl bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700">
+                      ⏱️ مدة الرحلة {editing.durationHours} ساعة — سيُحجب الوقت تلقائياً من {fmt12h(editing.departTime)} حتى {fmt12h(toHHMM(endH))}، والقارب غير متاح للحجز حتى {fmt12h(toHHMM(blockedEndH))} (+ ساعة تنظيف).
+                    </p>
+                  );
+                })()}
                 <p className="text-sm font-semibold text-slate-500">
                   💰 المتبقي: <span className={`font-extrabold ${Math.max(0, editing.total - editing.paid) > 0 ? "text-amber-600" : "text-emerald-600"}`}>
                     {fmt(Math.max(0, editing.total - editing.paid))} ريال

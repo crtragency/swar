@@ -13,6 +13,8 @@ export type Booking = {
   addons: string[];
   date: string;
   departTime: string;
+  // مدة الرحلة بالساعات — تُخزَّن فقط عند تعديلها يدوياً (تجاوز المدة المشتقة من الباقة)
+  durationHours?: number;
   name: string;
   phone: string;
   notes: string;
@@ -50,6 +52,7 @@ function toRow(b: Booking) {
     addons: b.addons,
     date: b.date,
     depart_time: b.departTime,
+    duration_hours: b.durationHours ?? null,
     name: b.name,
     phone: b.phone,
     notes: b.notes,
@@ -74,6 +77,7 @@ function fromRow(r: Record<string, unknown>): Booking {
     addons: Array.isArray(r.addons) ? (r.addons as string[]) : [],
     date: String(r.date ?? ""),
     departTime: String(r.depart_time ?? ""),
+    durationHours: r.duration_hours != null ? Number(r.duration_hours) : undefined,
     name: String(r.name ?? ""),
     phone: String(r.phone ?? ""),
     notes: String(r.notes ?? ""),
@@ -199,6 +203,7 @@ function toRowPatch(p: Partial<Booking>): Record<string, unknown> {
   if (p.addons !== undefined) m.addons = p.addons;
   if (p.date !== undefined) m.date = p.date;
   if (p.departTime !== undefined) m.depart_time = p.departTime;
+  if (p.durationHours !== undefined) m.duration_hours = p.durationHours;
   if (p.name !== undefined) m.name = p.name;
   if (p.phone !== undefined) m.phone = p.phone;
   if (p.notes !== undefined) m.notes = p.notes;

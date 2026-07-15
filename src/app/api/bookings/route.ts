@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { addBooking, getBookings, updateBooking, deleteBooking, type Booking } from "@/lib/store";
-import { deriveDuration } from "@/lib/packages";
+import { deriveDuration, bookingDuration } from "@/lib/packages";
 
 export const dynamic = "force-dynamic";
 
@@ -160,14 +160,14 @@ export async function POST(req: Request) {
       const conflict = existing.find((b) => {
         if (b.date !== date || b.status === "cancelled" || !b.departTime) return false;
         const bStart = toH(b.departTime);
-        const bDur = deriveDuration(b.packageId, b.option);
+        const bDur = bookingDuration(b);
         const bEnd = bStart + bDur + BUFFER;
         // overlap: [newStart, newEnd) ∩ [bStart, bEnd) ≠ ∅
         return newStart < bEnd && bStart < newEnd;
       });
 
       if (conflict) {
-        const cDur = deriveDuration(conflict.packageId, conflict.option);
+        const cDur = bookingDuration(conflict);
         const cEndH = toH(conflict.departTime) + cDur;
         const cEndHHMM = `${String(Math.floor(cEndH)).padStart(2, "0")}:00`;
         return NextResponse.json(
@@ -194,6 +194,7 @@ export async function POST(req: Request) {
     addons: Array.isArray(body.addons) ? body.addons.map(String) : [],
     date,
     departTime,
+    durationHours: Number(body.durationHours) > 0 ? Number(body.durationHours) : undefined,
     name,
     phone,
     notes: String(body.notes || ""),
@@ -266,6 +267,7 @@ export async function PATCH(req: Request) {
   if (body.phone !== undefined) patch.phone = String(body.phone);
   if (body.date !== undefined) patch.date = String(body.date);
   if (body.departTime !== undefined) patch.departTime = String(body.departTime);
+  if (body.durationHours !== undefined) patch.durationHours = Number(body.durationHours) > 0 ? Number(body.durationHours) : undefined;
   if (body.persons !== undefined) patch.persons = Number(body.persons) || 1;
   if (body.option !== undefined) patch.option = String(body.option);
   if (body.payMethod !== undefined) patch.payMethod = (["bank","online","pos","cash"].includes(String(body.payMethod)) ? body.payMethod : "bank") as Booking["payMethod"];

@@ -284,3 +284,9 @@ export function deriveDuration(packageId: string, option: string): number {
   }
   return pkg.durationHours;
 }
+
+// المدة الفعلية للحجز: المدة المخزّنة يدوياً (إن وُجدت) تتجاوز المدة المشتقة من الباقة.
+export function bookingDuration(b: { durationHours?: number; packageId: string; option: string }): number {
+  if (b.durationHours != null && b.durationHours > 0) return b.durationHours;
+  return deriveDuration(b.packageId, b.option);
+}

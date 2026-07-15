@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBookings } from "@/lib/store";
-import { deriveDuration } from "@/lib/packages";
+import { bookingDuration } from "@/lib/packages";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest) {
       if (b.status === "cancelled") continue;
       if (!b.departTime) continue;
       const startH = toH(b.departTime);
-      const dur = deriveDuration(b.packageId, b.option);
+      const dur = bookingDuration(b);
       const endH = startH + dur + BUFFER_HOURS;
       if (!ranges[b.date]) ranges[b.date] = [];
       ranges[b.date].push({ startH, endH, label: `${b.departTime}–${fromH(startH + dur)}` });

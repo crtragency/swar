@@ -14,6 +14,7 @@ create table if not exists public.bookings (
   addons        jsonb default '[]'::jsonb,
   date          text,
   depart_time   text,
+  duration_hours numeric,
   name          text,
   phone         text,
   notes         text,
@@ -29,6 +30,10 @@ create table if not exists public.bookings (
 
 -- For databases created before the "paid" column existed:
 alter table public.bookings add column if not exists paid int default 0;
+
+-- For databases created before the "duration_hours" column existed
+-- (manual per-booking override of the trip duration, used by the owner/captain edit form):
+alter table public.bookings add column if not exists duration_hours numeric;
 
 create index if not exists bookings_created_at_idx on public.bookings (created_at desc);
 
