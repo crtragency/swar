@@ -685,7 +685,7 @@ export default function OwnerDashboard({
             onClick={(e) => { if (e.target === e.currentTarget) setEditing(null); }}>
             <motion.div initial={{ scale: 0.92, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0, y: 20 }}
               transition={{ type: "spring", stiffness: 320, damping: 28 }}
-              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" dir="rtl">
+              className="max-h-[90vh] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-2xl" dir="rtl">
               <h3 className="mb-4 text-lg font-extrabold text-slate-800">✏️ تعديل الحجز</h3>
               <div className="space-y-3">
                 <div>
