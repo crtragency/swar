@@ -58,6 +58,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
   const [payMethod, setPayMethod] = useState<"bank" | "cash" | "online">("bank");
   const [payType, setPayType] = useState<"full" | "deposit">("full");
   const [copied, setCopied] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
       setQty({}); setToggles({}); setWeekend(false); setDate("");
       setDepartTime(pkg.id === "dolphin" ? DOLPHIN_TIME : "09:00");
       setName(""); setPhone(""); setNotes(""); setPromoCode(""); setPromoPct(0); setPromoMsg(null);
-      setPayMethod("bank"); setPayType("full"); setError(""); setDoneId(null); setSubmitting(false);
+      setPayMethod("bank"); setPayType("full"); setError(""); setDoneId(null); setSubmitting(false); setAcknowledged(false);
       fetch("/api/availability").then((r) => r.json()).then((d) => setAvailRanges(d.ranges ?? {})).catch(() => {});
     }
   }, [pkg]);
@@ -183,6 +184,7 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
     if (!/^05\d{8}$/.test(phone.trim())) return setError("رقم الجوال غير صحيح — يبدأ بـ 05 ويتكوّن من 10 أرقام");
     if (!date) return setError("يرجى اختيار تاريخ الرحلة");
     if (conflictRange) return setError(`هذا الوقت يتعارض مع رحلة أخرى (${conflictRange.label} + ساعة تنظيف). يُرجى اختيار وقت آخر.`);
+    if (!acknowledged) return setError("يرجى الضغط على الإقرار بصلاحية هويات الركاب قبل تأكيد الحجز");
     setSubmitting(true);
     try {
       const res = await fetch("/api/bookings", {
@@ -424,10 +426,24 @@ export default function BookingModal({ pkg, image, onClose }: { pkg: Pkg | null;
                 {/* cancellation policy */}
                 <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs leading-relaxed text-red-700"><strong className="block">⚠️ سياسة الإلغاء</strong>{CANCEL_POLICY}</p>
 
+                {/* passengers eligibility acknowledgement — must be accepted before booking */}
+                <button
+                  type="button"
+                  onClick={() => setAcknowledged((v) => !v)}
+                  aria-pressed={acknowledged}
+                  className={`mt-4 flex w-full items-start gap-3 rounded-2xl border-2 px-4 py-3.5 text-start transition-all ${acknowledged ? "border-turquoise-500 bg-turquoise-500/5" : "border-amber-300 bg-amber-50"}`}
+                >
+                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 text-xs font-bold transition-colors ${acknowledged ? "border-turquoise-500 bg-turquoise-500 text-white" : "border-amber-400 bg-white text-transparent"}`}>✓</span>
+                  <span className="text-xs leading-relaxed text-navy-900/80">
+                    <strong className="block text-navy-900">📋 إقرار صلاحية هويات الركاب</strong>
+                    أقر بأن هويات جميع الركاب سارية المفعول، وأنه لا يوجد على أيٍ منهم إيقاف خدمات أو منع من السفر أو أي مانع نظامي يمنع المشاركة في الرحلة، وأتحمل كامل المسؤولية عن صحة هذا الإقرار.
+                  </span>
+                </button>
+
                 {error && <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
 
-                <button onClick={submit} disabled={submitting || !!conflictRange} className="btn-ocean mt-4 w-full disabled:opacity-60">
-                  {submitting ? (payMethod === "online" ? "جاري الانتقال للدفع..." : "جاري الإرسال...") : conflictRange ? "🚫 الوقت المختار متعارض — اختر وقتاً آخر" : payMethod === "online" ? "🌐 تأكيد والانتقال للدفع" : "تأكيد الحجز"}
+                <button onClick={submit} disabled={submitting || !!conflictRange || !acknowledged} className="btn-ocean mt-4 w-full disabled:opacity-60">
+                  {submitting ? (payMethod === "online" ? "جاري الانتقال للدفع..." : "جاري الإرسال...") : conflictRange ? "🚫 الوقت المختار متعارض — اختر وقتاً آخر" : !acknowledged ? "📋 اضغط على الإقرار أعلاه أولاً" : payMethod === "online" ? "🌐 تأكيد والانتقال للدفع" : "تأكيد الحجز"}
                 </button>
               </div>
             )}
