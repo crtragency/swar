@@ -150,16 +150,32 @@ export async function POST(req: Request) {
   const BUFFER = 1;
 
   function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
+  function absoluteHour(dateStr: string, time: string) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return Date.UTC(y, m - 1, d) / 3600000 + toH(time);
+  }
+  function fromH(h: number) {
+    const normalized = ((h % 24) + 24) % 24;
+    let hh = Math.floor(normalized);
+    let mm = Math.round((normalized - hh) * 60);
+    if (mm === 60) { hh = (hh + 1) % 24; mm = 0; }
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  }
+  function formatAbsoluteHour(absHour: number) {
+    const dayStart = Math.floor(absHour / 24) * 24;
+    const dateText = new Date(dayStart * 3600000).toISOString().slice(0, 10);
+    return `${fromH(absHour - dayStart)} بتاريخ ${dateText}`;
+  }
 
   if (!isStaff && departTime) {
     try {
       const existing = await getBookings();
-      const newStart = toH(departTime);
+      const newStart = absoluteHour(date, departTime);
       const newEnd = newStart + incomingDur + BUFFER;
 
       const conflict = existing.find((b) => {
-        if (b.date !== date || b.status === "cancelled" || !b.departTime) return false;
-        const bStart = toH(b.departTime);
+        if (b.status === "cancelled" || !b.departTime) return false;
+        const bStart = absoluteHour(b.date, b.departTime);
         const bDur = bookingDuration(b);
         const bEnd = bStart + bDur + BUFFER;
         // overlap: [newStart, newEnd) ∩ [bStart, bEnd) ≠ ∅
@@ -168,11 +184,10 @@ export async function POST(req: Request) {
 
       if (conflict) {
         const cDur = bookingDuration(conflict);
-        const cEndH = toH(conflict.departTime) + cDur;
-        const cEndHHMM = `${String(Math.floor(cEndH)).padStart(2, "0")}:00`;
+        const cBlockedEnd = absoluteHour(conflict.date, conflict.departTime) + cDur + BUFFER;
         return NextResponse.json(
           {
-            error: `يوجد تعارض مع رحلة أخرى في هذا اليوم. القارب غير متاح حتى ${cEndHHMM} (+ ساعة تنظيف). يُرجى اختيار وقت آخر.`,
+            error: `يوجد تعارض مع رحلة أخرى. القارب غير متاح حتى ${formatAbsoluteHour(cBlockedEnd)} (+ ساعة تنظيف). يُرجى اختيار وقت آخر.`,
             conflict: true,
           },
           { status: 409 },

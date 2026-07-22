@@ -35,6 +35,23 @@ type EditState = { id: string; status: Booking["status"]; name: string; phone: s
 // ─── Quick Booking Form ────────────────────────────────────────────────────
 const TIMES = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 function timeLabel(t: string) { const h = parseInt(t, 10); const am = h < 12; return `${h % 12 === 0 ? 12 : h % 12}:00 ${am ? "ص" : "م"}`; }
+function toHHMMFromHour(h: number) {
+  const normalized = ((h % 24) + 24) % 24;
+  let hh = Math.floor(normalized);
+  let mm = Math.round((normalized - hh) * 60);
+  if (mm === 60) { hh = (hh + 1) % 24; mm = 0; }
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+function timeLabelAtHour(h: number) {
+  return `${timeLabel(toHHMMFromHour(h))}${h >= 24 ? " (اليوم التالي)" : ""}`;
+}
+function durationBetween(start: string, end: string) {
+  const startH = toH(start);
+  const endH = toH(end);
+  if (endH > startH) return endH - startH;
+  if (endH < startH) return 24 - startH + endH;
+  return 0;
+}
 
 function QuickBookingForm({ password, onDone, user = "owner" }: { password: string; onDone: () => void; user?: DashUser }) {
   const [pkgTitle, setPkgTitle] = useState("");
@@ -53,7 +70,10 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
-  const durationHours = Math.max(0.5, toH(endTime) - toH(startTime));
+  const durationHours = durationBetween(startTime, endTime);
+  const startH = toH(startTime);
+  const endH = startH + durationHours;
+  const blockedEndH = endH + 1;
 
   async function submit() {
     setError("");
@@ -61,7 +81,7 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
     if (!name.trim()) return setError("يرجى إدخال اسم العميل");
     if (!date) return setError("يرجى اختيار تاريخ الرحلة");
     if (!price || Number(price) <= 0) return setError("يرجى إدخال السعر");
-    if (toH(endTime) <= toH(startTime)) return setError("وقت الانتهاء يجب أن يكون بعد وقت البدء");
+    if (durationHours <= 0) return setError("وقت الانتهاء لا يمكن أن يساوي وقت البدء");
     setSubmitting(true);
     try {
       const res = await fetch(`/api/bookings?user=${user}&password=${encodeURIComponent(password)}`, {
@@ -131,7 +151,7 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
 
       {durationHours > 0 && (
         <p className="mt-1.5 text-xs text-teal-600 font-semibold">
-          ⏱️ مدة الرحلة: {durationHours} ساعة — سيُحجب الوقت من {timeLabel(startTime)} حتى {timeLabel(endTime)} + ساعة تنظيف
+          ⏱️ مدة الرحلة: {durationHours} ساعة — سيُحجب الوقت من {timeLabel(startTime)} حتى {timeLabelAtHour(endH)}، والقارب غير متاح حتى {timeLabelAtHour(blockedEndH)} (+ ساعة تنظيف)
         </p>
       )}
 
@@ -711,10 +731,9 @@ export default function OwnerDashboard({
                   const startH = toH(editing.departTime);
                   const endH = startH + editing.durationHours;
                   const blockedEndH = endH + 1; // + ساعة تنظيف
-                  const toHHMM = (h: number) => `${String(Math.floor(h) % 24).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
                   return (
                     <p className="rounded-xl bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700">
-                      ⏱️ مدة الرحلة {editing.durationHours} ساعة — سيُحجب الوقت تلقائياً من {fmt12h(editing.departTime)} حتى {fmt12h(toHHMM(endH))}، والقارب غير متاح للحجز حتى {fmt12h(toHHMM(blockedEndH))} (+ ساعة تنظيف).
+                      ⏱️ مدة الرحلة {editing.durationHours} ساعة — سيُحجب الوقت تلقائياً من {fmt12h(editing.departTime)} حتى {timeLabelAtHour(endH)}، والقارب غير متاح للحجز حتى {timeLabelAtHour(blockedEndH)} (+ ساعة تنظيف).
                     </p>
                   );
                 })()}
