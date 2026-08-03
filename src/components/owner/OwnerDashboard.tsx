@@ -20,9 +20,24 @@ function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m
 
 const HIJRI_DISPLAY_LOCALE = "ar-SA-u-ca-islamic-umalqura-nu-arab";
 const HIJRI_KEY_LOCALE = "en-US-u-ca-islamic-umalqura-nu-latn";
-const hijriMonthKeyFmt = new Intl.DateTimeFormat(HIJRI_KEY_LOCALE, { year: "numeric", month: "2-digit" });
+const hijriPartsFmt = new Intl.DateTimeFormat(HIJRI_KEY_LOCALE, { year: "numeric", month: "2-digit", day: "2-digit" });
 const hijriDateFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { weekday: "long", day: "numeric", month: "long", year: "numeric", era: "short" });
 const hijriMonthFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { month: "long", year: "numeric", era: "short" });
+const hijriMonthNameFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { month: "long" });
+const hijriDayFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { day: "numeric" });
+const hijriYearFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { year: "numeric", era: "short" });
+
+type HijriDateOption = {
+  value: string;
+  key: string;
+  label: string;
+  year: string;
+  month: string;
+  day: string;
+  yearLabel: string;
+  monthLabel: string;
+  dayLabel: string;
+};
 
 function isoFromDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -30,11 +45,26 @@ function isoFromDate(d: Date) {
 function dateFromISO(iso: string) {
   return new Date(`${iso}T12:00:00`);
 }
-function hijriMonthKey(iso: string) {
-  const parts = hijriMonthKeyFmt.formatToParts(dateFromISO(iso));
+function hijriDateOption(iso: string): HijriDateOption {
+  const date = dateFromISO(iso);
+  const parts = hijriPartsFmt.formatToParts(date);
   const year = parts.find((p) => p.type === "year")?.value ?? "";
   const month = parts.find((p) => p.type === "month")?.value.padStart(2, "0") ?? "";
-  return `${year}-${month}`;
+  const day = parts.find((p) => p.type === "day")?.value.padStart(2, "0") ?? "";
+  return {
+    value: iso,
+    key: `${year}-${month}`,
+    label: formatHijriDate(iso),
+    year,
+    month,
+    day,
+    yearLabel: hijriYearFmt.format(date),
+    monthLabel: hijriMonthNameFmt.format(date),
+    dayLabel: hijriDayFmt.format(date),
+  };
+}
+function hijriMonthKey(iso: string) {
+  return hijriDateOption(iso).key;
 }
 function thisHijriMonth() {
   return hijriMonthKey(today());
@@ -48,24 +78,21 @@ function formatHijriMonth(iso: string) {
 function buildHijriMonthOptions() {
   const out: { key: string; label: string }[] = [];
   const seen = new Set<string>();
-  const d = new Date();
-  for (let i = 0; out.length < 18 && i < 620; i++) {
-    const iso = isoFromDate(d);
-    const key = hijriMonthKey(iso);
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push({ key, label: formatHijriMonth(iso) });
+  for (const opt of buildExpenseDateOptions()) {
+    if (!seen.has(opt.key)) {
+      seen.add(opt.key);
+      out.push({ key: opt.key, label: formatHijriMonth(opt.value) });
+      if (out.length >= 18) break;
     }
-    d.setDate(d.getDate() - 1);
   }
   return out;
 }
-function buildExpenseDateOptions() {
-  const out: { value: string; label: string }[] = [];
+function buildExpenseDateOptions(): HijriDateOption[] {
+  const out: HijriDateOption[] = [];
   const d = new Date();
   for (let i = 0; i < 730; i++) {
     const iso = isoFromDate(d);
-    out.push({ value: iso, label: formatHijriDate(iso) });
+    out.push(hijriDateOption(iso));
     d.setDate(d.getDate() - 1);
   }
   return out;
@@ -270,7 +297,6 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(thisHijriMonth());
-  const [monthOpen, setMonthOpen] = useState(false);
   const [form, setForm] = useState({ date: today(), category: "أخرى", description: "", amount: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -316,45 +342,65 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
 
   const months = useMemo(() => buildHijriMonthOptions(), []);
   const expenseDates = useMemo(() => buildExpenseDateOptions(), []);
-  const selectedMonthLabel = months.find((m) => m.key === month)?.label ?? month;
+  const foundMonthIndex = months.findIndex((m) => m.key === month);
+  const selectedMonthIndex = foundMonthIndex >= 0 ? foundMonthIndex : 0;
+  const selectedMonthLabel = months[selectedMonthIndex]?.label ?? month;
+  const previousMonth = months[selectedMonthIndex + 1];
+  const nextMonth = months[selectedMonthIndex - 1];
+  const selectedExpenseDate = expenseDates.find((d) => d.value === form.date) ?? expenseDates[0] ?? hijriDateOption(today());
+  const expenseYears = useMemo(() => {
+    const seen = new Set<string>();
+    return expenseDates
+      .filter((d) => {
+        if (seen.has(d.year)) return false;
+        seen.add(d.year);
+        return true;
+      })
+      .map((d) => ({ value: d.year, label: d.yearLabel }));
+  }, [expenseDates]);
+  const expenseMonths = useMemo(() => {
+    const seen = new Set<string>();
+    return expenseDates
+      .filter((d) => d.year === selectedExpenseDate.year)
+      .filter((d) => {
+        if (seen.has(d.key)) return false;
+        seen.add(d.key);
+        return true;
+      })
+      .map((d) => ({ value: d.key, label: d.monthLabel }));
+  }, [expenseDates, selectedExpenseDate.year]);
+  const expenseDays = useMemo(
+    () => expenseDates.filter((d) => d.key === selectedExpenseDate.key),
+    [expenseDates, selectedExpenseDate.key]
+  );
+
+  function pickExpenseDate(match: (d: HijriDateOption) => boolean) {
+    const next = expenseDates.find(match) ?? selectedExpenseDate;
+    setForm((f) => ({ ...f, date: next.value }));
+  }
 
   return (
     <motion.div key="expenses" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
-      {/* Month selector (dropdown) */}
-      <div className="mb-4" dir="rtl">
-        <div className="relative inline-block">
-          <button
-            type="button"
-            onClick={() => setMonthOpen((o) => !o)}
-            className="flex min-w-[180px] items-center justify-between gap-3 rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
-          >
-            <span className="whitespace-nowrap">
-              {selectedMonthLabel}
-            </span>
-            <svg
-              className={`h-4 w-4 shrink-0 transition-transform ${monthOpen ? "rotate-180" : ""}`}
-              viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"
-            >
-              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
-            </svg>
-          </button>
-          {monthOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setMonthOpen(false)} />
-              <div className="absolute right-0 z-20 mt-2 max-h-64 w-full min-w-[180px] overflow-y-auto rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
-                {months.map((m) => (
-                  <button
-                    key={m.key}
-                    onClick={() => { setMonth(m.key); setMonthOpen(false); }}
-                    className={`block w-full whitespace-nowrap px-4 py-2 text-right text-sm font-bold transition-colors ${month === m.key ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+      <div className="mb-4 flex flex-wrap items-center gap-2" dir="rtl">
+        <button
+          type="button"
+          disabled={!previousMonth}
+          onClick={() => previousMonth && setMonth(previousMonth.key)}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          السابق
+        </button>
+        <div className="min-w-[190px] rounded-xl bg-slate-800 px-4 py-2 text-center text-sm font-bold text-white shadow-sm">
+          {selectedMonthLabel}
         </div>
+        <button
+          type="button"
+          disabled={!nextMonth}
+          onClick={() => nextMonth && setMonth(nextMonth.key)}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          التالي
+        </button>
       </div>
 
       {/* P&L Summary */}
@@ -377,10 +423,19 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm" dir="rtl">
         <h4 className="mb-3 font-extrabold text-slate-800">➕ إضافة مصروف</h4>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <label className="ow-block"><span className="ow-label">التاريخ</span>
-            <select value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="ow-in">
-              {expenseDates.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-            </select>
+          <label className="ow-block sm:col-span-2"><span className="ow-label">التاريخ الهجري</span>
+            <div className="grid grid-cols-3 gap-2">
+              <select value={selectedExpenseDate.value} onChange={(e) => setForm({ ...form, date: e.target.value })} className="ow-in min-w-0">
+                {expenseDays.map((d) => <option key={d.value} value={d.value}>{d.dayLabel}</option>)}
+              </select>
+              <select value={selectedExpenseDate.key} onChange={(e) => pickExpenseDate((d) => d.key === e.target.value)} className="ow-in min-w-0">
+                {expenseMonths.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              <select value={selectedExpenseDate.year} onChange={(e) => pickExpenseDate((d) => d.year === e.target.value)} className="ow-in min-w-0">
+                {expenseYears.map((y) => <option key={y.value} value={y.value}>{y.label}</option>)}
+              </select>
+            </div>
+            <p className="mt-1 text-xs font-semibold text-teal-600">{selectedExpenseDate.label}</p>
           </label>
           <label className="ow-block"><span className="ow-label">التصنيف</span>
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="ow-in">
@@ -398,7 +453,7 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
         <button onClick={addExp} disabled={saving} className="mt-3 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-80 disabled:opacity-50">
           {saving ? "جاري الحفظ..." : "حفظ المصروف"}
         </button>
-        <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}`}</style>
+        <style>{`.ow-block{display:block}.ow-label{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:4px}.ow-in{width:100%;min-width:0;padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:.875rem;color:#1e293b;outline:none}.ow-in:focus{border-color:#0d9488;background:#f0fdfa}`}</style>
       </div>
 
       {/* Expenses List */}
