@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Booking } from "@/lib/store";
 import { bookingDuration } from "@/lib/packages";
@@ -312,6 +312,11 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
   const totalExp = filtered.reduce((s, e) => s + e.amount, 0);
   const totalRev = bookings.filter((b) => b.status === "confirmed" && gregorianMonthKey(b.date) === month).reduce((s, b) => s + b.total, 0);
   const profit = totalRev - totalExp;
+  const monthButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    monthButtonRefs.current[month]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [month, selectedYear]);
 
   function changeYear(year: number) {
     const monthNumber = month.slice(5, 7) || String(new Date().getMonth() + 1).padStart(2, "0");
@@ -333,15 +338,16 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
             </select>
           </label>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-4 pb-2">
           {months.map((m) => {
             const active = m.key === month;
             return (
               <button
                 key={m.key}
+                ref={(el) => { monthButtonRefs.current[m.key] = el; }}
                 type="button"
                 onClick={() => setMonth(m.key)}
-                className={`min-h-[72px] rounded-xl border px-3 py-2 text-right transition ${active ? "border-slate-800 bg-slate-800 text-white shadow-md" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
+                className={`min-h-[74px] min-w-[170px] snap-center rounded-xl border px-4 py-3 text-right transition sm:min-w-[190px] ${active ? "border-slate-800 bg-slate-800 text-white shadow-md" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
               >
                 <span className="block text-sm font-extrabold">{m.label}</span>
                 <span className={`mt-1 block text-xs font-bold ${active ? "text-white/75" : "text-red-600"}`}>{fmt(monthlyExpenseTotals[m.key] ?? 0)} ريال</span>
