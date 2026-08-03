@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Booking } from "@/lib/store";
 import { bookingDuration } from "@/lib/packages";
@@ -312,11 +312,6 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
   const totalExp = filtered.reduce((s, e) => s + e.amount, 0);
   const totalRev = bookings.filter((b) => b.status === "confirmed" && gregorianMonthKey(b.date) === month).reduce((s, b) => s + b.total, 0);
   const profit = totalRev - totalExp;
-  const monthButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-
-  useEffect(() => {
-    monthButtonRefs.current[month]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  }, [month, selectedYear]);
 
   function changeYear(year: number) {
     const monthNumber = month.slice(5, 7) || String(new Date().getMonth() + 1).padStart(2, "0");
@@ -331,29 +326,23 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
             <h4 className="font-extrabold text-slate-800">شهور السنة الميلادية</h4>
             <div className="mt-1 text-sm font-bold text-slate-500">{selectedMonthLabel}</div>
           </div>
-          <label className="min-w-[120px]">
-            <span className="ow-label">السنة</span>
-            <select value={selectedYear} onChange={(e) => changeYear(Number(e.target.value))} className="ow-in">
-              {years.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </label>
+          <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:min-w-[280px]">
+            <label>
+              <span className="ow-label">الشهر</span>
+              <select value={month} onChange={(e) => setMonth(e.target.value)} className="ow-in">
+                {months.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+              </select>
+            </label>
+            <label>
+              <span className="ow-label">السنة</span>
+              <select value={selectedYear} onChange={(e) => changeYear(Number(e.target.value))} className="ow-in">
+                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </label>
+          </div>
         </div>
-        <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-4 pb-2">
-          {months.map((m) => {
-            const active = m.key === month;
-            return (
-              <button
-                key={m.key}
-                ref={(el) => { monthButtonRefs.current[m.key] = el; }}
-                type="button"
-                onClick={() => setMonth(m.key)}
-                className={`min-h-[74px] min-w-[170px] snap-center rounded-xl border px-4 py-3 text-right transition sm:min-w-[190px] ${active ? "border-slate-800 bg-slate-800 text-white shadow-md" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
-              >
-                <span className="block text-sm font-extrabold">{m.label}</span>
-                <span className={`mt-1 block text-xs font-bold ${active ? "text-white/75" : "text-red-600"}`}>{fmt(monthlyExpenseTotals[m.key] ?? 0)} ريال</span>
-              </button>
-            );
-          })}
+        <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
+          مصروفات {selectedMonthLabel}: <span className="text-red-600">{fmt(monthlyExpenseTotals[month] ?? 0)} ريال</span>
         </div>
       </div>
 
