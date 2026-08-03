@@ -18,6 +18,59 @@ function today() { return new Date().toISOString().slice(0, 10); }
 function fmt(n: number) { return n.toLocaleString("ar-SA"); }
 function toH(t: string) { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; }
 
+const HIJRI_DISPLAY_LOCALE = "ar-SA-u-ca-islamic-umalqura-nu-arab";
+const HIJRI_KEY_LOCALE = "en-US-u-ca-islamic-umalqura-nu-latn";
+const hijriMonthKeyFmt = new Intl.DateTimeFormat(HIJRI_KEY_LOCALE, { year: "numeric", month: "2-digit" });
+const hijriDateFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { weekday: "long", day: "numeric", month: "long", year: "numeric", era: "short" });
+const hijriMonthFmt = new Intl.DateTimeFormat(HIJRI_DISPLAY_LOCALE, { month: "long", year: "numeric", era: "short" });
+
+function isoFromDate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function dateFromISO(iso: string) {
+  return new Date(`${iso}T12:00:00`);
+}
+function hijriMonthKey(iso: string) {
+  const parts = hijriMonthKeyFmt.formatToParts(dateFromISO(iso));
+  const year = parts.find((p) => p.type === "year")?.value ?? "";
+  const month = parts.find((p) => p.type === "month")?.value.padStart(2, "0") ?? "";
+  return `${year}-${month}`;
+}
+function thisHijriMonth() {
+  return hijriMonthKey(today());
+}
+function formatHijriDate(iso: string) {
+  return hijriDateFmt.format(dateFromISO(iso));
+}
+function formatHijriMonth(iso: string) {
+  return hijriMonthFmt.format(dateFromISO(iso));
+}
+function buildHijriMonthOptions() {
+  const out: { key: string; label: string }[] = [];
+  const seen = new Set<string>();
+  const d = new Date();
+  for (let i = 0; out.length < 18 && i < 620; i++) {
+    const iso = isoFromDate(d);
+    const key = hijriMonthKey(iso);
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push({ key, label: formatHijriMonth(iso) });
+    }
+    d.setDate(d.getDate() - 1);
+  }
+  return out;
+}
+function buildExpenseDateOptions() {
+  const out: { value: string; label: string }[] = [];
+  const d = new Date();
+  for (let i = 0; i < 730; i++) {
+    const iso = isoFromDate(d);
+    out.push({ value: iso, label: formatHijriDate(iso) });
+    d.setDate(d.getDate() - 1);
+  }
+  return out;
+}
+
 const STATUS_LABEL: Record<Booking["status"], string> = { pending: "قيد الانتظار", confirmed: "مؤكد", cancelled: "ملغي" };
 const STATUS_CLASS: Record<Booking["status"], string> = { pending: "bg-amber-100 text-amber-700", confirmed: "bg-emerald-100 text-emerald-700", cancelled: "bg-red-100 text-red-700" };
 
@@ -216,7 +269,7 @@ function QuickBookingForm({ password, onDone, user = "owner" }: { password: stri
 function ExpensesPanel({ password, bookings, user = "owner" }: { password: string; bookings: Booking[]; user?: DashUser }) {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [month, setMonth] = useState(thisMonth());
+  const [month, setMonth] = useState(thisHijriMonth());
   const [monthOpen, setMonthOpen] = useState(false);
   const [form, setForm] = useState({ date: today(), category: "أخرى", description: "", amount: "" });
   const [saving, setSaving] = useState(false);
@@ -256,16 +309,14 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   }
 
-  const filtered = expenses.filter((e) => e.date.startsWith(month));
+  const filtered = expenses.filter((e) => hijriMonthKey(e.date) === month);
   const totalExp = filtered.reduce((s, e) => s + e.amount, 0);
-  const totalRev = bookings.filter((b) => b.status === "confirmed" && b.date.startsWith(month)).reduce((s, b) => s + b.total, 0);
+  const totalRev = bookings.filter((b) => b.status === "confirmed" && hijriMonthKey(b.date) === month).reduce((s, b) => s + b.total, 0);
   const profit = totalRev - totalExp;
 
-  const months: string[] = [];
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(); d.setMonth(d.getMonth() - i);
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-  }
+  const months = useMemo(() => buildHijriMonthOptions(), []);
+  const expenseDates = useMemo(() => buildExpenseDateOptions(), []);
+  const selectedMonthLabel = months.find((m) => m.key === month)?.label ?? month;
 
   return (
     <motion.div key="expenses" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.4 }}>
@@ -278,7 +329,7 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
             className="flex min-w-[180px] items-center justify-between gap-3 rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-90"
           >
             <span className="whitespace-nowrap">
-              {new Date(month + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+              {selectedMonthLabel}
             </span>
             <svg
               className={`h-4 w-4 shrink-0 transition-transform ${monthOpen ? "rotate-180" : ""}`}
@@ -293,11 +344,11 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
               <div className="absolute right-0 z-20 mt-2 max-h-64 w-full min-w-[180px] overflow-y-auto rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
                 {months.map((m) => (
                   <button
-                    key={m}
-                    onClick={() => { setMonth(m); setMonthOpen(false); }}
-                    className={`block w-full whitespace-nowrap px-4 py-2 text-right text-sm font-bold transition-colors ${month === m ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                    key={m.key}
+                    onClick={() => { setMonth(m.key); setMonthOpen(false); }}
+                    className={`block w-full whitespace-nowrap px-4 py-2 text-right text-sm font-bold transition-colors ${month === m.key ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
                   >
-                    {new Date(m + "-15").toLocaleString("ar-SA", { month: "long", year: "numeric" })}
+                    {m.label}
                   </button>
                 ))}
               </div>
@@ -327,7 +378,9 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
         <h4 className="mb-3 font-extrabold text-slate-800">➕ إضافة مصروف</h4>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <label className="ow-block"><span className="ow-label">التاريخ</span>
-            <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="ow-in" />
+            <select value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="ow-in">
+              {expenseDates.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+            </select>
           </label>
           <label className="ow-block"><span className="ow-label">التصنيف</span>
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="ow-in">
@@ -362,7 +415,7 @@ function ExpensesPanel({ password, bookings, user = "owner" }: { password: strin
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">{e.category}</span>
                   {e.description && <span className="truncate text-sm text-slate-700">{e.description}</span>}
                 </div>
-                <div className="mt-0.5 text-xs text-slate-400">{e.date}</div>
+                <div className="mt-0.5 text-xs text-slate-400">{formatHijriDate(e.date)}</div>
               </div>
               <div className="text-right">
                 <div className="font-extrabold text-red-600">−{fmt(e.amount)} ريال</div>
